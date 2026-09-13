@@ -3,7 +3,12 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { buildModel, refreshBatches, type Piece } from './models';
 import { resolvePickNear } from './picking.ts';
-import { byId, openLevel, type ExplorerState, type Selection } from './manifest';
+import {
+  byId,
+  openLevel,
+  type ExplorerState,
+  type Selection,
+} from './manifest';
 import { isPhysical, levels } from './levels.ts';
 import { inventoryLayout, smoothstep, spatialInventory } from './layout';
 /**
@@ -55,7 +60,7 @@ export function createViewer(
   renderer.setClearColor(0, 0);
   renderer.outputColorSpace = T.SRGBColorSpace;
   renderer.toneMapping = T.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.06;
+  renderer.toneMappingExposure = 1.02;
   // Pointer interaction owns the canvas. The surrounding controls provide the
   // keyboard path, so the drawing surface must not become an empty tab stop.
   renderer.domElement.tabIndex = -1;
@@ -67,32 +72,40 @@ export function createViewer(
   scene.environmentIntensity = 1.0;
   room.dispose();
   pmrem.dispose();
-  const fill = new T.HemisphereLight(0xe0e9ed, 0x292824, 0.65);
+  // A near-overhead key with a bright sky behind it flattens every upward face
+  // in the machine to the same pale grey, whatever it is made of: the shroud,
+  // the backplate and the lid all came out the same colour as each other and
+  // none of them came out black. Raking the key across the build instead, and
+  // leaving the ambient to the environment map, keeps a dark panel dark and
+  // puts the brightness back where it belongs, in the highlight along an edge.
+  const fill = new T.HemisphereLight(0xccd9e2, 0x23211f, 0.3);
   scene.add(fill);
-  const key = new T.DirectionalLight(0xfff4e6, 2.6);
-  key.position.set(-3, 10, 5);
+  const key = new T.DirectionalLight(0xfff2e2, 2.05);
+  key.position.set(-5, 7.5, 9);
   key.castShadow = true;
   key.shadow.mapSize.set(shadowSize, shadowSize);
+  // The assembled machine is thirteen units across, so a shadow frustum eight
+  // units wide cut its own shadow off halfway along the case.
   Object.assign(key.shadow.camera, {
-    left: -8,
-    right: 8,
-    top: 8,
-    bottom: -8,
+    left: -12,
+    right: 12,
+    top: 12,
+    bottom: -12,
     near: 0.1,
-    far: 35,
+    far: 45,
   });
   key.shadow.bias = -0.00015;
   // Halving the shadow map doubles the world size of a shadow texel, so the
   // offset that keeps a surface from shadowing itself has to grow with it.
   key.shadow.normalBias = compact ? 0.024 : 0.012;
   scene.add(key);
-  const rim = new T.DirectionalLight(0xbed6e3, 2);
-  rim.position.set(-5, 3, -4);
+  const rim = new T.DirectionalLight(0xb6d0e0, 1.75);
+  rim.position.set(-6, 3.5, -5);
   scene.add(rim);
   // A dim light from below and in front. Without it every downward face goes
   // flat black and the parts read as silhouettes rather than as objects.
-  const kick = new T.DirectionalLight(0xa9c4d6, 0.62);
-  kick.position.set(6, -5, 7);
+  const kick = new T.DirectionalLight(0xa2bdcf, 0.5);
+  kick.position.set(7, -4, 8);
   scene.add(kick);
   const camera = new T.PerspectiveCamera(32, 1, 0.1, 200);
   camera.position.set(9, 11, 14);
@@ -201,10 +214,14 @@ export function createViewer(
     // Shine comes from specular contrast, not from turning everything up:
     // a strong environment for highlights, a restrained key so the diffuse
     // surfaces keep their tone instead of blowing out to chalk.
-    scene.environmentIntensity = hardwareScale ? 0.86 : 0.48;
-    key.intensity = hardwareScale ? 2.5 : 0.85;
-    rim.intensity = hardwareScale ? 1.7 : 0.7;
-    kick.intensity = hardwareScale ? 0.62 : 0.28;
+    // Dark hardware needs its contrast from specular, not from diffuse. A
+    // strong environment lights the edges, the columns and every machined face
+    // while leaving the coated panels as dark as they really are; turning the
+    // key up instead would only wash those panels back to grey.
+    scene.environmentIntensity = hardwareScale ? 1.05 : 0.48;
+    key.intensity = hardwareScale ? 2.2 : 0.85;
+    rim.intensity = hardwareScale ? 1.6 : 0.7;
+    kick.intensity = hardwareScale ? 0.55 : 0.28;
     const visible = model.pieces.filter(shown);
     // Packing the shelves is the one expensive thing in here, and `refresh`
     // runs on every state change, which includes every step of the explode
@@ -286,10 +303,7 @@ export function createViewer(
     const grid = laidOut(value);
     inventoryTarget
       .copy(p.inventory)
-      .addScaledVector(
-        p.lieCenter ?? p.center,
-        -(p.inventoryScale ?? 1),
-      );
+      .addScaledVector(p.lieCenter ?? p.center, -(p.inventoryScale ?? 1));
     layoutPosition.lerp(inventoryTarget, grid);
     return {
       position: layoutPosition,
@@ -356,8 +370,7 @@ export function createViewer(
     // the detail panel. The old 0.8 multiplier cropped focused parts at every
     // edge, even though the ordinary whole-model fit looked intentional.
     const padding = focus ? 1.16 : 0.8;
-    const d =
-      (radius / Math.sin(Math.min(vertical, horizontal) / 2)) * padding;
+    const d = (radius / Math.sin(Math.min(vertical, horizontal) / 2)) * padding;
     targetPosition
       .copy(targetLook)
       .addScaledVector(direction, Math.max(focus ? 3.2 : 6, d));
@@ -435,9 +448,7 @@ export function createViewer(
       p.object.position.copy(dst.position);
       p.object.scale.setScalar(s);
       if (p.lie && p.restQuat)
-        p.object.quaternion
-          .copy(p.restQuat)
-          .slerp(p.lie, laidOut(amount));
+        p.object.quaternion.copy(p.restQuat).slerp(p.lie, laidOut(amount));
       if (p.batch) {
         matrix.compose(p.object.position, quat, scale.setScalar(s));
         p.batch.setMatrixAt(p.index!, matrix);
@@ -611,7 +622,9 @@ export function createViewer(
         hovered = null;
         // Arrive close in, so the deeper scale opens out of the part you
         // clicked rather than appearing from nowhere at a new distance.
-        dive = arriving ? { concept: next.diveInto ?? '', t: 0, phase: 'in' } : null;
+        dive = arriving
+          ? { concept: next.diveInto ?? '', t: 0, phase: 'in' }
+          : null;
       }
       const cameraChange =
         next.explode !== state.explode ||

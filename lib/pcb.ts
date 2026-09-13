@@ -53,6 +53,25 @@ const DARK: Palette = {
   pad: '#c2a35d',
 };
 
+/**
+ * Black solder mask, which is what a current desktop motherboard and a
+ * graphics card are actually finished in. Green is a low-cost mask and reads
+ * as a development board; every enthusiast board in the last decade is black,
+ * and the difference is not a styling preference but the single loudest cue
+ * for whether a board looks like a product or a prototype. The traces barely
+ * show through a black mask, so the contrast has to come from the silkscreen,
+ * the gold pads and the copper pour instead.
+ */
+const BLACK: Palette = {
+  mask: '#15171a',
+  maskDark: '#0c0e10',
+  trace: '#1e2226',
+  traceBright: '#2b3138',
+  pour: '#191d21',
+  silk: '#c3c9cf',
+  pad: '#cbab63',
+};
+
 /** Deterministic noise, so a board looks the same on every reload. */
 function rng(seed: number) {
   let s = seed >>> 0;
@@ -75,11 +94,21 @@ export function pcbTexture(variant: BoardVariant = 'motherboard') {
   canvas.width = W;
   canvas.height = H;
   const ctx = canvas.getContext('2d')!;
-  const p = variant === 'psu' ? DARK : GREEN;
+  const p =
+    variant === 'psu'
+      ? DARK
+      : variant === 'motherboard' || variant === 'graphics'
+        ? BLACK
+        : GREEN;
   const rand = rng(
-    { motherboard: 9137, graphics: 4421, psu: 7703, memory: 2213, storage: 5519, small: 8831 }[
-      variant
-    ],
+    {
+      motherboard: 9137,
+      graphics: 4421,
+      psu: 7703,
+      memory: 2213,
+      storage: 5519,
+      small: 8831,
+    }[variant],
   );
 
   ctx.fillStyle = p.mask;

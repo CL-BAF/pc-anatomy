@@ -14,6 +14,9 @@ import {
   buildScrew,
   glowMaterial,
 } from './parts.ts';
+import { buildChassis, plateWithHoles, type CaseShell } from './chassis.ts';
+import { finishes, type Finish } from './materials.ts';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 
 /**
  * The assembled desktop machine.
@@ -49,6 +52,10 @@ const ROOF = 6.5;
 const TRAY = -2.95; // motherboard tray plane
 const BOARD_Z = TRAY + 0.2; // board sits on standoffs
 const GLASS = 3.15; // window panel plane
+// Behind the tray: the cable chamber, closed by the solid side panel. A tower
+// of this shape is two rooms, and the run that feeds the processor only has
+// anywhere to hide because this one exists.
+const BACK = -3.95;
 
 // Board placement: rear edge against the rear panel, top edge near the roof.
 const BOARD_X0 = REAR + 0.42;
@@ -114,10 +121,18 @@ export function buildMotherboardAssembly(tools: ModelTools) {
 
   const socketX = -0.55,
     socketY = 1.55;
-  put(box([mm(56), mm(56), 0.06], '#454b51', 0.72), [socketX, socketY, 0.05]);
+  put(box([mm(56), mm(56), 0.06], '#2b3035', 0.4), [socketX, socketY, 0.05]);
   for (const side of [-1, 1]) {
-    put(box([mm(60), 0.1, 0.2], '#a2aaae', 0.9), [socketX, socketY + side * mm(30), 0.13]);
-    put(box([0.1, mm(60), 0.2], '#a2aaae', 0.9), [socketX + side * mm(30), socketY, 0.13]);
+    put(box([mm(60), 0.1, 0.2], '#a2aaae', 0.9), [
+      socketX,
+      socketY + side * mm(30),
+      0.13,
+    ]);
+    put(box([0.1, mm(60), 0.2], '#a2aaae', 0.9), [
+      socketX + side * mm(30),
+      socketY,
+      0.13,
+    ]);
   }
 
   // Memory: four slots, two populated, standing off the board.
@@ -136,8 +151,12 @@ export function buildMotherboardAssembly(tools: ModelTools) {
       0.11,
     ]);
     if (i % 2 === 1) {
-      put(box([mm(6.6), mm(131), 0.86], '#6a747a', 0.86, 0.01), [x, memY, 0.58]);
-      put(box([mm(7), mm(40), 0.08], '#9ba5ab', 0.92), [x, memY, 1.0]);
+      put(box([mm(6.6), mm(131), 0.86], '#33393e', 0.72, 0.01), [
+        x,
+        memY,
+        0.58,
+      ]);
+      put(box([mm(7), mm(40), 0.08], '#7f888e', 0.92), [x, memY, 1.0]);
       // Frosted diffuser along the top of the heatspreader.
       const bar = new T.Mesh(
         new T.BoxGeometry(mm(5), mm(124), 0.07),
@@ -149,20 +168,75 @@ export function buildMotherboardAssembly(tools: ModelTools) {
 
   for (let i = 0; i < 4; i++) {
     const long = i === 0 || i === 2;
-    put(box([long ? mm(89) : mm(25), mm(7.5), 0.2], i === 0 ? '#7d6a74' : '#3a4146', 0.14), [
-      -BOARD_D / 2 + (long ? mm(58) : mm(26)),
-      SLOT1_Y - BOARD_Y - i * SLOT_PITCH * 1.6,
-      0.11,
-    ]);
+    put(
+      box(
+        [long ? mm(89) : mm(25), mm(7.5), 0.2],
+        i === 0 ? '#7d6a74' : '#3a4146',
+        0.14,
+      ),
+      [
+        -BOARD_D / 2 + (long ? mm(58) : mm(26)),
+        SLOT1_Y - BOARD_Y - i * SLOT_PITCH * 1.6,
+        0.11,
+      ],
+    );
   }
 
+  /**
+   * The rear I/O cover.
+   *
+   * Every current desktop board has one: a moulded shroud over the port stack
+   * and the regulator, carrying the board's own branding. Without it the top
+   * corner of the board is bare laminate with a few blocks on it, which is
+   * what a board looks like in a catalogue photograph of a bare PCB and not
+   * what one looks like installed.
+   */
+  const armour = new T.Group();
+  const onArmour = (obj: T.Object3D, pos: Vec3) => {
+    obj.position.set(...pos);
+    armour.add(obj);
+  };
+  onArmour(box([mm(96), mm(122), 0.7], '#1b1f23', 0.32, 0.03), [0, 0, 0]);
+  onArmour(box([mm(86), mm(112), 0.06], '#2d343a', 0.68), [0, 0, 0.38]);
+  const armourBar = new T.Mesh(
+    new T.PlaneGeometry(mm(62), mm(7)),
+    glowMaterial(BOARD_ACCENT, 1.5),
+  );
+  armourBar.position.set(0, -mm(34), 0.42);
+  armour.add(armourBar);
+  put(armour, [-BOARD_D / 2 + mm(58), BOARD_H / 2 - mm(74), 0.34]);
+  label(
+    group,
+    'ATX',
+    [-BOARD_D / 2 + mm(58), BOARD_H / 2 - mm(96), 0.44],
+    mm(40),
+    '#8e979d',
+  );
+
   // Chipset block and the M.2 thermal covers.
-  const chipset = buildBlockSink(material, mm(48), mm(48), 0.38, '#6d767c');
+  const chipset = buildBlockSink(material, mm(48), mm(48), 0.38, '#3a4147');
   chipset.rotation.x = Math.PI / 2;
   put(chipset, [mm(34), -mm(92), 0.22]);
-  label(group, 'PCH', [mm(34), -mm(92), 0.46], mm(34), '#b6bec3');
-  for (let i = 0; i < 2; i++)
-    put(box([mm(88), mm(26), 0.18], '#737c82', 0.88), [-mm(18), -mm(30) - i * mm(64), 0.11]);
+  label(group, 'PCH', [mm(34), -mm(92), 0.46], mm(34), '#8d959b');
+  // M.2 covers: a thermal pad under a milled plate, the way they actually sit.
+  for (let i = 0; i < 2; i++) {
+    put(box([mm(88), mm(26), 0.16], '#242a2e', 0.55), [
+      -mm(18),
+      -mm(30) - i * mm(64),
+      0.1,
+    ]);
+    put(box([mm(80), mm(19), 0.05], '#4d565c', 0.86), [
+      -mm(18),
+      -mm(30) - i * mm(64),
+      0.2,
+    ]);
+    for (let g = 0; g < 5; g++)
+      put(box([mm(11), mm(15), 0.02], '#1a1f22', 0.5), [
+        -mm(52) + g * mm(17),
+        -mm(30) - i * mm(64),
+        0.23,
+      ]);
+  }
 
   // Regulator heatsinks: the finned blocks above and beside the socket.
   //
@@ -176,7 +250,7 @@ export function buildMotherboardAssembly(tools: ModelTools) {
     [mm(150), mm(30), socketX + mm(12), socketY + mm(78)],
     [mm(28), mm(120), socketX - mm(70), socketY + mm(10)],
   ] as const) {
-    const sink = buildBlockSink(material, w, h, 0.56, '#646d73');
+    const sink = buildBlockSink(material, w, h, 0.56, '#434b51');
     sink.rotation.x = Math.PI / 2;
     put(sink, [x, y, 0.3]);
   }
@@ -189,8 +263,16 @@ export function buildMotherboardAssembly(tools: ModelTools) {
   // the top corner clear of the regulator heatsink, which is where the cable
   // runs below can actually reach them: down at the old positions both blocks
   // stood inside the graphics card, and the 8-pin was buried in the sink.
-  put(box([mm(20), mm(52), 0.34], '#26292c', 0.1), [BOARD_D / 2 - mm(18), mm(48), 0.19]);
-  put(box([mm(38), mm(16), 0.3], '#26292c', 0.1), [-mm(101), BOARD_H / 2 - mm(16), 0.17]);
+  put(box([mm(20), mm(52), 0.34], '#26292c', 0.1), [
+    BOARD_D / 2 - mm(18),
+    mm(48),
+    0.19,
+  ]);
+  put(box([mm(38), mm(16), 0.3], '#26292c', 0.1), [
+    -mm(101),
+    BOARD_H / 2 - mm(16),
+    0.17,
+  ]);
 
   // Scattered small parts, so the empty board area is not a flat plane.
   for (let i = 0; i < 16; i++) {
@@ -210,75 +292,115 @@ export function buildMotherboardAssembly(tools: ModelTools) {
   return group;
 }
 
-export function buildMachine(tools: ModelTools, _root: T.Group) {
+export function buildMachine(tools: ModelTools, root: T.Group) {
   const { add, instances, box, pcb, material, label } = tools;
   const place = (group: T.Group, obj: T.Object3D, pos: Vec3) => {
     obj.position.set(...pos);
     group.add(obj);
     return obj;
   };
+  /**
+   * The surface the tower stands on.
+   *
+   * A machine drawn against nothing floats, and floating is most of why the
+   * old render read as a model rather than as a photograph of a machine. This
+   * catches the key light's shadow and nothing else, so the background stays
+   * transparent and all that appears under the case is the contact shadow its
+   * own feet cast. It is scenery rather than a part, which is what
+   * `contextFrame` marks: it is never selected, named or laid out.
+   */
+  const ground = new T.Mesh(
+    new T.PlaneGeometry(60, 60),
+    new T.ShadowMaterial({ opacity: 0.46 }),
+  );
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.y = FLOOR - 0.41;
+  ground.receiveShadow = true;
+  ground.userData.contextFrame = true;
+  root.add(ground);
 
-  // ── Chassis frame ───────────────────────────────────────────────────────
-  const frame = new T.Group();
-  const steel = '#474e54';
-  for (const [w, h, cy] of [
-    [FRONT - REAR, 2.0, ROOF - 1.0],
-    [FRONT - REAR, 2.2, FLOOR + 1.1],
-  ] as const)
-    place(frame, box([w, h, 0.09], steel, 0.76), [(FRONT + REAR) / 2, cy, TRAY]);
-  place(frame, box([2.4, ROOF - FLOOR, 0.09], steel, 0.76), [REAR + 1.2, 0, TRAY]);
-  place(frame, box([2.0, ROOF - FLOOR, 0.09], steel, 0.76), [FRONT - 1.0, 0, TRAY]);
-  place(frame, box([1.5, 3.4, 0.09], steel, 0.76), [1.6, -1.2, TRAY]);
-  place(frame, box([FRONT - REAR, 0.1, 6.3], '#3f464b', 0.8), [(FRONT + REAR) / 2, FLOOR, 0]);
-  place(frame, box([FRONT - REAR, 0.1, 6.3], steel, 0.76), [(FRONT + REAR) / 2, ROOF, 0]);
-  place(frame, box([0.12, ROOF - FLOOR, 6.3], steel, 0.76), [FRONT, 0, 0]);
+  const finish = finishes();
+  /**
+   * A part made in a named finish rather than in a colour.
+   *
+   * `box` takes a colour and a metalness and gives everything the same grain
+   * and the same roughness, which is why the shroud, the supply, the cage and
+   * the card all used to look moulded from one grey polymer. Asking for the
+   * finish instead - powder-coated steel, anodised aluminium, moulded ABS -
+   * carries the grain and the highlight that tell those materials apart.
+   */
+  const slab = (size: Vec3, kind: Finish, color?: string, radius = 0.014) =>
+    new T.Mesh(
+      new RoundedBoxGeometry(
+        ...size,
+        2,
+        Math.min(radius, Math.min(...size) * 0.45),
+      ),
+      finish(kind, color),
+    );
 
-  const apertureTop = BOARD_Y + BOARD_H / 2;
-  place(frame, box([0.12, ROOF - apertureTop, 6.3], steel, 0.78), [
+  // ── Chassis ─────────────────────────────────────────────────────────────
+  //
+  // The shell, its panels and its cut-outs are built in `chassis.ts`, from the
+  // openings the parts below actually need. Everything it is given here is a
+  // measurement taken from a component, not a styling number: the I/O window
+  // is where the board's port stack is, the slot cut-outs are on the ATX slot
+  // pitch, and the supply's opening is the size of the supply.
+  const shell: CaseShell = {
     REAR,
-    (ROOF + apertureTop) / 2,
-    0,
-  ]);
-  place(frame, box([0.12, 1.2, 6.3], steel, 0.78), [REAR, FLOOR + 0.6, 0]);
-  place(frame, box([0.12, apertureTop - APERTURE_W - (FLOOR + 1.2), 3.0], steel, 0.78), [
-    REAR,
-    (apertureTop - APERTURE_W + FLOOR + 1.2) / 2,
-    -1.6,
-  ]);
-  place(frame, box([0.12, ROOF - FLOOR, 1.1], steel, 0.78), [REAR, 0, GLASS - 0.6]);
-  // Strip down the front-inner corner post, against the upright above rather
-  // than hanging in open space in the middle of the case.
-  const pillar = buildLightStrip(ROOF - FLOOR - 1.2, 0.11, RGB[0], 1.9);
-  // rotation.z alone stands the strip on end; adding a second axis lays it
-  // diagonally across the shroud.
-  pillar.rotation.z = Math.PI / 2;
-  place(frame, pillar, [FRONT - 0.22, 0.2, 2.86]);
-  const pillarGlow = new T.PointLight(RGB[0], 7, 9, 2);
-  pillarGlow.position.set(FRONT - 1.4, 1.2, 2.0);
-  frame.add(pillarGlow);
-  add('chassis', frame, [0, 0, 0], [0, 0, -2.2]);
+    FRONT,
+    FLOOR,
+    ROOF,
+    TRAY,
+    GLASS,
+    BACK,
+    io: {
+      y: BOARD_Y + BOARD_H / 2 - APERTURE_W / 2 - 0.2,
+      z: BOARD_Z + APERTURE_H * 0.46,
+      up: APERTURE_W,
+      across: APERTURE_H,
+    },
+    slotY: SLOT1_Y,
+    slotZ: BOARD_Z + 1.55,
+    slotPitch: SLOT_PITCH,
+    slots: 7,
+    psu: {
+      y: FLOOR + mm(46),
+      z: -0.4,
+      up: mm(86) + 0.1,
+      across: mm(150) + 0.1,
+    },
+    accent: ACCENT,
+  };
+  buildChassis(tools, finish, shell);
 
-  const covers: Vec3[] = [];
-  for (let i = 0; i < 7; i++)
-    covers.push([REAR + 0.12, SLOT1_Y - i * SLOT_PITCH, -0.55]);
-  instances('chassis', covers, [0.1, SLOT_PITCH * 0.9, 1.9], 0, '#5b6268');
-
-  // Rear I/O aperture frame.
+  // Rear I/O shield: the stamped plate the board's port stack sits behind.
   const aperture = new T.Group();
-  const apY = apertureTop - APERTURE_W / 2 - 0.2;
-  for (const s of [-1, 1])
-    place(aperture, box([0.07, 0.16, APERTURE_H + 0.3], '#6b7377', 0.86), [
-      0,
-      apY + s * (APERTURE_W / 2 + 0.08),
-      APERTURE_H / 2,
+  const apY = shell.io.y;
+  place(aperture, box([0.05, APERTURE_W, APERTURE_H], '#575f65', 0.9), [
+    0,
+    apY,
+    shell.io.z,
+  ]);
+  for (let i = 0; i < 9; i++)
+    place(aperture, box([0.09, 0.34, 0.26], '#0b0d0e', 0.3), [
+      0.04,
+      apY + APERTURE_W / 2 - 0.5 - i * 0.44,
+      shell.io.z + ((i % 2) - 0.5) * 0.46,
     ]);
   for (const s of [-1, 1])
-    place(aperture, box([0.07, APERTURE_W + 0.3, 0.16], '#6b7377', 0.86), [
+    place(aperture, box([0.07, 0.14, APERTURE_H + 0.24], '#79828a', 0.9), [
+      0,
+      apY + s * (APERTURE_W / 2 + 0.07),
+      shell.io.z,
+    ]);
+  for (const s of [-1, 1])
+    place(aperture, box([0.07, APERTURE_W + 0.24, 0.14], '#79828a', 0.9), [
       0,
       apY,
-      APERTURE_H / 2 + s * (APERTURE_H / 2 + 0.08),
+      shell.io.z + s * (APERTURE_H / 2 + 0.07),
     ]);
-  add('ioshield', aperture, [REAR + 0.06, 0, 0], [-1.8, 0, 0]);
+  add('ioshield', aperture, [REAR + 0.14, 0, 0], [-1.8, 0, 0]);
 
   const standoffs: Vec3[] = [];
   for (const gx of [-mm(100), mm(6), mm(112)])
@@ -286,100 +408,95 @@ export function buildMachine(tools: ModelTools, _root: T.Group) {
       standoffs.push([BOARD_X + gx, BOARD_Y + gy, TRAY + 0.1]);
   instances('boardstandoff', standoffs, [0.14, 0.14, 0.2], 0, '#9ba3a7');
 
-  // ── Panels ──────────────────────────────────────────────────────────────
-  const glass = new T.MeshPhysicalMaterial({
-    color: '#79878f',
-    metalness: 0,
-    roughness: 0.04,
-    transmission: 0.95,
-    thickness: 0.14,
-    transparent: true,
-    opacity: 0.2,
-    ior: 1.5,
-  });
-  const windowPanel = new T.Group();
-  windowPanel.add(
-    new T.Mesh(
-      new T.BoxGeometry(FRONT - REAR - 0.3, ROOF - FLOOR - 0.3, 0.06),
-      glass,
-    ),
-  );
-  for (const sx of [-1, 1])
-    for (const sy of [-1, 1])
-      place(windowPanel, buildScrew(material, 0.075), [
-        (sx * (FRONT - REAR - 0.9)) / 2,
-        (sy * (ROOF - FLOOR - 0.9)) / 2,
-        0.06,
-      ]);
-  // Up and out, not straight at the camera: a 13-unit pane travelling toward
-  // the viewer parks itself in front of everything it was covering.
-  add('sidepanel', windowPanel, [(FRONT + REAR) / 2, 0, GLASS], [0, 3.1, 3.4]);
-
-  const backPanel = new T.Group();
-  place(backPanel, box([FRONT - REAR - 0.3, ROOF - FLOOR - 0.3, 0.08], '#3d4449', 0.8), [0, 0, 0]);
-  add('sidepanel', backPanel, [(FRONT + REAR) / 2, 0, TRAY - 0.62], [0, -1.4, -4.8]);
-
-  // Front panel: dark mesh intake over the fan wall, with the power button.
-  const front = new T.Group();
-  // A real mesh panel is mostly hole. Modelling ~700 apertures is too costly,
-  // so the backing sheet is rendered see-through and the stamped webbing sits
-  // in front of it: from outside you read a mesh, and the lit intake fans
-  // behind it show through the way they do on a real build.
-  const screen = new T.Mesh(
-    new T.BoxGeometry(0.06, ROOF - FLOOR + 0.2, 6.5),
-    new T.MeshPhysicalMaterial({
-      color: '#1b2023',
-      metalness: 0.3,
-      roughness: 0.62,
-      transparent: true,
-      opacity: 0.34,
-      side: T.DoubleSide,
-    }),
-  );
-  front.add(screen);
-  place(front, box([0.16, ROOF - FLOOR + 0.2, 0.22], '#3b4247', 0.7), [0, 0, 3.24]);
-  place(front, box([0.16, ROOF - FLOOR + 0.2, 0.22], '#3b4247', 0.7), [0, 0, -3.24]);
-  place(front, box([0.16, 0.22, 6.5], '#3b4247', 0.7), [0, (ROOF - FLOOR) / 2, 0]);
-  place(front, box([0.16, 0.22, 6.5], '#3b4247', 0.7), [0, -(ROOF - FLOOR) / 2, 0]);
-  const perf = new T.BoxGeometry(0.09, 0.055, 0.055);
-  const perfMaterial = material('#252c30', 0.5, 0.5);
-  for (let r = 0; r < 46; r++)
-    for (let c = 0; c < 27; c++) {
-      const web = new T.Mesh(perf, perfMaterial);
-      web.position.set(0.06, (r - 22.5) * 0.27, (c - 13) * 0.23 + (r % 2 ? 0.115 : 0));
-      front.add(web);
-    }
-  place(front, box([0.14, 0.42, 0.42], '#6d757b', 0.88), [0.18, ROOF - 0.9, 2.2]);
-  place(front, box([0.16, 0.1, 0.34], '#1b1e20', 0.5), [0.2, ROOF - 1.5, 2.2]);
-  add('frontpanel', front, [FRONT + 0.16, 0, 0], [4.2, 1.5, 0]);
-
-  // Top panel: vented lid.
-  const top = new T.Group();
-  place(top, box([FRONT - REAR + 0.2, 0.14, 6.5], '#40474d', 0.74), [0, 0, 0]);
-  for (let i = 0; i < 20; i++)
-    place(top, box([0.42, 0.07, 4.6], '#121516', 0.42), [(i - 9.5) * 0.6, 0.05, 0]);
-  add('toppanel', top, [(FRONT + REAR) / 2, ROOF + 0.14, 0], [0, 4.4, 0]);
+  // A light column down the inner face of the front corner post.
+  const pillar = buildLightStrip(ROOF - FLOOR - 1.6, 0.11, RGB[0], 1.9);
+  pillar.rotation.z = Math.PI / 2;
+  const pillarGroup = new T.Group();
+  pillarGroup.add(pillar);
+  const pillarGlow = new T.PointLight(RGB[0], 8, 9, 2);
+  pillarGlow.position.set(-1.0, 1.2, -0.6);
+  pillarGroup.add(pillarGlow);
+  add('chassis', pillarGroup, [FRONT - 0.62, 0.2, GLASS - 0.62], [2.2, 0, 2.2]);
 
   // Power supply shroud.
   // Ends at the intake fan wall, not through it: the deck used to reach past
   // the front fans, so the lit ring of the bottom one came out of its top face.
   const SHROUD_W = FRONT - REAR - 1.6;
+  const SHROUD_D = 5.9;
   const shroud = new T.Group();
-  place(shroud, box([SHROUD_W, 0.12, 5.9], '#3c4349', 0.72), [0, 0, 0]);
-  place(shroud, box([0.12, 1.4, 5.3], '#3c4349', 0.72), [SHROUD_W / 2, -0.7, 0.1]);
-  for (let i = 0; i < 9; i++)
-    place(shroud, box([0.3, 0.06, 2.6], '#131617', 0.42), [-3.6 + i * 0.42, 0.07, 1.2]);
-  // Brushed top plate and a chamfered lip, so the biggest flat surface in the
-  // machine is not one bare rectangle from the front three-quarter view.
-  place(shroud, box([SHROUD_W - 1.0, 0.04, 4.6], '#4a5259', 0.86), [0, 0.09, -0.5]);
-  place(shroud, box([SHROUD_W, 0.16, 0.2], '#525a61', 0.88), [0, 0.02, 2.92]);
+
+  /**
+   * The deck, cut rather than plain.
+   *
+   * One unbroken sheet eleven units across was the largest flat surface in the
+   * machine and had nothing on it, so it read as a moulded tray and dragged
+   * everything standing on it down with it. A real deck is cut: a long vent
+   * under the card, because the card's fans face down into it and would
+   * otherwise be breathing against a closed lid, and a grommeted pass-through
+   * where the supply's leads come up. Both are holes the build actually needs,
+   * and between them they break the plane into something with structure.
+   */
+  const deckHoles: [number, number, number, number][] = [
+    [5.0, 2.0, -1.4, -0.2], // vent under the graphics card
+    [1.1, 1.5, 3.9, 1.4], // cable pass-through
+  ];
+  for (const [w, h, cx, cz] of plateWithHoles(SHROUD_W, SHROUD_D, deckHoles))
+    place(shroud, slab([w, 0.12, h], 'steel'), [cx, 0, cz]);
+  // A grommet round the cable hole and a returned lip round the vent, so both
+  // openings have an edge instead of stopping dead in the sheet.
+  for (const [index, [w, h, cx, cz]] of deckHoles.entries()) {
+    const trim: Finish = index ? 'rubber' : 'steel';
+    for (const sx of [-1, 1])
+      place(
+        shroud,
+        slab([0.11, 0.16, h + 0.18], trim, index ? undefined : '#2e353a'),
+        [cx + (sx * (w + 0.09)) / 2, 0.02, cz],
+      );
+    for (const sz of [-1, 1])
+      place(
+        shroud,
+        slab([w + 0.18, 0.16, 0.11], trim, index ? undefined : '#2e353a'),
+        [cx, 0.02, cz + (sz * (h + 0.09)) / 2],
+      );
+  }
+  // A honeycomb screen across the vent: the card breathes through it, and it
+  // is the one place in the lower half of this machine with any fine detail.
+  const deckVent = buildHoneycomb(material, 4.9, 1.9, 0.03, 0.14, '#1b1f22');
+  deckVent.rotation.x = -Math.PI / 2;
+  place(shroud, deckVent, [-1.4, 0.01, -0.2]);
+
+  // The front wall of the deck, and the louvres over the supply's own air.
+  place(shroud, slab([0.12, 1.4, 5.3], 'steel'), [SHROUD_W / 2, -0.7, 0.1]);
+  for (let i = 0; i < 7; i++)
+    place(shroud, slab([0.28, 0.07, 1.5], 'plastic', '#0c0e0f'), [
+      -4.6 + i * 0.42,
+      0.06,
+      2.05,
+    ]);
+  // A brushed inlay along the window edge and a chamfered lip carrying the
+  // light strip, so the deck has a front face and not just a cut edge.
+  place(
+    shroud,
+    slab([SHROUD_W - 1.0, 0.05, 0.9], 'anodized', '#2a3136'),
+    [0, 0.1, 2.28],
+  );
+  place(
+    shroud,
+    slab([SHROUD_W, 0.17, 0.2], 'anodizedLight', '#7d868c'),
+    [0, 0.02, 2.92],
+  );
   const shroudStrip = buildLightStrip(SHROUD_W - 0.8, 0.12, ACCENT, 2.3);
   place(shroud, shroudStrip, [0, 0.02, 2.78]);
   const shroudGlow = new T.PointLight(ACCENT, 7, 7.5, 2);
   shroudGlow.position.set(0.4, 0.6, 2.2);
   shroud.add(shroudGlow);
   // Sits high enough that a loom fits between it and the top of the supply.
-  add('psushroud', shroud, [(FRONT + REAR) / 2 - 0.2, FLOOR + 3.0, -0.2], [0, 2.6, 0]);
+  add(
+    'psushroud',
+    shroud,
+    [(FRONT + REAR) / 2 - 0.2, FLOOR + 3.0, -0.2],
+    [0, 2.6, 0],
+  );
 
   // Drive cage.
   //
@@ -391,25 +508,94 @@ export function buildMachine(tools: ModelTools, _root: T.Group) {
     CAGE_D = mm(112);
   const cage = new T.Group();
   for (const sy of [-1, 1])
-    place(cage, box([CAGE_W, 0.07, CAGE_D], '#4e565b', 0.8), [0, sy * 0.95, 0]);
+    place(cage, slab([CAGE_W, 0.07, CAGE_D], 'steel', '#262b2f'), [
+      0,
+      sy * 0.95,
+      0,
+    ]);
   for (const sz of [-1, 1])
-    place(cage, box([CAGE_W, 1.9, 0.07], '#4e565b', 0.8), [0, 0, (sz * CAGE_D) / 2]);
+    place(cage, slab([CAGE_W, 1.9, 0.07], 'steel', '#262b2f'), [
+      0,
+      0,
+      (sz * CAGE_D) / 2,
+    ]);
+  // The moulded rails a drive actually slides in on.
+  for (const sy of [-1, 1])
+    for (const sz of [-1, 1])
+      place(cage, slab([CAGE_W - 0.2, 0.1, 0.16], 'plastic'), [
+        0,
+        sy * 0.5,
+        (sz * (CAGE_D - 0.3)) / 2,
+      ]);
+  // The folded legs that bolt it to the floor of the case. A cage hovering
+  // twenty millimetres clear of the floor it is supposedly screwed to is
+  // exactly the kind of gap that makes a build look assembled by nobody.
+  for (const sx of [-1, 1])
+    for (const sz of [-1, 1]) {
+      place(cage, slab([0.22, 0.95, 0.22], 'steel', '#262b2f'), [
+        (sx * (CAGE_W - 0.4)) / 2,
+        -1.42,
+        (sz * (CAGE_D - 0.3)) / 2,
+      ]);
+      place(cage, slab([0.5, 0.08, 0.44], 'steel', '#262b2f'), [
+        (sx * (CAGE_W - 0.4)) / 2,
+        -1.88,
+        (sz * (CAGE_D - 0.3)) / 2,
+      ]);
+    }
   add('drivecage', cage, [CAGE_X, FLOOR + 1.5, -0.3], [1.6, 0, 0]);
 
   // ── Storage ─────────────────────────────────────────────────────────────
   const hdd = new T.Group();
-  place(hdd, box([mm(147), mm(26), mm(102)], '#959da1', 0.92, 0.01), [0, 0, 0]);
-  place(hdd, box([mm(120), 0.02, mm(80)], '#a9b1b5', 0.94), [0, mm(14), 0]);
-  place(hdd, box([mm(40), mm(6), mm(30)], '#2d3134', 0.3), [mm(48), -mm(9), mm(30)]);
+  // A drive is a cast-aluminium body with a thin stamped lid and a bare board
+  // on the underside. The lid is the bright part; the casting around it is not.
+  place(
+    hdd,
+    slab([mm(147), mm(26), mm(102)], 'anodizedLight', '#7e868b', 0.01),
+    [0, 0, 0],
+  );
+  place(hdd, slab([mm(139), mm(3), mm(95)], 'brushed', '#b6bdc2', 0.006), [
+    0,
+    mm(12.5),
+    0,
+  ]);
+  place(hdd, slab([mm(120), mm(2), mm(80)], 'plasticGloss', '#dfe3e6'), [
+    0,
+    mm(14.4),
+    0,
+  ]);
+  place(hdd, slab([mm(140), mm(3), mm(96)], 'plastic', '#101315'), [
+    0,
+    -mm(12.5),
+    0,
+  ]);
+  place(hdd, slab([mm(40), mm(6), mm(30)], 'plasticGloss', '#16191b'), [
+    mm(48),
+    -mm(9),
+    mm(30),
+  ]);
   for (const sx of [-1, 1])
     for (const sz of [-1, 1])
-      place(hdd, buildScrew(material, mm(2.4)), [sx * mm(62), mm(13.5), sz * mm(40)]);
-  label(hdd, '3.5" HDD', [0, mm(15), 0], 1.2, '#40464a');
+      place(hdd, buildScrew(material, mm(2.4)), [
+        sx * mm(62),
+        mm(13.5),
+        sz * mm(40),
+      ]);
+  label(hdd, '3.5" HDD', [0, mm(15.6), 0], 1.2, '#2f3538');
   add('hdd', hdd, [CAGE_X, FLOOR + 0.95, -0.3], [1.9, -0.4, 0]);
 
   const ssd = new T.Group();
-  place(ssd, box([mm(100), mm(7), mm(70)], '#565e64', 0.84, 0.01), [0, 0, 0]);
-  label(ssd, 'SATA SSD', [0, mm(4.2), 0], 0.9, '#a2aaae');
+  place(
+    ssd,
+    slab([mm(100), mm(7), mm(70)], 'anodized', '#32383d', 0.01),
+    [0, 0, 0],
+  );
+  place(ssd, slab([mm(88), mm(1), mm(58)], 'anodizedLight', '#6f777d'), [
+    0,
+    mm(3.8),
+    0,
+  ]);
+  label(ssd, 'SATA SSD', [0, mm(4.6), 0], 0.9, '#aeb6bb');
   add('ssd', ssd, [CAGE_X, FLOOR + 1.95, -0.3], [1.9, 0.4, 0]);
 
   // ── Power supply ────────────────────────────────────────────────────────
@@ -417,28 +603,46 @@ export function buildMachine(tools: ModelTools, _root: T.Group) {
   const pw = mm(160),
     ph = mm(86),
     pd = mm(150);
-  place(psu, box([pw, ph, pd], '#42484e', 0.76, 0.012), [0, 0, 0]);
+  place(psu, slab([pw, ph, pd], 'steel', '#1c2023', 0.012), [0, 0, 0]);
+  // The fold line down each side of the wrap, which is how the sheet is made.
+  for (const sz of [-1, 1])
+    place(psu, slab([pw + 0.005, mm(3), mm(3)], 'steel', '#2b3134'), [
+      0,
+      ph / 2 - mm(3),
+      (sz * pd) / 2,
+    ]);
 
   // Bottom intake: fan behind a wire guard, drawing through the floor filter.
   const psuFan = buildFan(material, {
     size: mm(135),
     phase: 0.4,
     blades: 11,
-    frameColor: '#363c41',
+    frameColor: '#15181a',
     guard: true,
   });
   psuFan.rotation.x = Math.PI;
   place(psu, psuFan, [0, -ph / 2 + mm(24), 0]);
 
   // Rear face: hex exhaust grille, mains inlet and switch.
-  const grille = buildHoneycomb(material, ph * 0.82, pd * 0.62, 0.04, mm(5), '#3c4247');
+  const grille = buildHoneycomb(
+    material,
+    ph * 0.82,
+    pd * 0.62,
+    0.04,
+    mm(5),
+    '#23282b',
+  );
   grille.rotation.y = Math.PI / 2;
   grille.rotation.z = Math.PI / 2;
   place(psu, grille, [-pw / 2 - 0.01, mm(4), -mm(28)]);
   const inlet = buildMainsInlet(material, mm(26));
   inlet.rotation.y = -Math.PI / 2;
   place(psu, inlet, [-pw / 2 - 0.04, -mm(20), mm(38)]);
-  place(psu, box([0.08, mm(16), mm(22)], '#6b7378', 0.8), [-pw / 2 - 0.04, mm(10), mm(38)]);
+  place(psu, slab([0.08, mm(16), mm(22)], 'plasticGloss', '#1a1d1f'), [
+    -pw / 2 - 0.04,
+    mm(10),
+    mm(38),
+  ]);
 
   // Front face: the modular connector panel, facing into the case.
   const panel = buildModularPanel(material, ph * 0.86, pd * 0.5, 0.09);
@@ -453,7 +657,7 @@ export function buildMachine(tools: ModelTools, _root: T.Group) {
         sy * (ph / 2 - mm(9)),
         sz * (pd / 2 - mm(9)),
       ]);
-  label(psu, 'ATX POWER SUPPLY', [0, ph / 2 + 0.01, -mm(20)], 2.2, '#878f94');
+  label(psu, 'ATX POWER SUPPLY', [0, ph / 2 + 0.01, -mm(20)], 2.2, '#6d757a');
   add('psu', psu, [REAR + mm(100), FLOOR + mm(46), -0.4], [-1.2, -2.4, 0]);
 
   // Cable looms from the supply up to the board and the card.
@@ -464,7 +668,9 @@ export function buildMachine(tools: ModelTools, _root: T.Group) {
   // the spares terminated inside the graphics card.
   const cables = new T.Group();
   const loom = (points: Vec3[], radius: number, color: string) => {
-    const curve = new T.CatmullRomCurve3(points.map((p) => new T.Vector3(...p)));
+    const curve = new T.CatmullRomCurve3(
+      points.map((p) => new T.Vector3(...p)),
+    );
     cables.add(
       new T.Mesh(
         new T.TubeGeometry(curve, 30, radius, 7, false),
@@ -527,7 +733,12 @@ export function buildMachine(tools: ModelTools, _root: T.Group) {
   add('psucable', cables, [0, 0, 0], [0, -1.4, 1.2], 0.02);
 
   // ── Motherboard ─────────────────────────────────────────────────────────
-  add('motherboard', buildMotherboardAssembly(tools), [BOARD_X, BOARD_Y, BOARD_Z], [0, 0, -3.2]);
+  add(
+    'motherboard',
+    buildMotherboardAssembly(tools),
+    [BOARD_X, BOARD_Y, BOARD_Z],
+    [0, 0, -3.2],
+  );
 
   // ── Processor cooler ────────────────────────────────────────────────────
   // A tower air cooler, bolted to the socket, which is the build this machine
@@ -558,8 +769,16 @@ export function buildMachine(tools: ModelTools, _root: T.Group) {
   const tower = new T.Group();
 
   // Coldplate, and the crossbar whose two sprung screws pull it onto the lid.
-  place(tower, box([mm(54), mm(54), mm(8)], '#c9d0d4', 0.95, 0.004), [0, 0, mm(4)]);
-  place(tower, box([mm(78), mm(11), mm(6)], '#9aa2a7', 0.9), [0, 0, mm(11)]);
+  place(tower, slab([mm(54), mm(54), mm(8)], 'nickel', undefined, 0.004), [
+    0,
+    0,
+    mm(4),
+  ]);
+  place(tower, slab([mm(78), mm(11), mm(6)], 'brushed', '#8d959a'), [
+    0,
+    0,
+    mm(11),
+  ]);
   for (const sx of [-1, 1])
     place(tower, buildScrew(material, mm(5)), [sx * mm(38), 0, mm(15)]);
 
@@ -577,7 +796,7 @@ export function buildMachine(tools: ModelTools, _root: T.Group) {
       tower,
       new T.Mesh(
         new T.TubeGeometry(path, 32, mm(3.2), 12, false),
-        material('#c07b3e', 0.95, 0.24),
+        finish('copper'),
       ),
       [0, 0, 0],
     );
@@ -585,15 +804,22 @@ export function buildMachine(tools: ModelTools, _root: T.Group) {
 
   // Fin stack: horizontal plates stacked up the tower, air passing between
   // them front to rear.
+  // Forty-odd fins on a 2 mm pitch, not thirty on a 3 mm one. A fin stack is
+  // mostly shadow: it is the density of the gaps, and the dark between them,
+  // that makes it read as a heatsink rather than as a white plastic block.
+  // Seen end-on, a fin stack is mostly the shadow between the fins, not the
+  // fins. Rendered at a bright aluminium value the forty of them merge into
+  // one white block, which is what the tower used to look like, so the fin
+  // colour here is the *average* of a lit fin and the dark gap beside it.
   const stack = buildFinStack(
     material,
-    30,
-    [STACK_D, mm(0.5), STACK_W],
-    mm(2.9),
-    '#c6cdd1',
+    42,
+    [STACK_D, mm(0.42), STACK_W],
+    mm(2.05),
+    '#6d757b',
   );
   place(tower, stack, [0, STACK_Y, STACK_Z]);
-  place(tower, box([STACK_D + mm(4), mm(3), STACK_W + mm(4)], '#3a4147', 0.8), [
+  place(tower, slab([STACK_D + mm(4), mm(3.5), STACK_W + mm(4)], 'anodized'), [
     0,
     STACK_Y + mm(46),
     STACK_Z,
@@ -612,7 +838,7 @@ export function buildMachine(tools: ModelTools, _root: T.Group) {
     phase: 1.1,
     pads: true,
     cable: true,
-    frameColor: '#262b30',
+    frameColor: '#131618',
     rgb: RGB[1],
   });
   towerFan.rotation.z = Math.PI / 2; // axis along −X: front to rear
@@ -664,31 +890,59 @@ export function buildMachine(tools: ModelTools, _root: T.Group) {
   // Authored PCB-up / cooler-down, which is how a card sits in a tower.
   const cardLen = mm(304),
     cardWide = mm(112);
-  place(card, box([cardLen - 0.15, 0.05, cardWide - 0.1], '#4e565d', 0.88), [0, mm(20), 0]);
+  // The backplate: a brushed aluminium sheet standing off the board, which is
+  // the face most of this card shows through the window.
+  place(
+    card,
+    slab([cardLen - 0.15, 0.055, cardWide - 0.1], 'anodized', '#252a2e'),
+    [0, mm(20), 0],
+  );
+  place(
+    card,
+    slab([cardLen - mm(60), 0.02, cardWide - mm(34)], 'brushed', '#767e84'),
+    [0, mm(23), 0],
+  );
   place(card, pcb([cardLen, 0.06, cardWide], 'graphics'), [0, mm(13), 0]);
-  place(card, box([cardLen, mm(34), cardWide], '#414951', 0.72, 0.02), [0, -mm(6), 0]);
+  // The cooler shroud, in dark anodised aluminium rather than grey.
+  place(card, slab([cardLen, mm(34), cardWide], 'anodized', '#272c31', 0.02), [
+    0,
+    -mm(6),
+    0,
+  ]);
+  // A fin bank showing through each end of the shroud, so the card has depth
+  // where it used to be one closed slab.
+  for (const sx of [-1, 1]) {
+    const bank = buildFinStack(
+      material,
+      22,
+      [mm(46), mm(0.5), cardWide - mm(16)],
+      mm(2.4),
+      '#697177',
+    );
+    place(card, bank, [sx * mm(112), -mm(8), 0]);
+  }
   for (let i = 0; i < 2; i++) {
     const fan = buildFan(material, {
       size: mm(95),
       phase: i * 0.9,
       blades: 11,
-      frameColor: '#31373d',
+      frameColor: '#141719',
     });
     fan.rotation.x = Math.PI; // pulls air up through the cooler
     place(card, fan, [(i - 0.5) * mm(130), -mm(24), 0]);
   }
-  place(card, box([0.07, mm(112), mm(19)], '#9ba3a7', 0.9), [
+  place(card, slab([0.07, mm(112), mm(19)], 'anodizedLight', '#818a90'), [
     -cardLen / 2 - 0.05,
     -mm(6),
     -cardWide / 2 + mm(22),
   ]);
   for (let i = 0; i < 3; i++)
-    place(card, box([0.1, mm(18), mm(8)], '#121516', 0.4), [
+    place(card, slab([0.1, mm(18), mm(8)], 'plasticGloss'), [
       -cardLen / 2 - 0.09,
       -mm(30) + i * mm(24),
       -cardWide / 2 + mm(22),
     ]);
-  place(card, box([mm(28), mm(12), mm(16)], '#1b1e20', 0.12), [
+  place(card, slab([mm(28), mm(12), mm(16)], 'plasticGloss'), [
     mm(40),
     mm(26),
     cardWide / 2 - mm(20),
@@ -710,12 +964,18 @@ export function buildMachine(tools: ModelTools, _root: T.Group) {
   card.add(cardSpill);
   // Cut-outs in the backplate, which break up the top face.
   for (let i = 0; i < 5; i++)
-    place(card, box([mm(26), 0.02, mm(52)], '#232a2f', 0.5), [
+    place(card, slab([mm(26), 0.025, mm(52)], 'anodized', '#1c2124'), [
       mm(-100 + i * 50),
       mm(21),
       -mm(18),
     ]);
-  label(card, 'GEFORCE RTX', [mm(10), mm(23), cardWide / 2 - mm(34)], 1.9, '#9aa4ad');
+  label(
+    card,
+    'GEFORCE RTX',
+    [mm(10), mm(23.5), cardWide / 2 - mm(34)],
+    1.9,
+    '#b3bdc4',
+  );
   // Seated in the slot, not hovering over it. The group is authored with its
   // PCB at +13 mm, so +24 mm put the board of the card 37 mm above the slot it
   // is supposedly in, which lifted the whole card into the rear I/O stack and
@@ -725,7 +985,11 @@ export function buildMachine(tools: ModelTools, _root: T.Group) {
   add(
     'graphicscard',
     card,
-    [REAR + 0.24 + cardLen / 2, SLOT1_Y - mm(13), BOARD_Z + cardWide / 2 + 0.34],
+    [
+      REAR + 0.16 + cardLen / 2,
+      SLOT1_Y - mm(13),
+      BOARD_Z + cardWide / 2 + 0.34,
+    ],
     [0, 0, 3.0],
   );
 }
