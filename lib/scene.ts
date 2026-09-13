@@ -84,20 +84,22 @@ export function createViewer(
   key.position.set(-5, 7.5, 9);
   key.castShadow = true;
   key.shadow.mapSize.set(shadowSize, shadowSize);
-  // The assembled machine is thirteen units across, so a shadow frustum eight
-  // units wide cut its own shadow off halfway along the case.
+  // The frustum has to hold the machine *and* the shadow it throws, not just
+  // the machine: at thirteen units across and lit from one side, the cast
+  // shadow reaches well past the case, and a frustum sized to the case alone
+  // ends that shadow in a straight line across open floor.
   Object.assign(key.shadow.camera, {
-    left: -12,
-    right: 12,
-    top: 12,
-    bottom: -12,
+    left: -19,
+    right: 19,
+    top: 19,
+    bottom: -19,
     near: 0.1,
-    far: 45,
+    far: 60,
   });
-  key.shadow.bias = -0.00015;
+  key.shadow.bias = -0.0002;
   // Halving the shadow map doubles the world size of a shadow texel, so the
   // offset that keeps a surface from shadowing itself has to grow with it.
-  key.shadow.normalBias = compact ? 0.024 : 0.012;
+  key.shadow.normalBias = compact ? 0.03 : 0.017;
   scene.add(key);
   const rim = new T.DirectionalLight(0xb6d0e0, 1.75);
   rim.position.set(-6, 3.5, -5);

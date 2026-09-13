@@ -2,7 +2,7 @@
 
 PC Anatomy is an open-source 3D explorer that takes a desktop computer apart from the assembled ATX tower down to a single GPU streaming multiprocessor.
 
-![PC Anatomy showing an assembled desktop computer on the interactive workbench](docs/screenshots/workbench-assembled.png)
+![An assembled ATX tower in PC Anatomy: a dual-glass aluminium case with the motherboard, graphics card, cooler and power supply visible through the window](docs/screenshots/workbench-assembled.png)
 
 [Explore Live Demo](https://pc-anatomy.com/)
 
@@ -29,6 +29,12 @@ Desktop PC
 ```
 
 The slider moves each scale from its assembled state to a laid-out inventory. Search can jump directly to a component at any depth, while breadcrumbs and the scale navigator move back through the machine.
+
+![The same machine at the far end of the slider, with every part lifted out and laid flat as a component inventory](docs/screenshots/workbench-inventory.png)
+
+The layout is responsive, and the same scales, search and timeline work on a phone.
+
+<img src="docs/screenshots/workbench-mobile.png" alt="PC Anatomy on a phone, showing the assembled tower above the disassembly timeline" width="300">
 
 ## Quick start
 

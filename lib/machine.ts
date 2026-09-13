@@ -311,7 +311,7 @@ export function buildMachine(tools: ModelTools, root: T.Group) {
    */
   const ground = new T.Mesh(
     new T.PlaneGeometry(60, 60),
-    new T.ShadowMaterial({ opacity: 0.46 }),
+    new T.ShadowMaterial({ opacity: 0.42 }),
   );
   ground.rotation.x = -Math.PI / 2;
   ground.position.y = FLOOR - 0.41;
