@@ -167,7 +167,11 @@ a {
   place-items: center;
   width: 36px;
   height: 36px;
-  background: linear-gradient(135deg, var(--accent-bright), var(--accent-violet));
+  background: linear-gradient(
+    135deg,
+    var(--accent-bright),
+    var(--accent-violet)
+  );
   color: #191a1c;
   border-radius: 7px;
 }
@@ -201,6 +205,34 @@ a {
   display: flex;
   align-items: center;
   gap: 14px;
+}
+/* Authorship, in the header rather than buried in the About panel. Quiet
+   enough that it never competes with the controls beside it, and it doubles
+   as the link to the source. */
+.byline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 11px;
+  border-radius: 5px;
+  color: #8f939a;
+  font-size: 12px;
+  letter-spacing: 0.2px;
+  transition:
+    color 0.15s ease,
+    background 0.15s ease;
+}
+.byline strong {
+  color: #c8cbd0;
+  font-weight: 600;
+}
+.byline:hover {
+  color: #d6d9dd;
+  background: #191a1c;
+}
+.byline:hover strong {
+  color: var(--accent-bright);
 }
 .search-button {
   height: 36px;
@@ -1208,7 +1240,7 @@ a {
   .stage-tools {
     bottom: 182px;
   }
-    .scale-navigation > button {
+  .scale-navigation > button {
     padding-top: 15px;
     padding-bottom: 15px;
   }
@@ -1325,6 +1357,12 @@ a {
   .search-button {
     height: 34px;
   }
+  .byline {
+    padding: 0 6px;
+  }
+  .byline span {
+    display: none;
+  }
   .explorer {
     display: none;
     position: absolute;
@@ -1412,6 +1450,9 @@ a {
   }
   .header-actions {
     gap: 17px;
+  }
+  .byline {
+    display: none;
   }
   .search-button {
     width: 30px;

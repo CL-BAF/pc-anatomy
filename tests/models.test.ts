@@ -71,13 +71,14 @@ await test('all repeated structures have globally unique, consecutive identities
       else assert.equal(p.object.userData.piece, p);
     }
   }
+  // Three fin banks of fifty-two, one under each of the card's three fans.
   assert.equal(
     models.get('card')!.pieces.filter((p) => p.concept === 'heatsink').length,
-    152,
+    156,
   );
 });
 
-await test('ray picking distinguishes the two fin banks instead of selecting duplicate fin IDs', () => {
+await test('ray picking distinguishes the three fin banks instead of selecting duplicate fin IDs', () => {
   const fins = models
     .get('card')!
     .pieces.filter((p) => p.concept === 'heatsink');
@@ -87,7 +88,8 @@ await test('ray picking distinguishes the two fin banks instead of selecting dup
       new T.Matrix4().makeTranslation(...p.base.toArray()),
     );
   }
-  for (const index of [0, 75, 76, 151]) {
+  // The first and last fin of each of the three banks.
+  for (const index of [0, 51, 52, 103, 104, 155]) {
     const fin = fins[index];
     fin.batch!.computeBoundingSphere();
     const ray = new T.Raycaster(
@@ -177,9 +179,16 @@ await test('you can point through the glass instead of it answering for the whol
       assert.ok(!seeThrough(hits[0].object) || picked !== null);
     }
   }
-  assert.ok(crossedGlass > 20, 'the test never actually shot through the glass');
-  assert.ok(named.size >= 8, 'only ' + named.size + ' distinct parts were reachable');
-  for (const concept of named) assert.ok(byId[concept]?.shortName, concept + ' has no name');
+  assert.ok(
+    crossedGlass > 20,
+    'the test never actually shot through the glass',
+  );
+  assert.ok(
+    named.size >= 8,
+    'only ' + named.size + ' distinct parts were reachable',
+  );
+  for (const concept of named)
+    assert.ok(byId[concept]?.shortName, concept + ' has no name');
 });
 
 await test('nothing on screen is anonymous: every rendered object belongs to a named part', () => {
@@ -196,7 +205,10 @@ await test('nothing on screen is anonymous: every rendered object belongs to a n
       );
     }
     for (const p of pieces)
-      assert.ok(byId[p.concept]?.shortName, `${level}: ${p.concept} has no name`);
+      assert.ok(
+        byId[p.concept]?.shortName,
+        `${level}: ${p.concept} has no name`,
+      );
   }
 });
 
@@ -247,10 +259,16 @@ await test('pointing has a margin for error, and it never reaches past what is i
   // widening the target never picks something behind a closer part.
   const mixed = (dx: number) =>
     dx === 0 ? [] : dx > 0 ? [far.intersection] : [near.intersection];
-  assert.equal(resolvePickNear((dx) => mixed(dx), 12), near.piece);
+  assert.equal(
+    resolvePickNear((dx) => mixed(dx), 12),
+    near.piece,
+  );
 
   // Empty sky stays empty.
-  assert.equal(resolvePickNear(() => [], 30), null);
+  assert.equal(
+    resolvePickNear(() => [], 30),
+    null,
+  );
 });
 
 await test('parts drawn as instances stay pickable after the layout moves them', () => {
@@ -288,12 +306,17 @@ await test('parts drawn as instances stay pickable after the layout moves them',
   // Somewhere to put them where nothing occludes anything: one long row.
   const sample = batched.filter((_, i) => i % 7 === 0).slice(0, 24);
   const spread = (gap: number) =>
-    pieces.forEach((p, i) => p.object.position.set((i - pieces.length / 2) * gap, 0, 0));
+    pieces.forEach((p, i) =>
+      p.object.position.set((i - pieces.length / 2) * gap, 0, 0),
+    );
 
   spread(0.6);
   sync();
   const first = sample.filter(reachable).length;
-  assert.ok(first > sample.length * 0.7, `only ${first}/${sample.length} reachable to begin with`);
+  assert.ok(
+    first > sample.length * 0.7,
+    `only ${first}/${sample.length} reachable to begin with`,
+  );
 
   // Now move everything, exactly as sliding the explode control does.
   spread(2.4);

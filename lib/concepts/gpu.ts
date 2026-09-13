@@ -1,8 +1,4 @@
-import {
-  concept,
-  type Category,
-  type Concept,
-} from '../concept.ts';
+import { concept, type Category, type Concept } from '../concept.ts';
 import type { LevelId } from '../levels.ts';
 import { sources } from '../sources.ts';
 
@@ -58,8 +54,8 @@ export const gpuConcepts: Concept[] = [
     level: 'card',
     description: 'Rotating blades move air across the cooler.',
     purpose: 'Carries heat from the fins into the surrounding air.',
-    quantity: '2 modeled fans',
-    specifications: { Design: 'Illustrative dual fan' },
+    quantity: '3 modeled fans',
+    specifications: { Design: 'Illustrative triple fan' },
     representationType: 'physical',
     searchTerms: ['cooling', 'airflow'],
   }),
@@ -73,7 +69,7 @@ export const gpuConcepts: Concept[] = [
     description:
       'Closely spaced metal fins expose a large surface to moving air.',
     purpose: 'Releases the heat collected from the processor and memory.',
-    quantity: '2 modeled sections',
+    quantity: '3 modeled sections',
     specifications: { 'Fin spacing': 'Illustrative' },
     representationType: 'physical',
   }),

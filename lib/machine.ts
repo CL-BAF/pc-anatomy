@@ -15,6 +15,7 @@ import {
   glowMaterial,
 } from './parts.ts';
 import { buildChassis, plateWithHoles, type CaseShell } from './chassis.ts';
+import { buildCardCooler, CARD, cardStack } from './graphics-card.ts';
 import { finishes, type Finish } from './materials.ts';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 
@@ -886,110 +887,50 @@ export function buildMachine(tools: ModelTools, root: T.Group) {
   add('casefan', exhaust, [3.6, ROOF - 0.68, 0], [0, 3.4, 0]);
 
   // ── Graphics card, in the primary slot ──────────────────────────────────
+  //
+  // The card itself is `graphics-card.ts`, the same module its own scale
+  // builds from, so what is installed here and what you open up are one
+  // object rather than two drawings of one. Only the level of detail differs:
+  // inside the tower the card is a hundred pixels across, so it gets coarser
+  // fin banks and no blade rims, and it is added as one selectable part
+  // instead of the dozen the card's own scale breaks out.
+  //
+  // A card in a tower hangs cooler-downward, which is the half turn about X
+  // below. The turn also swaps the card's two long edges, so the lit wordmark
+  // is asked for on the far edge in order to end up facing the window.
+  const CARD_L = mm(350);
+  const parts = buildCardCooler(tools, finish, CARD_L, {
+    logoEdge: -1,
+    accent: ACCENT,
+    detail: 'plain',
+  });
+  const seat = cardStack(CARD_L);
   const card = new T.Group();
-  // Authored PCB-up / cooler-down, which is how a card sits in a tower.
-  const cardLen = mm(304),
-    cardWide = mm(112);
-  // The backplate: a brushed aluminium sheet standing off the board, which is
-  // the face most of this card shows through the window.
+  const cardWide = CARD.width * CARD_L;
   place(
     card,
-    slab([cardLen - 0.15, 0.055, cardWide - 0.1], 'anodized', '#252a2e'),
-    [0, mm(20), 0],
+    pcb(
+      [CARD.pcb.length * CARD_L, mm(1.6), CARD.pcb.width * CARD_L],
+      'graphics',
+    ),
+    [CARD_L * 0.08, seat.pcb, 0],
   );
-  place(
-    card,
-    slab([cardLen - mm(60), 0.02, cardWide - mm(34)], 'brushed', '#767e84'),
-    [0, mm(23), 0],
-  );
-  place(card, pcb([cardLen, 0.06, cardWide], 'graphics'), [0, mm(13), 0]);
-  // The cooler shroud, in dark anodised aluminium rather than grey.
-  place(card, slab([cardLen, mm(34), cardWide], 'anodized', '#272c31', 0.02), [
-    0,
-    -mm(6),
-    0,
-  ]);
-  // A fin bank showing through each end of the shroud, so the card has depth
-  // where it used to be one closed slab.
-  for (const sx of [-1, 1]) {
-    const bank = buildFinStack(
-      material,
-      22,
-      [mm(46), mm(0.5), cardWide - mm(16)],
-      mm(2.4),
-      '#697177',
-    );
-    place(card, bank, [sx * mm(112), -mm(8), 0]);
-  }
-  for (let i = 0; i < 2; i++) {
-    const fan = buildFan(material, {
-      size: mm(95),
-      phase: i * 0.9,
-      blades: 11,
-      frameColor: '#141719',
-    });
-    fan.rotation.x = Math.PI; // pulls air up through the cooler
-    place(card, fan, [(i - 0.5) * mm(130), -mm(24), 0]);
-  }
-  place(card, slab([0.07, mm(112), mm(19)], 'anodizedLight', '#818a90'), [
-    -cardLen / 2 - 0.05,
-    -mm(6),
-    -cardWide / 2 + mm(22),
-  ]);
-  for (let i = 0; i < 3; i++)
-    place(card, slab([0.1, mm(18), mm(8)], 'plasticGloss'), [
-      -cardLen / 2 - 0.09,
-      -mm(30) + i * mm(24),
-      -cardWide / 2 + mm(22),
-    ]);
-  place(card, slab([mm(28), mm(12), mm(16)], 'plasticGloss'), [
-    mm(40),
-    mm(26),
-    cardWide / 2 - mm(20),
-  ]);
-  // Lit logo bar along the side that faces the window.
-  place(card, box([mm(150), mm(7), mm(2)], '#111416', 0.2), [
-    mm(10),
-    mm(4),
-    cardWide / 2 + mm(1),
-  ]);
-  const cardLogo = new T.Mesh(
-    new T.PlaneGeometry(mm(138), mm(4.4)),
-    glowMaterial(ACCENT, 1.9),
-  );
-  cardLogo.position.set(mm(10), mm(4), cardWide / 2 + mm(2.4));
-  card.add(cardLogo);
+  place(card, parts.shroud, [0, seat.shroud, 0]);
+  place(card, parts.fins, [0, seat.fins, 0]);
+  for (const fan of parts.fans) place(card, fan.object, [fan.x, seat.fan, 0]);
+  place(card, parts.backplate, [0, seat.backplate, 0]);
+  place(card, parts.bracket, [-CARD_L / 2 - mm(2), seat.bracket, 0]);
   const cardSpill = new T.PointLight(ACCENT, 5.5, 5.5, 2);
-  cardSpill.position.set(mm(10), mm(16), cardWide / 2 + mm(20));
+  cardSpill.position.set(CARD_L * 0.02, seat.shroud * 0.4, -cardWide * 0.6);
   card.add(cardSpill);
-  // Cut-outs in the backplate, which break up the top face.
-  for (let i = 0; i < 5; i++)
-    place(card, slab([mm(26), 0.025, mm(52)], 'anodized', '#1c2124'), [
-      mm(-100 + i * 50),
-      mm(21),
-      -mm(18),
-    ]);
-  label(
-    card,
-    'GEFORCE RTX',
-    [mm(10), mm(23.5), cardWide / 2 - mm(34)],
-    1.9,
-    '#b3bdc4',
-  );
-  // Seated in the slot, not hovering over it. The group is authored with its
-  // PCB at +13 mm, so +24 mm put the board of the card 37 mm above the slot it
-  // is supposedly in, which lifted the whole card into the rear I/O stack and
-  // into the rear fan. −13 mm lands the PCB exactly on the slot. The stand-off
-  // in Z is the height of the connector, which is also what gives the M.2
-  // covers underneath the card their clearance.
+  // Cooler-downward, and seated on the slot rather than hovering over it: the
+  // board inside the card lands on the connector, and the card's height then
+  // reaches out from the tray toward the window.
+  card.rotation.x = Math.PI;
   add(
     'graphicscard',
     card,
-    [
-      REAR + 0.16 + cardLen / 2,
-      SLOT1_Y - mm(13),
-      BOARD_Z + cardWide / 2 + 0.34,
-    ],
+    [REAR + 0.16 + CARD_L / 2, SLOT1_Y - mm(2), BOARD_Z + cardWide / 2 + 0.3],
     [0, 0, 3.0],
   );
 }

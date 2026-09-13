@@ -24,6 +24,7 @@ import {
   Fan,
   HardDrive,
   Droplets,
+  Code2,
 } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
@@ -90,9 +91,14 @@ const levelIcon: Record<LevelId, typeof Box> = {
 };
 
 function menuRoot(level: LevelId) {
-  return branches().find((branch) => branch.levels.includes(level))?.root ?? null;
+  return (
+    branches().find((branch) => branch.levels.includes(level))?.root ?? null
+  );
 }
 import Viewer from './viewer';
+
+/** The project's source, linked from the header byline and the About panel. */
+const REPOSITORY = 'https://github.com/Yoosseph/gpu_anatomy';
 
 export default function Home() {
   const [playing, setPlaying] = useState(false);
@@ -301,19 +307,25 @@ export default function Home() {
       }
     >
       <header className="topbar">
-        <button
-          className="brand"
-          onClick={reset}
-          aria-label="Reset PC Anatomy"
-        >
+        <button className="brand" onClick={reset} aria-label="Reset PC Anatomy">
           <span className="brand-icon">
             <Cpu size={21} />
           </span>
-          <span>
-            PC Anatomy
-          </span>
+          <span>PC Anatomy</span>
         </button>
         <div className="header-actions">
+          <a
+            className="byline"
+            href={REPOSITORY}
+            target="_blank"
+            rel="noreferrer"
+            title="PC Anatomy on GitHub"
+          >
+            <Code2 size={15} />
+            <span>
+              Made by <strong>Yoseph</strong>
+            </span>
+          </a>
           <button
             className="mobile-layers"
             onClick={() => setLayers(!layers)}
@@ -388,7 +400,9 @@ export default function Home() {
               const here = menuRoot(state.level) === root;
               return (
                 <div
-                  className={'branch' + (open ? ' open' : '') + (here ? ' here' : '')}
+                  className={
+                    'branch' + (open ? ' open' : '') + (here ? ' here' : '')
+                  }
                   key={root}
                 >
                   <button
@@ -441,7 +455,10 @@ export default function Home() {
               onClick={() =>
                 setState((s) => ({
                   ...s,
-                  visible: s.visible.length === categories.length ? [] : [...categories],
+                  visible:
+                    s.visible.length === categories.length
+                      ? []
+                      : [...categories],
                   hidden: [],
                   selection: null,
                   isolated: false,
@@ -449,7 +466,9 @@ export default function Home() {
                 }))
               }
             >
-              {state.visible.length === categories.length ? 'Hide all' : 'Show all'}
+              {state.visible.length === categories.length
+                ? 'Hide all'
+                : 'Show all'}
             </button>
           </div>
           <div className="layer-scroll">
@@ -641,12 +660,16 @@ export default function Home() {
               aria-label={view[0].toUpperCase() + view.slice(1) + ' view'}
               disabled={logical && state.explode > 85 && view !== 'top'}
               aria-pressed={
-                logical && state.explode > 85 ? view === 'top' : state.view === view
+                logical && state.explode > 85
+                  ? view === 'top'
+                  : state.view === view
               }
               className={
-                (logical && state.explode > 85
-                  ? view === 'top'
-                  : state.view === view)
+                (
+                  logical && state.explode > 85
+                    ? view === 'top'
+                    : state.view === view
+                )
                   ? 'active'
                   : ''
               }
@@ -689,7 +712,9 @@ export default function Home() {
               }
               // Someone who has asked for less motion gets the end state, not a
               // nine-second animation they did not want.
-              if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+              if (
+                window.matchMedia('(prefers-reduced-motion: reduce)').matches
+              ) {
                 setState((s) => ({ ...s, explode: 100, focusRevision: 0 }));
                 return;
               }
@@ -876,13 +901,13 @@ export default function Home() {
               )}
               {openLevel(selected.id) &&
                 openLevel(selected.id) !== state.level && (
-                <button
-                  className="open-component"
-                  onClick={() => navigate(openLevel(selected.id)!)}
-                >
-                  Take apart {levels[openLevel(selected.id)!].name}
-                  <ChevronRight size={17} />
-                </button>
+                  <button
+                    className="open-component"
+                    onClick={() => navigate(openLevel(selected.id)!)}
+                  >
+                    Take apart {levels[openLevel(selected.id)!].name}
+                    <ChevronRight size={17} />
+                  </button>
                 )}
               <div className="detail-actions">
                 <button
@@ -927,19 +952,19 @@ export default function Home() {
               </div>
               <p className="accuracy">{selected.physicalAccuracy}</p>
               {selected.sources.length > 0 && (
-              <div className="source-links">
-                {selected.sources.map((s) => (
-                  <a
-                    key={s}
-                    href={sources[s].url}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    {sources[s].name}
-                    <ArrowUpRight size={12} />
-                  </a>
-                ))}
-              </div>
+                <div className="source-links">
+                  {selected.sources.map((s) => (
+                    <a
+                      key={s}
+                      href={sources[s].url}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      {sources[s].name}
+                      <ArrowUpRight size={12} />
+                    </a>
+                  ))}
+                </div>
               )}
             </>
           )}
@@ -955,8 +980,8 @@ export default function Home() {
           <p>
             Start with an assembled ATX tower, take it apart, and keep going:
             into the motherboard, into the graphics card, and down through the
-            GB202 processor to a single streaming multiprocessor. Every scale
-            is a branch you can descend or step back out of.
+            GB202 processor to a single streaming multiprocessor. Every scale is
+            a branch you can descend or step back out of.
           </p>
           <h3>Two kinds of model.</h3>
           <p>
@@ -964,8 +989,8 @@ export default function Home() {
             geometry. The ATX board outline, the expansion-slot pitch and the
             rear I/O aperture follow the published form factor. The RTX 5090,
             Ryzen 9 9950X and Core Ultra 9 285K are named subjects; everything
-            else is a representative example of its component family, not a
-            bill of materials for a particular build.
+            else is a representative example of its component family, not a bill
+            of materials for a particular build.
           </p>
           <p>
             <strong>Silicon</strong> shows documented logical architecture.
@@ -999,7 +1024,7 @@ export default function Home() {
           </a>
           <a
             className="about-source"
-            href="https://github.com/Yoosseph/gpu_anatomy"
+            href={REPOSITORY}
             target="_blank"
             rel="noreferrer"
           >

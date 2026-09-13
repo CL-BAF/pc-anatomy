@@ -5,6 +5,8 @@ import type { Vec3 } from './layout.ts';
 import { boardTexture } from './surfaces.ts';
 import type { BoardVariant } from './pcb.ts';
 import { buildBoardDetails } from './board-details.ts';
+import { finishes } from './materials.ts';
+import { buildCardCooler, CARD, cardStack } from './graphics-card.ts';
 
 export type ModelTools = {
   add: (
@@ -40,14 +42,8 @@ export type ModelTools = {
 };
 
 /** Original educational assembly. Counts and routing are illustrative, not an FE BOM. */
-export function buildHardware({
-  add,
-  instances,
-  box,
-  pcb,
-  material,
-  label,
-}: ModelTools) {
+export function buildHardware(tools: ModelTools) {
+  const { add, instances, box, pcb, material, label } = tools;
   const place = (group: T.Group, obj: T.Object3D, pos: Vec3) => {
     obj.position.set(...pos);
     group.add(obj);
@@ -132,7 +128,7 @@ export function buildHardware({
     roughness: 0.78,
     metalness: 0.08,
   });
-  const boardEdge = material('#393b2b', 0.05, 0.82);
+  const boardEdge = material('#2b2f33', 0.05, 0.82);
   place(
     board,
     new T.Mesh(new T.BoxGeometry(7.96, 0.095, 3.28), [
@@ -145,7 +141,7 @@ export function buildHardware({
     ]),
     [0, 0, 0],
   );
-  place(board, box([7.92, 0.024, 3.24], '#24453a', 0.25), [0, -0.06, 0]);
+  place(board, box([7.92, 0.024, 3.24], '#1b1f23', 0.25), [0, -0.06, 0]);
   const traces: Vec3[] = [],
     traceScale: Vec3[] = [];
   for (let side = -1; side <= 1; side += 2)
@@ -161,7 +157,7 @@ export function buildHardware({
   batch(
     board,
     new T.BoxGeometry(1, 0.003, 0.009),
-    material('#386b57', 0.6, 0.6),
+    material('#3a4a52', 0.6, 0.6),
     traces,
     traceScale,
   );
@@ -178,7 +174,7 @@ export function buildHardware({
     material('#ae9c66', 0.8),
     vias,
   );
-  label(board, 'GPU ANATOMY / GB202', [-2.4, 0.058, 1.03], 2.4, '#92ac96');
+  label(board, 'GPU ANATOMY / GB202', [-2.4, 0.058, 1.03], 2.4, '#96a1a8');
   add('pcb', board, [0, 0, 0], [0, -0.7, 0]);
   // Machined rear plate: cut-out air paths and reinforcing ribs.
   const back = new T.Group();
@@ -354,149 +350,42 @@ export function buildHardware({
     );
     add('heatpipe', pipe, [0, 0.56, 0], [0, 2.85 + i * 0.065, 0]);
   }
-  for (const side of [-1, 1]) {
+  /**
+   * Cooler, shroud, fans and backplate: one card, built from the shared model.
+   *
+   * The shape of this card is `graphics-card.ts`, which the assembled tower
+   * builds from as well. It used to be drawn twice, once here in full detail
+   * and once in `machine.ts` as a plain slab, and the two had drifted into
+   * different cards: different length, different shroud, and two fans against
+   * two. Now the proportions, the fan count and the shroud come from one
+   * table, and only the level of detail differs between the scales.
+   *
+   * `L` is the card's length in this scale's units. Everything else follows
+   * from it, and `cardStack` gives the height each layer sits at, so the fans
+   * are the same distance under the shroud face here as they are in the case.
+   */
+  const finish = finishes();
+  const L = 8.93;
+  const parts = buildCardCooler(tools, finish, L, { logoEdge: 1 });
+  const seat = cardStack(L);
+
+  // Three fin banks, one under each fan, individually selectable. The two
+  // banks that used to be here were positioned for a two-fan card and left
+  // the middle of a three-fan one empty.
+  for (const [index, f] of CARD.fans.entries()) {
     const positions: Vec3[] = [];
-    for (let i = 0; i < 76; i++)
-      positions.push([side * 2.33 + (i - 37.5) * 0.046, 0.98, 0]);
-    instances('heatsink', positions, [0.018, 0.76, 3.18], 0, '#56616a').forEach(
-      (p) => p.delta.set(side * 0.5, 3.3, 0),
+    for (let i = 0; i < 52; i++)
+      positions.push([f * L + (i - 25.5) * 0.05, seat.fins, 0]);
+    instances('heatsink', positions, [0.018, 0.76, 3.18], 0, '#59636b').forEach(
+      (p) => p.delta.set((index - 1) * 0.6, 3.3, 0),
     );
   }
-  // A real shell with circular apertures, rather than rectangular rails around flat fans.
-  const shroud = new T.Group();
-  place(
-    shroud,
-    new T.Mesh(
-      panelWithHoles(8.93, 3.78, 0.13, 0.18, 1.52),
-      material('#373c40', 0.86, 0.48),
-    ),
-    [0, 0, 0],
-  );
-  for (const z of [-1.88, 1.88]) {
-    place(shroud, box([8.67, 0.31, 0.075], '#303539', 0.85), [0, -0.06, z]);
-    place(shroud, box([8.67, 0.2, 0.075], '#303539', 0.85), [0, -0.95, z]);
-    for (const x of [-4.26, -0.53, 0.53, 4.26])
-      place(shroud, box([0.11, 0.76, 0.075], '#32383b', 0.85), [x, -0.51, z]);
-    place(shroud, box([8.55, 0.045, 0.036], '#a3afb5', 0.92, 0.009), [
-      0,
-      0.135,
-      z,
-    ]);
-    place(shroud, box([8.4, 0.05, 0.036], '#778891', 0.86, 0.009), [
-      0,
-      -1.04,
-      z,
-    ]);
-  }
-  for (const x of [-4.4, 4.4])
-    place(shroud, box([0.09, 0.68, 3.42], '#3c4851', 0.85), [x, -0.24, 0]);
-  const center = place(
-    shroud,
-    box([1.0, 0.09, 3.61], '#323f49', 0.85),
-    [0, 0.115, 0],
-  );
-  center.rotation.y = 0.11;
-  label(shroud, 'GEFORCE', [0, 0.177, -0.25], 0.91, '#d6dde1');
-  label(shroud, 'RTX 5090', [0, 0.178, 0.04], 0.92, '#aebdc8');
-  const sideLabel = new T.Group();
-  label(sideLabel, 'GEFORCE RTX', [0, 0, 0], 2.8, '#dce0e0');
-  sideLabel.rotation.x = Math.PI / 2;
-  place(shroud, sideLabel, [-0.1, -0.24, 1.923]);
-  add('shroud', shroud, [0, 1.39, 0], [0, 4.7, 0]);
-  // Swept, twisted blade surfaces, including thickness and closed rims.
-  const verts: number[] = [],
-    indices: number[] = [];
-  const rows = 13,
-    cols = 6;
-  for (let side = 0; side < 2; side++)
-    for (let r = 0; r < rows; r++)
-      for (let c = 0; c < cols; c++) {
-        const t = r / (rows - 1),
-          u = c / (cols - 1) - 0.5;
-        const radius = 0.32 + t * 1.13;
-        const angle = 0.35 * Math.pow(t, 1.3) + u * (0.52 - 0.11 * t);
-        const height =
-          0.12 * Math.sin(t * Math.PI * 0.85) + u * 0.24 * (0.25 + t);
-        verts.push(
-          Math.cos(angle) * radius,
-          height + side * 0.027,
-          Math.sin(angle) * radius,
-        );
-      }
-  for (let side = 0; side < 2; side++)
-    for (let r = 0; r < rows - 1; r++)
-      for (let c = 0; c < cols - 1; c++) {
-        const a = side * rows * cols + r * cols + c,
-          b = a + 1,
-          d = a + cols,
-          e = d + 1;
-        indices.push(...(side ? [a, d, b, b, d, e] : [a, b, d, b, e, d]));
-      }
-  const layer = rows * cols;
-  for (let r = 0; r < rows - 1; r++)
-    for (const c of [0, cols - 1]) {
-      const a = r * cols + c,
-        b = (r + 1) * cols + c;
-      indices.push(a, a + layer, b, b, a + layer, b + layer);
-    }
-  for (let c = 0; c < cols - 1; c++)
-    for (const r of [0, rows - 1]) {
-      const a = r * cols + c,
-        b = a + 1;
-      indices.push(a, b, a + layer, b, b + layer, a + layer);
-    }
-  const bladeGeometry = new T.BufferGeometry();
-  bladeGeometry.setAttribute(
-    'position',
-    new T.Float32BufferAttribute(verts, 3),
-  );
-  bladeGeometry.setIndex(indices);
-  bladeGeometry.computeVertexNormals();
-  for (const x of [-2.32, 2.32]) {
-    const fan = new T.Group();
-    for (const [r, y] of [
-      [1.51, 0],
-      [1.49, 0.08],
-    ] as const) {
-      const ring = new T.Mesh(
-        new T.TorusGeometry(r, 0.026, 10, 96),
-        material('#6a767e', 0.9, 0.3),
-      );
-      ring.rotation.x = Math.PI / 2;
-      place(fan, ring, [0, y, 0]);
-    }
-    const blades = new T.InstancedMesh(
-      bladeGeometry,
-      material('#1c2023', 0.06, 0.6),
-      11,
-    );
-    for (let i = 0; i < 11; i++) {
-      helper.position.set(0, 0, 0);
-      helper.scale.set(1, 1, 1);
-      helper.rotation.set(0, (i * Math.PI * 2) / 11, 0);
-      helper.updateMatrix();
-      blades.setMatrixAt(i, helper.matrix);
-    }
-    fan.add(blades);
-    place(
-      fan,
-      new T.Mesh(
-        new T.CylinderGeometry(0.32, 0.4, 0.25, 64),
-        material('#242729', 0.08, 0.56),
-      ),
-      [0, 0.045, 0],
-    );
-    place(
-      fan,
-      new T.Mesh(
-        new T.CylinderGeometry(0.24, 0.24, 0.014, 64),
-        material('#50575a', 0.86, 0.4),
-      ),
-      [0, 0.18, 0],
-    );
-    label(fan, 'GA', [0, 0.191, 0], 0.23, '#b2b8b8');
-    add('fan', fan, [x, 1.5, 0], [x * 0.16, 5.1, 0]);
-  }
+
+  add('shroud', parts.shroud, [0, seat.shroud, 0], [0, 4.7, 0]);
+  add('backplate', parts.backplate, [0, seat.backplate, 0], [0, -2.35, 0]);
+  for (const fan of parts.fans)
+    add('fan', fan.object, [fan.x, seat.fan, 0], [fan.x * 0.16, 5.1, 0]);
+
   const screwGeometry = merge([
     colored(new T.CylinderGeometry(0.059, 0.059, 0.037, 16), '#9eaaad'),
     colored(

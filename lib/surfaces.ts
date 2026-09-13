@@ -33,7 +33,7 @@ export function boardTexture() {
   canvas.width = 2048;
   canvas.height = 1024;
   const ctx = canvas.getContext('2d')!;
-  ctx.fillStyle = '#142722';
+  ctx.fillStyle = '#15181b';
   ctx.fillRect(0, 0, 2048, 1024);
   // Routed bundles use 45-degree bends; they illustrate routing, not a netlist.
   for (let side = 0; side < 2; side++) {
@@ -45,7 +45,7 @@ export function boardTexture() {
     for (let n = 0; n < 112; n++) {
       const x = 50 + (n % 28) * 17;
       const y = 50 + Math.floor(n / 28) * 246 + (n % 7) * 8;
-      ctx.strokeStyle = n % 5 ? '#244237' : '#315243';
+      ctx.strokeStyle = n % 5 ? '#20252a' : '#2c333a';
       ctx.lineWidth = n % 9 ? 1.5 : 3;
       ctx.beginPath();
       ctx.moveTo(x, y);
@@ -53,7 +53,7 @@ export function boardTexture() {
       ctx.lineTo(x + 120, y + 50);
       ctx.lineTo(x + 360 + (n % 90), y + 50);
       ctx.stroke();
-      ctx.strokeStyle = '#65715a';
+      ctx.strokeStyle = '#6b6d63';
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.arc(x, y, 3, 0, Math.PI * 2);
@@ -61,10 +61,10 @@ export function boardTexture() {
     }
     ctx.restore();
   }
-  ctx.strokeStyle = '#758377';
+  ctx.strokeStyle = '#767c81';
   ctx.lineWidth = 2;
   ctx.font = '15px monospace';
-  ctx.fillStyle = '#99a498';
+  ctx.fillStyle = '#9aa1a7';
   for (let i = 0; i < 48; i++) {
     const x = 40 + (i % 12) * 170,
       y = 82 + Math.floor(i / 12) * 250;

@@ -2,11 +2,11 @@
 
 PC Anatomy is an open-source 3D explorer that takes a desktop computer apart from the assembled ATX tower down to a single GPU streaming multiprocessor.
 
-![An assembled ATX tower in PC Anatomy: a dual-glass aluminium case with the motherboard, graphics card, cooler and power supply visible through the window](docs/screenshots/workbench-assembled.png)
-
-[Explore Live Demo](https://pc-anatomy.com/)
+## 🔎 [**Explore the live demo →**](https://pc-anatomy.com/)
 
 Every polygon is generated in TypeScript with three.js. There are no imported models, image textures, or other runtime asset files. The roughly 300 selectable components each carry a name, a description, an explanation of their purpose, specifications, and citations instead of stopping at a label.
+
+![An assembled ATX tower in PC Anatomy: a dual-glass aluminium case with the motherboard, graphics card, cooler and power supply visible through the window](docs/screenshots/pc-assembled.png)
 
 ## Scale tree
 
@@ -30,11 +30,11 @@ Desktop PC
 
 The slider moves each scale from its assembled state to a laid-out inventory. Search can jump directly to a component at any depth, while breadcrumbs and the scale navigator move back through the machine.
 
-![The same machine at the far end of the slider, with every part lifted out and laid flat as a component inventory](docs/screenshots/workbench-inventory.png)
+![The same machine at the far end of the slider, with every part lifted out and laid flat as a component inventory](docs/screenshots/pc-disassembled.png)
 
-The layout is responsive, and the same scales, search and timeline work on a phone.
+Descending into a part rebuilds it at its own scale with its own timeline, so the graphics card that was installed in the tower comes apart into its shroud, fans, fin banks, heat pipes, vapor chamber, board and backplate.
 
-<img src="docs/screenshots/workbench-mobile.png" alt="PC Anatomy on a phone, showing the assembled tower above the disassembly timeline" width="300">
+![The RTX 5090 part way through its own disassembly, with the shroud and fans lifted clear of the fin banks, heat pipes and circuit board below](docs/screenshots/gpu-exploded.png)
 
 ## Quick start
 
