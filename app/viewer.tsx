@@ -61,11 +61,12 @@ export default function Viewer({ state, onSelect, onCount, onDived }: Props) {
       <div
         ref={host}
         className="viewport"
-        aria-label="Interactive 3D graphics card"
+        aria-label="Interactive 3D computer model"
       />
-      {!ready && !error && (
-        <output className="viewer-status">Preparing the specimen…</output>
-      )}
+      {/* The stage carries its own "Loading components for you…" until the
+          first frame reports in, so there is one message on screen rather than
+          this one stacked under it. `ready` still gates the error branch. */}
+      {!ready && !error && <output className="viewer-status sr-only">Loading…</output>}
       {error && (
         <div className="viewer-status error" role="alert">
           {error}
