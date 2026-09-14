@@ -8,6 +8,8 @@ Every polygon is generated in TypeScript with three.js. There are no imported mo
 
 ![An assembled ATX tower in PC Anatomy: a dual-glass aluminium case with the motherboard, graphics card, cooler and power supply visible through the window](docs/screenshots/pc-assembled.png)
 
+Press **Auto** at the left end of the bottom bar to watch the machine take itself apart, or drag the timeline to move through the sequence by hand.
+
 ## Scale tree
 
 ```text
@@ -34,7 +36,19 @@ The slider moves each scale from its assembled state to a laid-out inventory. Se
 
 Descending into a part rebuilds it at its own scale with its own timeline, so the graphics card that was installed in the tower comes apart into its shroud, fans, fin banks, heat pipes, vapor chamber, board and backplate.
 
-![The RTX 5090 part way through its own disassembly, with the shroud and fans lifted clear of the fin banks, heat pipes and circuit board below](docs/screenshots/gpu-exploded.png)
+![The GeForce RTX 5090 at its own scale, assembled: a triple-fan card with its shroud, backplate and PCIe bracket in place](docs/screenshots/gpu-assembled.png)
+
+![The RTX 5090 part way through its own disassembly, with the shroud and fans lifted clear of the fin banks, vapor chamber and circuit board below](docs/screenshots/gpu-exploded.png)
+
+## The interface
+
+The rail on the left carries the scale tree and per-system visibility. The bar along the bottom is the disassembly timeline, with the **Auto** key at its left-hand end, the named phases above the slider, and a reset on the right. Selecting any component opens a panel with its purpose, specifications and sources.
+
+| Workbench | On a phone |
+| --- | --- |
+| ![The full desktop workbench: scale rail, 3D stage and disassembly timeline](docs/screenshots/workbench-assembled.png) | ![The same explorer on a phone, with the rail collapsed behind a button and the timeline stacked below the stage](docs/screenshots/workbench-mobile.png) |
+
+![Every part of the machine laid out flat as a component inventory, seen on the desktop workbench](docs/screenshots/workbench-inventory.png)
 
 ## Quick start
 

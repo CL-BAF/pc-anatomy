@@ -752,37 +752,131 @@ a {
   outline-offset: 3px;
 }
 
-/* Auto-disassembly. */
+/* Auto-disassembly. This is the one control a first-time visitor should reach
+   for, so it is the biggest, brightest thing on the bar: filled with the
+   accent, lit from above like a physical key, and quietly pulsing until the
+   machine has been taken apart at least once. */
 .disassembly .play {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  width: 60px;
-  height: 60px;
+  gap: 3px;
+  width: 72px;
+  height: 72px;
   flex: none;
-  border-radius: 9px;
-  border: 1px solid #4a4c52;
-  background: #202124;
-  color: var(--accent-bright);
+  border-radius: 13px;
+  border: 1px solid #9ccdd7;
+  background: linear-gradient(
+    168deg,
+    #9fd2dc 0%,
+    var(--accent) 34%,
+    #62a9b7 68%,
+    #3f8794 100%
+  );
+  color: #062026;
   cursor: pointer;
+  box-shadow:
+    0 0 0 1px #0b0c0d,
+    0 6px 18px #000000a6,
+    0 0 18px #79bfcc2e,
+    inset 0 1px 0 #ffffff9e,
+    inset 0 -3px 7px #00313c47;
   transition:
-    background 0.15s,
-    border-color 0.15s;
+    transform 0.14s,
+    box-shadow 0.16s,
+    filter 0.16s;
+}
+/* A single band of light across the face: the gloss that reads as "press me"
+   without spending another word of copy on it. */
+.disassembly .play::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    152deg,
+    #ffffff00 34%,
+    #ffffff45 49%,
+    #ffffff00 64%
+  );
+  pointer-events: none;
+}
+/* Solid glyph, not an outline: a filled triangle is the shape everyone has
+   already learned to press. */
+.disassembly .play svg {
+  width: 23px;
+  height: 23px;
+  fill: currentColor;
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 1px 0 #ffffff4d);
 }
 .disassembly .play span {
-  font: 8px monospace;
-  letter-spacing: 0.7px;
-  color: #9a9ea6;
+  font: 700 9px monospace;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: #06272e;
 }
 .disassembly .play:hover {
-  background: #2a2c30;
-  border-color: #6d7077;
+  filter: brightness(1.07);
+  transform: translateY(-1px);
+  box-shadow:
+    0 0 0 1px #0b0c0d,
+    0 9px 22px #000000b3,
+    0 0 26px #79bfcc54,
+    inset 0 1px 0 #ffffffc4,
+    inset 0 -3px 7px #00313c47;
 }
+.disassembly .play:active {
+  transform: translateY(1px);
+  filter: brightness(0.96);
+  box-shadow:
+    0 0 0 1px #0b0c0d,
+    0 3px 9px #000000a6,
+    inset 0 2px 6px #00313c73;
+}
+/* Until the specimen has been opened at all, a slow ring goes out from the
+   button so the eye lands there first. It stops the moment anything moves. */
+.disassembly .play.idle::before {
+  content: '';
+  position: absolute;
+  inset: -5px;
+  border-radius: 17px;
+  border: 1px solid var(--accent-muted);
+  opacity: 0;
+  pointer-events: none;
+  animation: play-beacon 2.9s ease-out infinite;
+}
+@keyframes play-beacon {
+  0% {
+    transform: scale(0.93);
+    opacity: 0.42;
+  }
+  70% {
+    transform: scale(1.13);
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+/* Running, the key is pressed in: dark face, lit rim, no gloss to chase. */
 .disassembly .play.running {
   border-color: var(--accent);
-  background: #17282c;
+  background: linear-gradient(#1b3238, #12252a);
+  color: var(--accent-bright);
+  box-shadow:
+    0 0 0 1px #0b0c0d,
+    0 0 18px #79bfcc3d,
+    inset 0 2px 8px #00000080;
+}
+.disassembly .play.running::after {
+  opacity: 0;
+}
+.disassembly .play.running svg {
+  filter: none;
 }
 .disassembly .play.running span {
   color: var(--accent-bright);
@@ -1247,6 +1341,14 @@ a {
   .layer-row {
     min-height: 39px;
   }
+  .disassembly .play {
+    width: 76px;
+    height: 76px;
+  }
+  .disassembly .play svg {
+    width: 25px;
+    height: 25px;
+  }
 }
 @media (max-height: 850px) and (min-width: 1001px) {
   .explorer {
@@ -1628,6 +1730,15 @@ a {
   .hover-label {
     display: none;
   }
+  .disassembly .play {
+    width: 66px;
+    height: 66px;
+    border-radius: 12px;
+  }
+  .disassembly .play svg {
+    width: 21px;
+    height: 21px;
+  }
 }
 @media (max-width: 359px) {
   .disassembly-label {
@@ -1683,6 +1794,15 @@ a {
   }
   .detail-panel[data-slot='sheet-content'] {
     height: calc(42dvh + var(--safe-b));
+  }
+  .disassembly .play {
+    width: 58px;
+    height: 58px;
+    border-radius: 11px;
+  }
+  .disassembly .play svg {
+    width: 19px;
+    height: 19px;
   }
 }
 @media (max-height: 500px) and (orientation: landscape) {
@@ -1817,6 +1937,20 @@ a {
   }
   .has-selection .stage-heading {
     right: calc(var(--inspect) + 15px);
+  }
+  .disassembly .play {
+    width: 54px;
+    height: 54px;
+    border-radius: 10px;
+    gap: 2px;
+  }
+  .disassembly .play svg {
+    width: 18px;
+    height: 18px;
+  }
+  .disassembly .play span {
+    font-size: 7px;
+    letter-spacing: 0.8px;
   }
 }
 /* Below about 760px there is no room for both the title block and the panel:

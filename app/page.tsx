@@ -704,7 +704,11 @@ export default function Home() {
       <section className="disassembly" aria-label="Explosion control">
         <div className="disassembly-intro">
           <button
-            className={'play' + (playing ? ' running' : '')}
+            className={
+              'play' +
+              (playing ? ' running' : '') +
+              (!playing && state.explode < 1 ? ' idle' : '')
+            }
             onClick={() => {
               if (playing) {
                 setPlaying(false);
@@ -731,7 +735,7 @@ export default function Home() {
                 : 'Take it apart automatically'
             }
           >
-            {playing ? <Pause size={17} /> : <Play size={17} />}
+            {playing ? <Pause size={23} /> : <Play size={23} />}
             <span>{playing ? 'Pause' : 'Auto'}</span>
           </button>
           <div className="disassembly-label">
