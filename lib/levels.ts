@@ -11,12 +11,14 @@ export type LevelId =
   | 'pc'
   | 'motherboard'
   | 'ryzen'
+  | 'ryzenio'
   | 'corei9'
+  | 'coreio'
   | 'psu'
   | 'fan'
   | 'cooler'
   | 'liquid'
-  | 'disk'
+  | 'ssd'
   | 'card'
   | 'die'
   | 'gpc'
@@ -73,19 +75,9 @@ export interface LevelDef {
   alternative?: boolean;
 }
 
-const physicalPhases = [
+const dissectionPhases = [
   ['Assembled', 0],
-  ['Cooling', 25],
-  ['Board', 50],
-  ['Package', 75],
-  ['Inventory', 100],
-] as const;
-
-const logicalPhases = [
-  ['Grouped', 0],
-  ['Resources', 25],
-  ['Partitions', 50],
-  ['Separated', 75],
+  ['Dissection', 50],
   ['Inventory', 100],
 ] as const;
 
@@ -100,13 +92,7 @@ export const levels: Record<LevelId, LevelDef> = {
     kind: 'physical',
     concept: 'pc',
     spread: 2.4,
-    phases: [
-      ['Assembled', 0],
-      ['Panels', 25],
-      ['Subsystems', 50],
-      ['Modules', 75],
-      ['Inventory', 100],
-    ],
+    phases: dissectionPhases,
     detailed: true,
   },
   motherboard: {
@@ -120,13 +106,7 @@ export const levels: Record<LevelId, LevelDef> = {
     branchLabel: 'Motherboard',
     concept: 'motherboard',
     spread: 1.7,
-    phases: [
-      ['Assembled', 0],
-      ['Cooling', 25],
-      ['Modules', 50],
-      ['Sockets', 75],
-      ['Inventory', 100],
-    ],
+    phases: dissectionPhases,
     detailed: true,
   },
   ryzen: {
@@ -138,7 +118,19 @@ export const levels: Record<LevelId, LevelDef> = {
     summary: 'Two core complex dies and an I/O die',
     kind: 'logical',
     concept: 'ryzenpackage',
-    phases: logicalPhases,
+    phases: dissectionPhases,
+    detailed: true,
+  },
+  ryzenio: {
+    id: 'ryzenio',
+    parent: 'ryzen',
+    name: 'Ryzen I/O die',
+    title: 'Inside the Ryzen I/O die.',
+    caption: 'ZEN 5 I/O DIE · TSMC 6 NM',
+    summary: 'Memory, PCIe, display and chiplet fabric',
+    kind: 'logical',
+    concept: 'zeniod',
+    phases: dissectionPhases,
     detailed: true,
   },
   corei9: {
@@ -153,7 +145,19 @@ export const levels: Record<LevelId, LevelDef> = {
     summary: 'Compute, SoC, graphics and I/O tiles on a base',
     kind: 'logical',
     concept: 'corepackage',
-    phases: logicalPhases,
+    phases: dissectionPhases,
+    detailed: true,
+  },
+  coreio: {
+    id: 'coreio',
+    parent: 'corei9',
+    name: 'Core Ultra I/O tile',
+    title: 'Inside the I/O extender tile.',
+    caption: 'ARROW LAKE I/O EXTENDER · TSMC N6',
+    summary: 'PCIe, Thunderbolt and die-to-die links',
+    kind: 'logical',
+    concept: 'arrowio',
+    phases: dissectionPhases,
     detailed: true,
   },
   psu: {
@@ -167,13 +171,7 @@ export const levels: Record<LevelId, LevelDef> = {
     branchLabel: 'Power supply',
     concept: 'psu',
     spread: 1.9,
-    phases: [
-      ['Assembled', 0],
-      ['Housing', 25],
-      ['Stages', 50],
-      ['Components', 75],
-      ['Inventory', 100],
-    ],
+    phases: dissectionPhases,
     detailed: true,
   },
   fan: {
@@ -187,13 +185,7 @@ export const levels: Record<LevelId, LevelDef> = {
     branchLabel: 'Cooling',
     concept: 'casefan',
     spread: 1.6,
-    phases: [
-      ['Assembled', 0],
-      ['Impeller', 25],
-      ['Motor', 50],
-      ['Parts', 75],
-      ['Inventory', 100],
-    ],
+    phases: dissectionPhases,
     detailed: true,
   },
   cooler: {
@@ -207,13 +199,7 @@ export const levels: Record<LevelId, LevelDef> = {
     branchLabel: 'Cooling',
     concept: 'cpucooler',
     spread: 1.7,
-    phases: [
-      ['Assembled', 0],
-      ['Fan', 25],
-      ['Fins', 50],
-      ['Mount', 75],
-      ['Inventory', 100],
-    ],
+    phases: dissectionPhases,
     detailed: true,
   },
   liquid: {
@@ -230,33 +216,21 @@ export const levels: Record<LevelId, LevelDef> = {
     branchLabel: 'Cooling',
     concept: 'aio',
     spread: 1.9,
-    phases: [
-      ['Assembled', 0],
-      ['Fans', 25],
-      ['Loop', 50],
-      ['Block', 75],
-      ['Inventory', 100],
-    ],
+    phases: dissectionPhases,
     detailed: true,
   },
-  disk: {
-    id: 'disk',
+  ssd: {
+    id: 'ssd',
     parent: 'pc',
-    name: 'Hard disk',
-    title: 'Inside the hard disk.',
-    caption: '3.5-INCH DRIVE',
-    summary: 'Platters, heads and the voice coil',
+    name: 'SATA SSD',
+    title: 'Inside the solid-state drive.',
+    caption: '2.5-INCH SATA SSD',
+    summary: 'NAND flash, controller and separate SATA connectors',
     kind: 'physical',
     branchLabel: 'Storage',
-    concept: 'hdd',
-    spread: 1.8,
-    phases: [
-      ['Assembled', 0],
-      ['Cover', 25],
-      ['Platters', 50],
-      ['Mechanism', 75],
-      ['Inventory', 100],
-    ],
+    concept: 'ssd',
+    spread: 1.7,
+    phases: dissectionPhases,
     detailed: true,
   },
   card: {
@@ -269,7 +243,7 @@ export const levels: Record<LevelId, LevelDef> = {
     kind: 'physical',
     branchLabel: 'GPU',
     concept: 'card',
-    phases: physicalPhases,
+    phases: dissectionPhases,
     detailed: true,
   },
   die: {
@@ -281,7 +255,7 @@ export const levels: Record<LevelId, LevelDef> = {
     summary: 'Inside the Blackwell chip',
     kind: 'logical',
     concept: 'silicon',
-    phases: logicalPhases,
+    phases: dissectionPhases,
     detailed: true,
   },
   gpc: {
@@ -293,7 +267,7 @@ export const levels: Record<LevelId, LevelDef> = {
     summary: 'One cluster of the compute array',
     kind: 'logical',
     concept: 'gpc',
-    phases: logicalPhases,
+    phases: dissectionPhases,
     detailed: true,
   },
   tpc: {
@@ -305,7 +279,7 @@ export const levels: Record<LevelId, LevelDef> = {
     summary: 'A pair of multiprocessors',
     kind: 'logical',
     concept: 'tpc',
-    phases: logicalPhases,
+    phases: dissectionPhases,
     detailed: true,
   },
   sm: {
@@ -317,7 +291,7 @@ export const levels: Record<LevelId, LevelDef> = {
     summary: 'Inside a streaming multiprocessor',
     kind: 'logical',
     concept: 'sm',
-    phases: logicalPhases,
+    phases: dissectionPhases,
     detailed: true,
   },
 };
@@ -352,7 +326,6 @@ export function isPhysical(id: LevelId) {
 export const levelNames = Object.fromEntries(
   levelIds.map((id) => [id, levels[id].name]),
 ) as Record<LevelId, string>;
-
 
 /** The scale directly under the machine that this one belongs to. */
 export function branchRoot(id: LevelId): LevelId | null {

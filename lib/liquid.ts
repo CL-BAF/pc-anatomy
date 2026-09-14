@@ -50,11 +50,11 @@ export function buildLiquid(tools: ModelTools, _root: T.Group) {
   const CHANNELS = 11;
   for (let i = 0; i < CHANNELS; i++) {
     const y = (i / (CHANNELS - 1) - 0.5) * (RAD_W - mm(10));
-    place(radiator, box([coreLen, mm(2.2), RAD_T * 0.86], '#9fa8ad', 0.9, 0.001), [
-      0,
-      y,
-      0,
-    ]);
+    place(
+      radiator,
+      box([coreLen, mm(2.2), RAD_T * 0.86], '#9fa8ad', 0.9, 0.001),
+      [0, y, 0],
+    );
   }
   // The folded fin matrix between the channels is what the air actually meets.
   const matrix = buildFinStack(
@@ -70,7 +70,13 @@ export function buildLiquid(tools: ModelTools, _root: T.Group) {
     0,
     -RAD_T / 2 - mm(0.7),
   ]);
-  label(radiator, '360 MM CORE', [0, RAD_W / 2 + mm(14), 0], mm(150), '#87919a');
+  label(
+    radiator,
+    '360 MM CORE',
+    [0, RAD_W / 2 + mm(14), 0],
+    mm(150),
+    '#87919a',
+  );
   add('aioradiator', radiator, [0, RAD_Y, 0], [0, 2.4, 0]);
 
   // Three fans clamped to the intake face.
@@ -90,7 +96,13 @@ export function buildLiquid(tools: ModelTools, _root: T.Group) {
   const wash = new T.PointLight(COOLANT, 5, 9, 2);
   wash.position.set(0, 0, mm(60));
   fans.add(wash);
-  label(fans, 'THREE 120 MM FANS', [0, -RAD_W / 2 - mm(16), 0], mm(150), '#6f8794');
+  label(
+    fans,
+    'THREE 120 MM FANS',
+    [0, -RAD_W / 2 - mm(16), 0],
+    mm(150),
+    '#6f8794',
+  );
   add('aiofans', fans, [0, RAD_Y, RAD_T / 2 + mm(14)], [0, 0.6, 3.2]);
 
   // Pump and block, one housing on top of the coldplate.
@@ -108,14 +120,16 @@ export function buildLiquid(tools: ModelTools, _root: T.Group) {
   const crownLight = new T.PointLight(COOLANT, 4, 6, 2);
   crownLight.position.set(0, mm(40), 0);
   pump.add(crownLight);
-  // Rotary outlets, angled the way they leave a real block.
+  // Two adjacent rotary outlets on one side of the block. A real AIO routes
+  // the pair together so the hoses do not have to wrap around both sides of
+  // the socket area.
   for (const side of [-1, 1]) {
     const outlet = new T.Mesh(
       new T.CylinderGeometry(mm(9), mm(9), mm(22), 18),
       material('#7e878d', 0.9, 0.3),
     );
     outlet.rotation.z = Math.PI / 2;
-    place(pump, outlet, [side * mm(46), mm(14), 0]);
+    place(pump, outlet, [mm(46), mm(14), side * mm(12)]);
   }
   label(pump, 'PUMP + BLOCK', [0, mm(-30), mm(44)], mm(96), '#7d878e');
   add('aiopump', pump, [0, BLOCK_Y, BLOCK_Z], [0, -1.1, 1.6]);
@@ -139,7 +153,13 @@ export function buildLiquid(tools: ModelTools, _root: T.Group) {
     impeller.add(vane);
   }
   label(impeller, 'IMPELLER', [0, mm(14), 0], mm(76), '#8c959b');
-  add('aioimpeller', impeller, [0, BLOCK_Y + mm(8), BLOCK_Z], [0, 1.5, 0], 0.16);
+  add(
+    'aioimpeller',
+    impeller,
+    [0, BLOCK_Y + mm(8), BLOCK_Z],
+    [0, 1.5, 0],
+    0.16,
+  );
 
   // Coldplate, microfins facing up into the chamber.
   const plate = new T.Group();
@@ -153,17 +173,24 @@ export function buildLiquid(tools: ModelTools, _root: T.Group) {
   );
   place(plate, micro, [0, mm(7), 0]);
   label(plate, 'MICROFIN COLDPLATE', [0, mm(-8), mm(48)], mm(96), '#9aa19f');
-  add('aiocoldplate', plate, [0, BLOCK_Y - mm(26), BLOCK_Z], [0, -2.2, 0], 0.08);
+  add(
+    'aiocoldplate',
+    plate,
+    [0, BLOCK_Y - mm(26), BLOCK_Z],
+    [0, -2.2, 0],
+    0.08,
+  );
 
-  // Tubing: two sleeved runs from the block up to the radiator tanks.
+  // Tubing: both runs leave the same side of the block and terminate together
+  // on the radiator's right-hand end tank, the usual AIO arrangement.
   const tubes = new T.Group();
   for (const side of [-1, 1]) {
     const path = new T.CatmullRomCurve3([
-      new T.Vector3(side * mm(56), BLOCK_Y + mm(14), BLOCK_Z),
-      new T.Vector3(side * mm(150), BLOCK_Y + mm(60), BLOCK_Z * 0.7),
-      new T.Vector3(side * mm(178), mm(40), mm(10)),
-      new T.Vector3(side * (coreLen / 2 + TANK / 2), RAD_Y - mm(34), 0),
-      new T.Vector3(side * (coreLen / 2 + TANK / 2), RAD_Y - mm(12), 0),
+      new T.Vector3(mm(56), BLOCK_Y + mm(14), BLOCK_Z + side * mm(12)),
+      new T.Vector3(mm(145), BLOCK_Y + mm(54), BLOCK_Z * 0.72 + side * mm(10)),
+      new T.Vector3(mm(178), mm(42), mm(10) + side * mm(8)),
+      new T.Vector3(coreLen / 2 + TANK / 2, RAD_Y - mm(34), side * mm(10)),
+      new T.Vector3(coreLen / 2 + TANK / 2, RAD_Y + side * mm(12), 0),
     ]);
     place(
       tubes,
@@ -181,11 +208,11 @@ export function buildLiquid(tools: ModelTools, _root: T.Group) {
   const coolant = new T.Group();
   for (const side of [-1, 1]) {
     const path = new T.CatmullRomCurve3([
-      new T.Vector3(side * mm(56), BLOCK_Y + mm(14), BLOCK_Z),
-      new T.Vector3(side * mm(150), BLOCK_Y + mm(60), BLOCK_Z * 0.7),
-      new T.Vector3(side * mm(178), mm(40), mm(10)),
-      new T.Vector3(side * (coreLen / 2 + TANK / 2), RAD_Y - mm(34), 0),
-      new T.Vector3(side * (coreLen / 2 + TANK / 2), RAD_Y - mm(12), 0),
+      new T.Vector3(mm(56), BLOCK_Y + mm(14), BLOCK_Z + side * mm(12)),
+      new T.Vector3(mm(145), BLOCK_Y + mm(54), BLOCK_Z * 0.72 + side * mm(10)),
+      new T.Vector3(mm(178), mm(42), mm(10) + side * mm(8)),
+      new T.Vector3(coreLen / 2 + TANK / 2, RAD_Y - mm(34), side * mm(10)),
+      new T.Vector3(coreLen / 2 + TANK / 2, RAD_Y + side * mm(12), 0),
     ]);
     place(
       coolant,
@@ -207,16 +234,13 @@ export function buildLiquid(tools: ModelTools, _root: T.Group) {
       material('#8b9399', 0.92, 0.28),
     );
     low.rotation.z = Math.PI / 2.4;
-    place(fittings, low, [side * mm(60), BLOCK_Y + mm(18), BLOCK_Z]);
+    place(fittings, low, [mm(60), BLOCK_Y + mm(18), BLOCK_Z + side * mm(12)]);
     const high = new T.Mesh(
       new T.CylinderGeometry(mm(12), mm(12), mm(16), 20),
       material('#8b9399', 0.92, 0.28),
     );
-    place(fittings, high, [
-      side * (coreLen / 2 + TANK / 2),
-      RAD_Y - mm(20),
-      0,
-    ]);
+    high.rotation.z = Math.PI / 2;
+    place(fittings, high, [coreLen / 2 + TANK / 2, RAD_Y + side * mm(12), 0]);
   }
   label(fittings, 'ROTARY FITTINGS', [0, mm(64), mm(40)], mm(110), '#868f95');
   add('aiofittings', fittings, [0, 0, 0], [1.2, 0.9, 0], 0.12);

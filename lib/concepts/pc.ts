@@ -122,17 +122,18 @@ export const pcConcepts: Concept[] = [
   }),
   concept({
     id: 'drivecage',
-    name: 'Drive cage',
+    name: '2.5-inch drive tray',
     category: 'Chassis',
     parent: 'chassis',
     level: 'pc',
-    description: 'The bracket that holds 3.5-inch and 2.5-inch drives.',
-    purpose: 'Fixes drives against vibration and aligns their connectors.',
-    quantity: '1 modeled cage',
-    specifications: { Bays: '2 modeled bays' },
+    description: 'The compact metal tray that supports the SATA SSD.',
+    purpose:
+      'Fixes the drive in place and leaves its two keyed connectors accessible.',
+    quantity: '1 modeled tray',
+    specifications: { Format: '2.5-inch' },
     representationType: 'physical',
     sources: ['atx'],
-    searchTerms: ['bay', 'bracket', 'cage', 'hdd'],
+    searchTerms: ['bay', 'bracket', 'tray', 'ssd'],
   }),
   concept({
     id: 'boardstandoff',
@@ -307,7 +308,15 @@ export const pcConcepts: Concept[] = [
     },
     representationType: 'physical',
     sources: ['aio'],
-    searchTerms: ['liquid', 'aio', 'water', 'radiator', 'pump', 'loop', 'cooling'],
+    searchTerms: [
+      'liquid',
+      'aio',
+      'water',
+      'radiator',
+      'pump',
+      'loop',
+      'cooling',
+    ],
   }),
   concept({
     id: 'casefan',
@@ -318,11 +327,11 @@ export const pcConcepts: Concept[] = [
     level: 'pc',
     open: 'fan',
     description:
-      'Intake fans behind the front panel and an exhaust fan in the roof set the direction air travels.',
+      'Three intake fans behind the front panel and a rear exhaust fan form one front-to-back airflow path.',
     purpose:
       'Keeps a steady current of cool air moving past every component instead of letting heat pool.',
     quantity: '4 modeled fans',
-    specifications: { Layout: '3 front intake · 1 roof exhaust' },
+    specifications: { Layout: '3 front intake · 1 rear exhaust' },
     representationType: 'physical',
     sources: ['bldc'],
     searchTerms: ['fan', 'airflow', 'intake', 'exhaust', 'cooling'],
@@ -334,6 +343,7 @@ export const pcConcepts: Concept[] = [
     category: 'Storage',
     parent: 'drivecage',
     level: 'pc',
+    open: 'ssd',
     description:
       'Flash storage in a drive-shaped enclosure on the older SATA interface.',
     purpose:
@@ -344,24 +354,5 @@ export const pcConcepts: Concept[] = [
     physicalAccuracy: standard,
     sources: ['sata'],
     searchTerms: ['ssd', 'sata', 'flash', 'drive', 'storage'],
-  }),
-  concept({
-    id: 'hdd',
-    name: '3.5-inch hard disk',
-    shortName: 'Hard disk',
-    category: 'Storage',
-    parent: 'drivecage',
-    level: 'pc',
-    open: 'disk',
-    description:
-      'Magnetic platters spinning under a moving read/write head, in a sealed housing.',
-    purpose:
-      'Stores large amounts of data cheaply, where the delay of physically moving a head is acceptable.',
-    quantity: '1 modeled drive',
-    specifications: { Interface: 'SATA 6 Gb/s', Format: '3.5-inch' },
-    representationType: 'physical',
-    physicalAccuracy: standard,
-    sources: ['sata'],
-    searchTerms: ['hdd', 'hard drive', 'disk', 'platter', 'magnetic'],
   }),
 ];

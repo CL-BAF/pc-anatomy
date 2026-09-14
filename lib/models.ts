@@ -7,8 +7,9 @@ import { buildPowerSupply } from './power-supply.ts';
 import { buildFanUnit } from './fan-unit.ts';
 import { buildCooler } from './cooler.ts';
 import { buildLiquid } from './liquid.ts';
-import { buildDisk } from './disk.ts';
+import { buildSsd } from './ssd.ts';
 import { buildCoreUltra, buildRyzen } from './processor.ts';
+import { buildCoreIo, buildRyzenIo } from './io-die.ts';
 import { packageTexture, surfaceTexture } from './surfaces.ts';
 import { pcbRoughness, pcbTexture, type BoardVariant } from './pcb.ts';
 import * as T from 'three';
@@ -89,12 +90,14 @@ const builders: Record<LevelId, (tools: ModelTools, root: T.Group) => void> = {
   pc: buildMachine,
   motherboard: buildMotherboard,
   ryzen: buildRyzen,
+  ryzenio: buildRyzenIo,
   corei9: buildCoreUltra,
+  coreio: buildCoreIo,
   psu: buildPowerSupply,
   fan: buildFanUnit,
   cooler: buildCooler,
   liquid: buildLiquid,
-  disk: buildDisk,
+  ssd: buildSsd,
   card: (tools) => buildHardware(tools),
   die: (tools, root) => buildGpuArchitecture('die', tools, root),
   gpc: (tools, root) => buildGpuArchitecture('gpc', tools, root),

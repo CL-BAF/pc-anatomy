@@ -388,6 +388,17 @@ export function createViewer(
   }
   let lastTime = performance.now();
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let animated: T.Object3D[] = [];
+  const collectAnimations = () => {
+    animated = [];
+    model.root.traverse((object) => {
+      if (object.userData.spinRate || object.userData.seekAmplitude) {
+        object.userData.restRotationY ??= object.rotation.y;
+        animated.push(object);
+      }
+    });
+  };
+  collectAnimations();
   function render() {
     if (disposed) return;
     const now = performance.now(),
@@ -471,6 +482,23 @@ export function createViewer(
       }
     }
     refreshBatches(batches);
+    if (!reducedMotion && animated.length) {
+      const seconds = now / 1000;
+      for (const object of animated) {
+        const rest = object.userData.restRotationY as number;
+        if (object.userData.spinRate)
+          object.rotation.y =
+            rest + seconds * (object.userData.spinRate as number);
+        else
+          object.rotation.y =
+            rest +
+            Math.sin(seconds * 1.35) *
+              (object.userData.seekAmplitude as number);
+      }
+      // Operating parts keep the scene alive. requestAnimationFrame pauses in
+      // background tabs, and reduced-motion users receive the static model.
+      changed = true;
+    }
     selectedBox.visible = selected;
     hoverBox.visible = !!hovered && hovered.visible;
     if (hovered) boxFor(hovered, hoverBox.box);
@@ -615,6 +643,7 @@ export function createViewer(
       if (next.level !== state.level) {
         disposeModel();
         model = buildModel(next.level);
+        collectAnimations();
         // New pieces, so the cached packing belongs to objects that no longer
         // exist. Returning to a scale would otherwise leave every part of it
         // with an inventory position of zero, in a heap at the origin.

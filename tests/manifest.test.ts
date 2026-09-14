@@ -26,7 +26,11 @@ await test('all concepts have unique identities, reciprocal parents, sources and
     assert.ok(c.description && c.purpose && c.quantity);
     // A citation must resolve. An empty list is honest: some parts are just
     // sheet metal, and pointing at a vendor page for them would be a fiction.
-    assert.equal(new Set(c.sources).size, c.sources.length, 'duplicate source on ' + c.id);
+    assert.equal(
+      new Set(c.sources).size,
+      c.sources.length,
+      'duplicate source on ' + c.id,
+    );
     for (const s of c.sources)
       assert.ok(sources[s], c.id + ' cites a source that does not exist: ' + s);
     assert.ok(categories.includes(c.category));
@@ -97,6 +101,19 @@ await test('search restores hidden layers, selects groups and navigates to the c
     assert.equal(root.visible.length, categories.length);
   }
   assert.deepEqual(levelPath('sm'), ['pc', 'card', 'die', 'gpc', 'tpc', 'sm']);
+  assert.deepEqual(levelPath('ssd'), ['pc', 'ssd']);
+  assert.deepEqual(levelPath('ryzenio'), [
+    'pc',
+    'motherboard',
+    'ryzen',
+    'ryzenio',
+  ]);
+  assert.deepEqual(levelPath('coreio'), [
+    'pc',
+    'motherboard',
+    'corei9',
+    'coreio',
+  ]);
 });
 await test('deterministic inventories fit every normalized component without overlap at supported aspect ratios', () => {
   for (const n of [0, 1, 28, 154, 408, 589])
@@ -163,16 +180,26 @@ await test('descending is reversible: every scale names the concept it belongs t
   for (const id of levelIds) {
     const owner = byId[levels[id].concept];
     assert.ok(owner, 'scale ' + id + ' names a concept that does not exist');
-    assert.ok(
-      owner.open === id,
-      'the concept for ' + id + ' does not open it',
-    );
+    assert.ok(owner.open === id, 'the concept for ' + id + ' does not open it');
   }
   // The graphics branch still hangs off the machine, unchanged internally.
   assert.deepEqual(levelPath('card'), ['pc', 'card']);
   assert.equal(byId.card.parent, 'graphicscard');
   assert.equal(byId.graphicscard.open, 'card');
   assert.equal(byId.silicon.open, 'die');
+  assert.equal(byId.ssd.open, 'ssd');
+  assert.equal(byId.ssddata.specifications.Contacts, '7-pin');
+  assert.equal(byId.ssdpower.specifications.Contacts, '15-pin');
+  assert.equal(byId.hdd, undefined);
+});
+
+await test('every scale uses the same three-stage dissection language', () => {
+  for (const id of levelIds)
+    assert.deepEqual(levels[id].phases, [
+      ['Assembled', 0],
+      ['Dissection', 50],
+      ['Inventory', 100],
+    ]);
 });
 
 await test('branching does not strand the viewer: back always reaches the machine', () => {
@@ -193,7 +220,10 @@ await test('searching for a part on another branch moves the viewer to that bran
   assert.equal(found.level, 'motherboard');
   assert.equal(found.selection?.concept, 'ram');
   assert.ok(found.visible.includes('Memory'));
-  assert.ok(found.explode > 0, 'a part inside a closed assembly must be exposed');
+  assert.ok(
+    found.explode > 0,
+    'a part inside a closed assembly must be exposed',
+  );
   // Scales themselves navigate rather than select.
   for (const id of ['pc', 'card', 'die']) {
     const root = selectSearch(deep, id);
@@ -211,7 +241,11 @@ await test('the disassembled machine occupies real depth and never overlaps itse
   for (const aspect of [0.5, 1, 1.8, 2.6]) {
     const laid = spatialInventory(items, aspect);
     assert.equal(laid.length, items.length);
-    assert.deepEqual(laid, spatialInventory(items, aspect), 'must be deterministic');
+    assert.deepEqual(
+      laid,
+      spatialInventory(items, aspect),
+      'must be deterministic',
+    );
     assert.ok(laid.every((c) => c.position.every(Number.isFinite)));
     // It has to be a volume, not a tray: more than one shelf height.
     assert.ok(
@@ -250,7 +284,10 @@ await test('the inventory does not lose its smallest parts in empty space', () =
   // several times their own width, so the shelf was almost entirely air and a
   // part was a speck you had to hit exactly.
   const items = [
-    ...Array.from({ length: 6 }, () => ({ extent: [7, 2, 5] as Vec3, size: 7 })),
+    ...Array.from({ length: 6 }, () => ({
+      extent: [7, 2, 5] as Vec3,
+      size: 7,
+    })),
     ...Array.from({ length: 30 }, () => ({
       extent: [1.4, 0.5, 1.1] as Vec3,
       size: 1.4,
@@ -285,7 +322,9 @@ await test('the inventory does not lose its smallest parts in empty space', () =
       return drawn / neighbour;
     });
     const smallest = covered.slice(-180);
-    const median = smallest.sort((a, b) => a - b)[Math.floor(smallest.length / 2)];
+    const median = smallest.sort((a, b) => a - b)[
+      Math.floor(smallest.length / 2)
+    ];
     assert.ok(
       median > 0.45,
       `small parts span only ${(median * 100).toFixed(0)}% of the distance to their nearest neighbour at aspect ${aspect}: they are lost in the gaps`,

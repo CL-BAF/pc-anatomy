@@ -66,7 +66,9 @@ export default function Viewer({ state, onSelect, onCount, onDived }: Props) {
       {/* The stage carries its own "Loading components for you…" until the
           first frame reports in, so there is one message on screen rather than
           this one stacked under it. `ready` still gates the error branch. */}
-      {!ready && !error && <output className="viewer-status sr-only">Loading…</output>}
+      {!ready && !error && (
+        <output className="viewer-status sr-only">Loading…</output>
+      )}
       {error && (
         <div className="viewer-status error" role="alert">
           {error}
@@ -83,7 +85,11 @@ export default function Viewer({ state, onSelect, onCount, onDived }: Props) {
           }}
         >
           {hover.name}
-          <span>{hover.opens ? 'Click to open' : 'Click to inspect'}</span>
+          <span>
+            {hover.opens
+              ? 'Click to inspect · open from the panel'
+              : 'Click to inspect'}
+          </span>
         </div>
       )}
     </>

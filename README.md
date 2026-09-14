@@ -16,13 +16,15 @@ Press **Auto** at the left end of the bottom bar to watch the machine take itsel
 Desktop PC
 ├── Motherboard
 │   ├── Ryzen 9 9950X
+│   │   └── Ryzen I/O die
 │   └── Core Ultra 9 285K
+│       └── Core Ultra I/O tile
 ├── Power supply
 ├── Cooling
 │   ├── Case fan
 │   ├── CPU cooler
 │   └── Liquid cooling
-├── Hard disk
+├── SATA SSD
 └── RTX 5090
     └── GB202 processor
         └── Graphics processing cluster (GPC)
@@ -44,8 +46,8 @@ Descending into a part rebuilds it at its own scale with its own timeline, so th
 
 The rail on the left carries the scale tree and per-system visibility. The bar along the bottom is the disassembly timeline, with the **Auto** key at its left-hand end, the named phases above the slider, and a reset on the right. Selecting any component opens a panel with its purpose, specifications and sources.
 
-| Workbench | On a phone |
-| --- | --- |
+| Workbench                                                                                                              | On a phone                                                                                                                                               |
+| ---------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | ![The full desktop workbench: scale rail, 3D stage and disassembly timeline](docs/screenshots/workbench-assembled.png) | ![The same explorer on a phone, with the rail collapsed behind a button and the timeline stacked below the stage](docs/screenshots/workbench-mobile.png) |
 
 ![Every part of the machine laid out flat as a component inventory, seen on the desktop workbench](docs/screenshots/workbench-inventory.png)
@@ -72,20 +74,20 @@ The project is entirely static. The production output is written to `dist/` and 
 
 ## Project layout
 
-| Path | Purpose |
-| --- | --- |
-| `index.html`, `app/main.tsx` | Vite entry point and React mount |
-| `app/page.tsx` | Explorer interface, navigation, search, timeline, and detail panel |
-| `app/viewer.tsx` | Canvas host and lazy scene loading |
-| `app/workbench.css` | Desktop, responsive, and touch layout |
-| `lib/scene.ts` | Renderer, camera, picking, dive animation, and explode interpolation |
-| `lib/levels.ts` | Scale tree and per-scale presentation metadata |
-| `lib/models.ts` | Builder registry and shared geometry tools |
-| `lib/concepts/*.ts` | Written component catalogue, organized by subsystem |
-| `lib/manifest.ts` | Catalogue composition, search, and explorer state helpers |
-| `lib/*.ts` builder modules | Code-generated geometry for each physical or logical scale |
-| `tests/*.test.ts` | Data integrity, layout, picking, and geometry-presence tests |
-| `SOURCES.md` | Research and dimensional references |
+| Path                         | Purpose                                                              |
+| ---------------------------- | -------------------------------------------------------------------- |
+| `index.html`, `app/main.tsx` | Vite entry point and React mount                                     |
+| `app/page.tsx`               | Explorer interface, navigation, search, timeline, and detail panel   |
+| `app/viewer.tsx`             | Canvas host and lazy scene loading                                   |
+| `app/workbench.css`          | Desktop, responsive, and touch layout                                |
+| `lib/scene.ts`               | Renderer, camera, picking, dive animation, and explode interpolation |
+| `lib/levels.ts`              | Scale tree and per-scale presentation metadata                       |
+| `lib/models.ts`              | Builder registry and shared geometry tools                           |
+| `lib/concepts/*.ts`          | Written component catalogue, organized by subsystem                  |
+| `lib/manifest.ts`            | Catalogue composition, search, and explorer state helpers            |
+| `lib/*.ts` builder modules   | Code-generated geometry for each physical or logical scale           |
+| `tests/*.test.ts`            | Data integrity, layout, picking, and geometry-presence tests         |
+| `SOURCES.md`                 | Research and dimensional references                                  |
 
 ## Adding a component
 

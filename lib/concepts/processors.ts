@@ -124,6 +124,7 @@ export const processorConcepts: Concept[] = [
     category: 'Board',
     parent: 'ryzenpackage',
     level: 'ryzen',
+    open: 'ryzenio',
     description:
       'A separate, larger die on an older process holding the memory controllers, the PCIe lanes, the display output and the fabric that joins everything.',
     purpose:
@@ -137,6 +138,91 @@ export const processorConcepts: Concept[] = [
     representationType: 'logical',
     sources: ['ryzen', 'ddr5'],
     searchTerms: ['iod', 'io die', 'memory controller', 'pcie', 'uncore'],
+  }),
+  concept({
+    id: 'zeniomemory',
+    name: 'DDR5 memory controllers',
+    shortName: 'DDR5 controllers',
+    category: 'Memory',
+    parent: 'zeniod',
+    level: 'ryzenio',
+    description:
+      'Two controller blocks at the edge of the I/O die connect the processor package to dual-channel DDR5 memory.',
+    purpose:
+      'Schedule reads and writes, train the electrical link and translate fabric requests into DDR5 commands.',
+    quantity: '2 modeled controller blocks',
+    specifications: { Memory: 'Dual-channel DDR5', Capacity: 'Up to 256 GB' },
+    representationType: 'logical',
+    sources: ['ryzen', 'ddr5'],
+    searchTerms: ['memory controller', 'ddr5', 'dram', 'channel'],
+  }),
+  concept({
+    id: 'zeniopcie',
+    name: 'PCI Express root complex',
+    shortName: 'PCIe root',
+    category: 'Board',
+    parent: 'zeniod',
+    level: 'ryzenio',
+    description:
+      'The high-speed serial interfaces that make the processor the root of the platform PCI Express hierarchy.',
+    purpose:
+      'Connects graphics, NVMe storage and the platform chipset directly to the processor package.',
+    quantity: '2 modeled interface regions',
+    specifications: { Generation: 'PCI Express 5.0', Role: 'Root complex' },
+    representationType: 'logical',
+    sources: ['ryzen', 'pcie'],
+    searchTerms: ['pcie', 'root complex', 'nvme', 'graphics lanes'],
+  }),
+  concept({
+    id: 'zeniofabric',
+    name: 'I/O-die fabric',
+    shortName: 'I/O fabric',
+    category: 'Board',
+    parent: 'zeniod',
+    level: 'ryzenio',
+    description:
+      'The central routing fabric inside the I/O die joins memory, PCIe and the package links to both core dies.',
+    purpose:
+      'Moves requests between interfaces and gives every core complex a path to memory and external devices.',
+    quantity: '1 modeled fabric',
+    specifications: { Topology: 'Illustrative central crossbar' },
+    representationType: 'logical',
+    sources: ['ryzen', 'zen5'],
+    searchTerms: ['infinity fabric', 'crossbar', 'interconnect', 'data fabric'],
+  }),
+  concept({
+    id: 'zeniodisplay',
+    name: 'Display engine',
+    shortName: 'Display engine',
+    category: 'Graphics',
+    parent: 'zeniod',
+    level: 'ryzenio',
+    description:
+      'A small integrated graphics and display region able to drive a desktop without a discrete graphics card.',
+    purpose:
+      'Provides basic display output, media functions and a fallback path for diagnosis or office workloads.',
+    quantity: '1 modeled region',
+    specifications: { Role: 'Integrated display and media' },
+    representationType: 'logical',
+    sources: ['ryzen'],
+    searchTerms: ['display', 'igpu', 'integrated graphics', 'media'],
+  }),
+  concept({
+    id: 'zeniousb',
+    name: 'USB and platform I/O',
+    shortName: 'Platform I/O',
+    category: 'Board',
+    parent: 'zeniod',
+    level: 'ryzenio',
+    description:
+      'Lower-speed controller logic serving USB and the package-management functions around the high-speed links.',
+    purpose:
+      'Handles external peripherals and the housekeeping interfaces that do not belong in the core dies.',
+    quantity: '1 modeled region',
+    specifications: { Role: 'USB and platform services' },
+    representationType: 'logical',
+    sources: ['ryzen'],
+    searchTerms: ['usb', 'platform io', 'peripheral', 'controller'],
   }),
   concept({
     id: 'zenfabric',
@@ -313,6 +399,7 @@ export const processorConcepts: Concept[] = [
     category: 'Board',
     parent: 'corepackage',
     level: 'corei9',
+    open: 'coreio',
     description:
       'A small tile carrying the high speed external links that would not fit on the SoC tile, notably PCIe and Thunderbolt.',
     purpose:
@@ -322,6 +409,74 @@ export const processorConcepts: Concept[] = [
     representationType: 'logical',
     sources: ['arrowlake', 'pcie'],
     searchTerms: ['io tile', 'extender', 'pcie', 'thunderbolt'],
+  }),
+  concept({
+    id: 'arrowiopcie',
+    name: 'PCI Express interfaces',
+    shortName: 'PCIe interfaces',
+    category: 'Board',
+    parent: 'arrowio',
+    level: 'coreio',
+    description:
+      'High-speed physical interfaces on the extender tile connect external PCI Express links to the processor fabric.',
+    purpose:
+      'Moves graphics and storage traffic across short analogue front ends without consuming advanced compute-tile area.',
+    quantity: '2 modeled interface regions',
+    specifications: { Generation: 'PCI Express 5.0', Tile: 'I/O extender' },
+    representationType: 'logical',
+    sources: ['arrowlake', 'pcie'],
+    searchTerms: ['pcie', 'phy', 'root port', 'graphics', 'nvme'],
+  }),
+  concept({
+    id: 'arrowiothunderbolt',
+    name: 'Thunderbolt interfaces',
+    shortName: 'Thunderbolt',
+    category: 'Board',
+    parent: 'arrowio',
+    level: 'coreio',
+    description:
+      'External high-speed I/O circuitry grouped on the extender tile alongside the PCI Express physical interfaces.',
+    purpose:
+      'Provides a compact, shared high-bandwidth connection for displays, storage and docked peripherals.',
+    quantity: '2 modeled interface regions',
+    specifications: { Role: 'External high-speed I/O' },
+    representationType: 'logical',
+    sources: ['arrowlake'],
+    searchTerms: ['thunderbolt', 'usb4', 'dock', 'external io'],
+  }),
+  concept({
+    id: 'arrowiod2d',
+    name: 'Die-to-die interface',
+    shortName: 'Die-to-die link',
+    category: 'Board',
+    parent: 'arrowio',
+    level: 'coreio',
+    description:
+      'A dense internal interface at the tile edge carries traffic down through the Foveros base tile to the SoC fabric.',
+    purpose:
+      'Makes the separate I/O tile behave as part of one processor rather than as an external device.',
+    quantity: '1 modeled interface band',
+    specifications: { Path: 'I/O tile through Foveros base' },
+    representationType: 'logical',
+    sources: ['arrowlake'],
+    searchTerms: ['die to die', 'foveros', 'interconnect', 'base tile'],
+  }),
+  concept({
+    id: 'arrowioclock',
+    name: 'Clock and signal conditioning',
+    shortName: 'Clocking',
+    category: 'Board',
+    parent: 'arrowio',
+    level: 'coreio',
+    description:
+      'Shared analogue support logic conditions reference clocks and high-speed signals for the tile interfaces.',
+    purpose:
+      'Keeps serial links synchronized and electrically reliable as data crosses the package boundary.',
+    quantity: '1 modeled support region',
+    specifications: { Role: 'Illustrative PHY support logic' },
+    representationType: 'logical',
+    sources: ['arrowlake', 'pcie'],
+    searchTerms: ['clock', 'pll', 'signal conditioning', 'phy'],
   }),
   concept({
     id: 'arrowbase',

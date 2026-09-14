@@ -1,18 +1,13 @@
 import { coolerConcepts } from './concepts/cooler.ts';
 import { liquidConcepts } from './concepts/liquid.ts';
 import { processorConcepts } from './concepts/processors.ts';
-import { diskConcepts } from './concepts/disk.ts';
+import { ssdConcepts } from './concepts/ssd.ts';
 import { fanConcepts } from './concepts/fan.ts';
 import { gpuConcepts } from './concepts/gpu.ts';
 import { motherboardConcepts } from './concepts/motherboard.ts';
 import { pcConcepts } from './concepts/pc.ts';
 import { psuConcepts } from './concepts/psu.ts';
-import {
-  categories,
-  colors,
-  type Category,
-  type Concept,
-} from './concept.ts';
+import { categories, colors, type Category, type Concept } from './concept.ts';
 import {
   isPhysical,
   levelNames,
@@ -23,7 +18,15 @@ import {
 } from './levels.ts';
 import { sources } from './sources.ts';
 
-export { categories, colors, sources, levelNames, levelPath, levels, isPhysical };
+export {
+  categories,
+  colors,
+  sources,
+  levelNames,
+  levelPath,
+  levels,
+  isPhysical,
+};
 export type { Category, Concept, LevelId };
 /** Older name for a scale id, kept so existing call sites keep compiling. */
 export type Level = LevelId;
@@ -42,7 +45,7 @@ export const manifest: Concept[] = [
   ...coolerConcepts,
   ...liquidConcepts,
   ...processorConcepts,
-  ...diskConcepts,
+  ...ssdConcepts,
   ...gpuConcepts,
 ];
 
@@ -54,7 +57,9 @@ for (const c of manifest) {
   if (!c.parent) continue;
   const parent = byId[c.parent];
   if (!parent)
-    throw new Error(`Concept "${c.id}" names a parent that does not exist: ${c.parent}`);
+    throw new Error(
+      `Concept "${c.id}" names a parent that does not exist: ${c.parent}`,
+    );
   parent.children.push(c.id);
 }
 

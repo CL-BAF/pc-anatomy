@@ -499,92 +499,42 @@ export function buildMachine(tools: ModelTools, root: T.Group) {
     [0, 2.6, 0],
   );
 
-  // Drive cage.
-  //
-  // Sized from the drive it holds, and stood back from the intake fans. It
-  // used to be 2.7 units across with a 4.2-unit disk in it, so the drive hung
-  // out of both ends of its own cage and into the front fans.
+  // Compact 2.5-inch SSD tray, stood back from the intake fans with its keyed
+  // data and power edge facing the cable channel.
   const CAGE_X = 3.3,
-    CAGE_W = mm(154),
-    CAGE_D = mm(112);
+    CAGE_W = mm(112),
+    CAGE_D = mm(82);
   const cage = new T.Group();
-  for (const sy of [-1, 1])
-    place(cage, slab([CAGE_W, 0.07, CAGE_D], 'steel', '#262b2f'), [
-      0,
-      sy * 0.95,
-      0,
-    ]);
+  place(cage, slab([CAGE_W, 0.07, CAGE_D], 'steel', '#262b2f'), [0, -0.1, 0]);
   for (const sz of [-1, 1])
-    place(cage, slab([CAGE_W, 1.9, 0.07], 'steel', '#262b2f'), [
+    place(cage, slab([CAGE_W, 0.4, 0.07], 'steel', '#262b2f'), [
       0,
-      0,
+      0.1,
       (sz * CAGE_D) / 2,
     ]);
-  // The moulded rails a drive actually slides in on.
-  for (const sy of [-1, 1])
-    for (const sz of [-1, 1])
-      place(cage, slab([CAGE_W - 0.2, 0.1, 0.16], 'plastic'), [
-        0,
-        sy * 0.5,
-        (sz * (CAGE_D - 0.3)) / 2,
-      ]);
-  // The folded legs that bolt it to the floor of the case. A cage hovering
-  // twenty millimetres clear of the floor it is supposedly screwed to is
-  // exactly the kind of gap that makes a build look assembled by nobody.
+  for (const sx of [-1, 1])
+    place(cage, slab([0.08, 0.4, CAGE_D], 'steel', '#262b2f'), [
+      (sx * CAGE_W) / 2,
+      0.1,
+      0,
+    ]);
+  // Folded legs and mounting feet tie the tray to the case floor.
   for (const sx of [-1, 1])
     for (const sz of [-1, 1]) {
-      place(cage, slab([0.22, 0.95, 0.22], 'steel', '#262b2f'), [
+      place(cage, slab([0.16, 0.65, 0.16], 'steel', '#262b2f'), [
         (sx * (CAGE_W - 0.4)) / 2,
-        -1.42,
+        -0.42,
         (sz * (CAGE_D - 0.3)) / 2,
       ]);
-      place(cage, slab([0.5, 0.08, 0.44], 'steel', '#262b2f'), [
+      place(cage, slab([0.42, 0.08, 0.42], 'steel', '#262b2f'), [
         (sx * (CAGE_W - 0.4)) / 2,
-        -1.88,
+        -0.75,
         (sz * (CAGE_D - 0.3)) / 2,
       ]);
     }
-  add('drivecage', cage, [CAGE_X, FLOOR + 1.5, -0.3], [1.6, 0, 0]);
+  add('drivecage', cage, [CAGE_X, FLOOR + 0.8, -0.3], [1.6, 0, 0]);
 
   // ── Storage ─────────────────────────────────────────────────────────────
-  const hdd = new T.Group();
-  // A drive is a cast-aluminium body with a thin stamped lid and a bare board
-  // on the underside. The lid is the bright part; the casting around it is not.
-  place(
-    hdd,
-    slab([mm(147), mm(26), mm(102)], 'anodizedLight', '#7e868b', 0.01),
-    [0, 0, 0],
-  );
-  place(hdd, slab([mm(139), mm(3), mm(95)], 'brushed', '#b6bdc2', 0.006), [
-    0,
-    mm(12.5),
-    0,
-  ]);
-  place(hdd, slab([mm(120), mm(2), mm(80)], 'plasticGloss', '#dfe3e6'), [
-    0,
-    mm(14.4),
-    0,
-  ]);
-  place(hdd, slab([mm(140), mm(3), mm(96)], 'plastic', '#101315'), [
-    0,
-    -mm(12.5),
-    0,
-  ]);
-  place(hdd, slab([mm(40), mm(6), mm(30)], 'plasticGloss', '#16191b'), [
-    mm(48),
-    -mm(9),
-    mm(30),
-  ]);
-  for (const sx of [-1, 1])
-    for (const sz of [-1, 1])
-      place(hdd, buildScrew(material, mm(2.4)), [
-        sx * mm(62),
-        mm(13.5),
-        sz * mm(40),
-      ]);
-  label(hdd, '3.5" HDD', [0, mm(15.6), 0], 1.2, '#2f3538');
-  add('hdd', hdd, [CAGE_X, FLOOR + 0.95, -0.3], [1.9, -0.4, 0]);
-
   const ssd = new T.Group();
   place(
     ssd,
@@ -596,8 +546,26 @@ export function buildMachine(tools: ModelTools, root: T.Group) {
     mm(3.8),
     0,
   ]);
+  for (const sx of [-1, 1])
+    for (const sz of [-1, 1])
+      place(ssd, buildScrew(material, mm(1.4)), [
+        sx * mm(43),
+        mm(4.1),
+        sz * mm(28),
+      ]);
+  // Separate 7-pin data and 15-pin power sockets on the cable-facing edge.
+  place(ssd, slab([mm(16), mm(4), mm(6)], 'plasticGloss', '#111416'), [
+    mm(30),
+    0,
+    mm(36),
+  ]);
+  place(ssd, slab([mm(28), mm(4), mm(6)], 'plasticGloss', '#111416'), [
+    mm(6),
+    0,
+    mm(36),
+  ]);
   label(ssd, 'SATA SSD', [0, mm(4.6), 0], 0.9, '#aeb6bb');
-  add('ssd', ssd, [CAGE_X, FLOOR + 1.95, -0.3], [1.9, 0.4, 0]);
+  add('ssd', ssd, [CAGE_X, FLOOR + 1.0, -0.3], [1.9, 0.4, 0]);
 
   // ── Power supply ────────────────────────────────────────────────────────
   const psu = new T.Group();
@@ -868,12 +836,9 @@ export function buildMachine(tools: ModelTools, root: T.Group) {
     fan.add(spill);
     add('casefan', fan, [FRONT - 0.55, -3.0 + i * mm(125), 0], [3.4, 0, 0]);
   }
-  // Exhaust, in the roof rather than on the rear panel.
-  //
-  // The rear panel of this build has no room for one: the I/O window takes
-  // everything above the top slot and the graphics card takes the height
-  // below it, so a 120 mm fan there stood inside the card. The roof is clear
-  // now that the radiator has gone, and it still blows out of the vented lid.
+  // Rear exhaust. It sits beside the I/O aperture in the depth of the rear
+  // panel, above the graphics card, so the front intakes and tower cooler all
+  // share one straight front-to-back path.
   const exhaust = buildFan(material, {
     size: mm(120),
     phase: 2.2,
@@ -884,7 +849,8 @@ export function buildMachine(tools: ModelTools, root: T.Group) {
   const exhaustSpill = new T.PointLight(RGB[3], 6, 6, 2);
   exhaustSpill.position.set(0, -0.5, 0);
   exhaust.add(exhaustSpill);
-  add('casefan', exhaust, [3.6, ROOF - 0.68, 0], [0, 3.4, 0]);
+  exhaust.rotation.z = Math.PI / 2;
+  add('casefan', exhaust, [REAR + 0.32, 4.0, 0.75], [-3.4, 0, 0]);
 
   // ── Graphics card, in the primary slot ──────────────────────────────────
   //

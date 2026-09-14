@@ -159,6 +159,58 @@ export function pcbTexture(variant: BoardVariant = 'motherboard') {
     }
   }
 
+  // The motherboard uses anchored routing zones instead of relying only on
+  // decorative random traces. Coordinates mirror the physical model and the
+  // X670E reference: socket high-centre, DIMMs to its right, primary PCIe and
+  // M.2 below, chipset lower-right, and rear I/O down the left edge. This is a
+  // functional illustration, not a claim about an actual product netlist.
+  if (variant === 'motherboard') {
+    const route = (
+      from: [number, number],
+      through: [number, number],
+      to: [number, number],
+      lanes: number,
+      gap = 5,
+    ) => {
+      ctx.strokeStyle = p.traceBright;
+      ctx.lineWidth = 2;
+      for (let lane = 0; lane < lanes; lane++) {
+        const offset = (lane - (lanes - 1) / 2) * gap;
+        ctx.beginPath();
+        ctx.moveTo(from[0], from[1] + offset);
+        ctx.lineTo(through[0], through[1] + offset);
+        ctx.lineTo(to[0], to[1] + offset);
+        ctx.stroke();
+      }
+    };
+    // Length-matched memory fan-out, CPU PCIe lanes and chipset uplink.
+    route([760, 455], [920, 455], [1110, 285], 12, 4);
+    route([720, 560], [720, 720], [420, 835], 10, 4.5);
+    route([760, 575], [900, 720], [1080, 990], 8, 5);
+    route([560, 540], [400, 650], [155, 740], 6, 5);
+    route([1080, 1020], [1180, 1100], [1385, 1130], 6, 4);
+
+    ctx.strokeStyle = p.silk;
+    ctx.lineWidth = 3;
+    ctx.globalAlpha = 0.58;
+    ctx.setLineDash([18, 9]);
+    ctx.strokeRect(555, 310, 330, 330); // AM5 socket keep-out
+    for (let i = 0; i < 4; i++) ctx.strokeRect(1050 + i * 58, 190, 34, 610);
+    ctx.strokeRect(230, 800, 760, 52); // primary PCIe x16
+    ctx.strokeRect(430, 700, 500, 90); // primary M.2
+    ctx.strokeRect(980, 900, 330, 360); // chipset / lower armour
+    ctx.strokeRect(18, 70, 235, 700); // integrated rear-I/O armour
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 0.74;
+    ctx.fillStyle = p.silk;
+    ctx.font = '24px monospace';
+    ctx.fillText('AM5', 570, 300);
+    ctx.fillText('DDR5 A1 A2 B1 B2', 1045, 165);
+    ctx.fillText('PCIEX16_1', 235, 790);
+    ctx.fillText('M.2 PCIe 5.0', 440, 690);
+    ctx.globalAlpha = 1;
+  }
+
   // Via stitching: rings of plated copper, in rows along the power rails and
   // scattered where the pour needs tying together.
   const via = (x: number, y: number, r: number) => {
@@ -208,8 +260,12 @@ export function pcbTexture(variant: BoardVariant = 'motherboard') {
   }
   ctx.globalAlpha = 1;
 
-  // Mounting holes, ringed in bare copper.
-  if (!wide)
+  // Mounting holes, ringed in bare copper. The motherboard uses the same
+  // three-by-three physical registration as its modeled standoffs.
+  if (variant === 'motherboard') {
+    for (const x of [72, W / 2, W - 72])
+      for (const y of [72, H / 2, H - 72]) via(x, y, 17);
+  } else if (!wide)
     for (let i = 0; i < 6; i++) {
       const x = 60 + rand() * (W - 120),
         y = 60 + rand() * (H - 120);

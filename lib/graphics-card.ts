@@ -139,6 +139,7 @@ export function buildAxialFan(
     helper.updateMatrix();
     impeller.setMatrixAt(i, helper.matrix);
   }
+  impeller.userData.spinRate = 6.4;
   fan.add(impeller);
   // The hub, and the plate on top of it that carries the marking.
   const hub = new T.Mesh(
@@ -345,11 +346,20 @@ export function buildCardCooler(
     slab([L * 0.062, L * 0.03, L * 0.022], finish('plasticGloss')),
     [0, 0, 0],
   );
-  for (let i = 0; i < 6; i++)
+  // Twelve high-current contacts in two rows, plus four smaller sense
+  // contacts. This is the feature that distinguishes 12V-2x6 / 12VHPWR from
+  // an ordinary PCIe 8-pin block at a glance.
+  for (let i = 0; i < 12; i++)
     put(socket, slab([L * 0.007, L * 0.012, L * 0.008], finish('nickel')), [
-      -L * 0.021 + i * L * 0.0084,
+      -L * 0.021 + (i % 6) * L * 0.0084,
       L * 0.006,
-      0,
+      (Math.floor(i / 6) - 0.5) * L * 0.01,
+    ]);
+  for (let i = 0; i < 4; i++)
+    put(socket, slab([L * 0.003, L * 0.006, L * 0.004], finish('nickel')), [
+      -L * 0.0075 + i * L * 0.005,
+      L * 0.012,
+      L * 0.014,
     ]);
   put(shroud, socket, [L * 0.1, L * 0.012, -logoEdge * W * 0.2]);
 

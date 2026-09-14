@@ -207,7 +207,9 @@ export function buildFan(material: MaterialFn, options: FanOptions) {
   const depth = size * 0.213;
   const half = size / 2;
 
-  group.add(new T.Mesh(fanFrame(size, depth), material(frameColor, 0.22, 0.58)));
+  group.add(
+    new T.Mesh(fanFrame(size, depth), material(frameColor, 0.22, 0.58)),
+  );
 
   // Hub: barrel, domed cap and a printed ring where the label sits.
   const hubRadius = size * 0.163;
@@ -218,7 +220,15 @@ export function buildFan(material: MaterialFn, options: FanOptions) {
     ),
   );
   const cap = new T.Mesh(
-    new T.SphereGeometry(hubRadius * 0.95, 26, 12, 0, Math.PI * 2, 0, Math.PI / 2.6),
+    new T.SphereGeometry(
+      hubRadius * 0.95,
+      26,
+      12,
+      0,
+      Math.PI * 2,
+      0,
+      Math.PI / 2.6,
+    ),
     material('#31383d', 0.52, 0.34),
   );
   cap.position.y = depth * 0.36;
@@ -245,6 +255,10 @@ export function buildFan(material: MaterialFn, options: FanOptions) {
     blade.setMatrixAt(i, helper.matrix);
   }
   blade.castShadow = blade.receiveShadow = true;
+  // The viewer animates marked rotors without knowing how any particular fan
+  // was built. Keeping the marker on the impeller (not the whole fan) leaves
+  // the frame and motor struts fixed as they are in real hardware.
+  blade.userData.spinRate = 5.2;
   group.add(blade);
 
   // Four struts carrying the motor, visible through the blades from behind.
@@ -451,7 +465,11 @@ export function buildBlockSink(
   const base = new T.Mesh(new T.BoxGeometry(width, height * 0.3, depth), body);
   group.add(base);
   const columns = Math.max(3, Math.round(width / (height * 0.42)));
-  const fin = new T.BoxGeometry(width / columns / 2.1, height * 0.7, depth * 0.92);
+  const fin = new T.BoxGeometry(
+    width / columns / 2.1,
+    height * 0.7,
+    depth * 0.92,
+  );
   for (let i = 0; i < columns; i++) {
     const blade = new T.Mesh(fin, body);
     blade.position.set(
@@ -530,7 +548,11 @@ export function buildChip(
 ) {
   const group = new T.Group();
   group.add(new T.Mesh(new T.BoxGeometry(...size), material(color, 0.1, 0.55)));
-  const lead = new T.BoxGeometry(size[0] / pins / 2.4, size[1] * 0.22, size[2] * 0.2);
+  const lead = new T.BoxGeometry(
+    size[0] / pins / 2.4,
+    size[1] * 0.22,
+    size[2] * 0.2,
+  );
   const leadMaterial = material('#aab1b5', 0.92, 0.28);
   for (let edge = 0; edge < (fourSides ? 4 : 2); edge++)
     for (let i = 0; i < pins; i++) {
@@ -636,7 +658,11 @@ export function buildSlot(
   );
   key.position.set(length * (notch - 0.5), -height * 0.05, 0);
   group.add(key);
-  const contact = new T.BoxGeometry(length * 0.94, height * 0.12, width * 0.055);
+  const contact = new T.BoxGeometry(
+    length * 0.94,
+    height * 0.12,
+    width * 0.055,
+  );
   const gold = material('#c2a457', 0.93, 0.26);
   for (const side of [-1, 1]) {
     const row = new T.Mesh(contact, gold);
@@ -683,7 +709,9 @@ export function buildPort(
   inner = '#0a0c0d',
 ) {
   const group = new T.Group();
-  group.add(new T.Mesh(new T.BoxGeometry(...size), material(shell, 0.88, 0.27)));
+  group.add(
+    new T.Mesh(new T.BoxGeometry(...size), material(shell, 0.88, 0.27)),
+  );
   const mouth = new T.Mesh(
     new T.BoxGeometry(size[0] * 0.76, size[1] * 0.56, size[2] * 0.34),
     material(inner, 0.1, 0.82),
@@ -771,7 +799,10 @@ export function buildModularPanel(
     [width * 0.33, -height * 0.22, width * 0.16, height * 0.2],
   ];
   for (const [x, y, w, h] of layout) {
-    const socket = new T.Mesh(new T.BoxGeometry(w, h, depth * 0.7), socketMaterial);
+    const socket = new T.Mesh(
+      new T.BoxGeometry(w, h, depth * 0.7),
+      socketMaterial,
+    );
     socket.position.set(x, y, depth * 0.25);
     group.add(socket);
     const pins = new T.Mesh(

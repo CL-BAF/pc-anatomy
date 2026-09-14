@@ -77,12 +77,14 @@ const levelIcon: Record<LevelId, typeof Box> = {
   pc: PcCase,
   motherboard: CircuitBoard,
   ryzen: Cpu,
+  ryzenio: CircuitBoard,
   corei9: Cpu,
+  coreio: CircuitBoard,
   psu: Zap,
   fan: Fan,
   cooler: Fan,
   liquid: Droplets,
-  disk: HardDrive,
+  ssd: HardDrive,
   card: Box,
   die: Cpu,
   gpc: Layers3,
@@ -206,14 +208,10 @@ export default function Home() {
     });
   }, [state.diveInto]);
 
-  const choose = useCallback(
-    (selection: Selection | null) => {
-      if (selection && dive(selection.concept)) return;
-      setState((s) => ({ ...s, selection, isolated: false, focusRevision: 0 }));
-      setLayers(false);
-    },
-    [dive],
-  );
+  const choose = useCallback((selection: Selection | null) => {
+    setState((s) => ({ ...s, selection, isolated: false, focusRevision: 0 }));
+    setLayers(false);
+  }, []);
   const selectResult = (id: string) => {
     setOpenMenu(menuRoot(byId[id].level));
     setState((s) => selectSearch(s, id));
@@ -907,7 +905,7 @@ export default function Home() {
                 openLevel(selected.id) !== state.level && (
                   <button
                     className="open-component"
-                    onClick={() => navigate(openLevel(selected.id)!)}
+                    onClick={() => dive(selected.id)}
                   >
                     Take apart {levels[openLevel(selected.id)!].name}
                     <ChevronRight size={17} />

@@ -4,9 +4,9 @@ import { concept, standard, type Concept } from '../concept.ts';
  * Inside the mainboard.
  *
  * Slot positions, board outline and the rear aperture follow the ATX
- * specification. Controllers, regulator phase counts, header placement and
- * passive population are representative of the category. No vendor, chipset
- * or part number is claimed.
+ * specification. The major zones follow the supplied X670E reference while
+ * controller identities, regulator phase count and electrical routing remain
+ * representative rather than a product netlist or exact board reproduction.
  */
 export const motherboardConcepts: Concept[] = [
   concept({
@@ -43,12 +43,12 @@ export const motherboardConcepts: Concept[] = [
       'Presses hundreds of contacts against the processor’s pads so it can be installed without soldering.',
     quantity: '1 modeled socket',
     specifications: {
-      Type: 'Land grid array, illustrative',
+      Type: 'AMD AM5 land grid array, illustrative',
       Retention: 'Lever and load plate',
     },
     representationType: 'physical',
-    sources: ['coolermount'],
-    searchTerms: ['lga', 'socket', 'retention', 'contacts', 'zif'],
+    sources: ['ryzen', 'coolermount'],
+    searchTerms: ['am5', 'lga', 'socket', 'retention', 'contacts', 'zif'],
   }),
   concept({
     id: 'cpu',
@@ -64,11 +64,11 @@ export const motherboardConcepts: Concept[] = [
       'Runs the operating system and program logic, and decides what every other part of the machine does next.',
     quantity: '1 processor package',
     specifications: {
-      Package: 'Land grid array',
+      Package: 'AMD AM5 land grid array',
       Lid: 'Integrated heat spreader',
     },
     representationType: 'physical',
-    sources: ['coolermount'],
+    sources: ['ryzen', 'coolermount'],
     searchTerms: ['processor', 'cpu', 'chip', 'core', 'package'],
   }),
   concept({
@@ -192,7 +192,8 @@ export const motherboardConcepts: Concept[] = [
     category: 'Board',
     parent: 'motherboard',
     level: 'motherboard',
-    description: 'Short single-lane slots for capture, network and audio cards.',
+    description:
+      'Short single-lane slots for capture, network and audio cards.',
     purpose:
       'Adds expansion for devices that need a modest amount of bandwidth.',
     quantity: '2 modeled slots',

@@ -78,6 +78,37 @@ await test('all repeated structures have globally unique, consecutive identities
   );
 });
 
+await test('the SATA SSD exposes flash and two distinct interfaces', () => {
+  const ssd = models.get('ssd')!;
+  assert.equal(ssd.pieces.filter((p) => p.concept === 'ssdnand').length, 4);
+  assert.equal(ssd.pieces.filter((p) => p.concept === 'ssddata').length, 1);
+  assert.equal(ssd.pieces.filter((p) => p.concept === 'ssdpower').length, 1);
+});
+
+await test('the assembled motherboard never invents parts mid-dissection', () => {
+  const motherboard = models.get('motherboard')!;
+  assert.ok(motherboard.pieces.length > 0);
+  assert.ok(motherboard.pieces.every((piece) => piece.reveal === 0));
+});
+
+await test('motherboard components stay on the 244 by 305 mm ATX outline', () => {
+  const motherboard = models.get('motherboard')!;
+  const halfWidth = 244 / 22 / 2;
+  const halfDepth = 305 / 22 / 2;
+  for (const piece of motherboard.pieces) {
+    const outerX = Math.abs(piece.base.x + piece.center.x) + piece.extent.x / 2;
+    const outerZ = Math.abs(piece.base.z + piece.center.z) + piece.extent.z / 2;
+    assert.ok(
+      outerX <= halfWidth + 0.35,
+      `${piece.key} leaves the ATX side edge`,
+    );
+    assert.ok(
+      outerZ <= halfDepth + 0.35,
+      `${piece.key} leaves the ATX top or bottom edge`,
+    );
+  }
+});
+
 await test('ray picking distinguishes the three fin banks instead of selecting duplicate fin IDs', () => {
   const fins = models
     .get('card')!
