@@ -93,6 +93,7 @@ await test('search restores hidden layers, selects groups and navigates to the c
   assert.equal(next.isolated, false);
   assert.ok(next.focusRevision > hidden.focusRevision);
   assert.equal(hidden.hidden.length, 1);
+  assert.deepEqual(next.hidden, []);
   for (const id of ['card', 'die']) {
     const root = selectSearch(hidden, id);
     assert.equal(root.selection, null);

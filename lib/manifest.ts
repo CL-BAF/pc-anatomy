@@ -146,7 +146,10 @@ export function selectSearch(state: ExplorerState, id: string): ExplorerState {
     visible: state.visible.includes(c.category)
       ? state.visible
       : [...state.visible, c.category],
-    hidden: state.hidden.filter((x) => x !== id),
+    // Hidden objects belong to the scale where they were hidden. A search that
+    // jumps to another scale starts with a clean visibility state, just like
+    // navigation and diving do.
+    hidden: state.level === c.level ? state.hidden.filter((x) => x !== id) : [],
     isolated: false,
     focusRevision: state.focusRevision + 1,
     cameraRevision: state.cameraRevision + 1,

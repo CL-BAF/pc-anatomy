@@ -25,12 +25,10 @@ import {
  * the board, the one real safety feature you can see, runs along Z at the
  * transformer.
  *
- * **Nothing here takes a `reveal` threshold.** Thirteen of these nineteen
- * pieces used to, which meant the assembled supply was an empty steel box with
- * a fan in it and the contents only faded in once you had already pulled it
- * apart. `reveal` is for a part sealed inside a closed enclosure, and this
- * housing is a thin shell open at both ends: it is the subject of the scale,
- * not a lid over it. The same mistake once left assembled fans with no blades.
+ * **Nothing here takes a `reveal` threshold.** Every internal part exists at
+ * slider position zero, but the complete six-sided housing naturally hides it
+ * until the enclosure moves away during dissection. That keeps the assembled
+ * supply closed without making its contents pop into existence later.
  */
 
 /** Millimetres to scene units. 1 unit ≈ 12 mm, so the unit fills the stage. */
@@ -57,6 +55,11 @@ export function buildPowerSupply(tools: ModelTools, _root: T.Group) {
   place(housing, box([W, mm(86), WALL], steel, 0.8), [0, mm(43), -D / 2]);
   place(housing, box([W, mm(86), WALL], steel, 0.8), [0, mm(43), D / 2]);
   place(housing, box([W, WALL, D], steel, 0.8), [0, mm(86), 0]);
+  // Both end plates are part of the removable shell. The external grille,
+  // inlet and modular socket panel sit just proud of these faces; previously
+  // the missing plates left a clear view straight through the assembled PSU.
+  place(housing, box([WALL, mm(86), D], '#424a50', 0.8), [-W / 2, mm(43), 0]);
+  place(housing, box([WALL, mm(86), D], '#424a50', 0.8), [W / 2, mm(43), 0]);
   for (const sx of [-1, 1])
     for (const sz of [-1, 1])
       place(housing, buildScrew(material, mm(3)), [
@@ -79,7 +82,14 @@ export function buildPowerSupply(tools: ModelTools, _root: T.Group) {
   add('psuintake', intake, [mm(6), mm(4), 0], [0, -2.4, 0]);
 
   // Rear grille, mains inlet and switch.
-  const grille = buildHoneycomb(material, mm(78), mm(52), mm(1), mm(4.4), '#454c52');
+  const grille = buildHoneycomb(
+    material,
+    mm(78),
+    mm(52),
+    mm(1),
+    mm(4.4),
+    '#454c52',
+  );
   grille.rotation.y = Math.PI / 2;
   grille.rotation.z = Math.PI / 2;
   add('psugrille', grille, [-W / 2 - mm(1), mm(52), mm(22)], [-3.4, 1.4, 0]);
@@ -94,11 +104,31 @@ export function buildPowerSupply(tools: ModelTools, _root: T.Group) {
 
   // ── The board, and the isolation gap across it ─────────────────────────
   const board = new T.Group();
-  place(board, box([W - mm(10), mm(1.6), D - mm(10)], '#2c3a24', 0.05, 0.01), [0, 0, 0]);
+  place(
+    board,
+    box([W - mm(10), mm(1.6), D - mm(10)], '#2c3a24', 0.05, 0.01),
+    [0, 0, 0],
+  );
   // The routed slot that separates mains-voltage copper from the output side.
-  place(board, box([mm(3), mm(2.2), D - mm(24)], '#12160f', 0.2), [mm(2), mm(0.6), 0]);
-  label(board, 'PRIMARY · MAINS VOLTAGE', [-mm(44), mm(1.2), D / 2 - mm(14)], mm(64), '#7d8a6e');
-  label(board, 'SECONDARY · LOW VOLTAGE', [mm(46), mm(1.2), D / 2 - mm(14)], mm(64), '#6e8a7f');
+  place(board, box([mm(3), mm(2.2), D - mm(24)], '#12160f', 0.2), [
+    mm(2),
+    mm(0.6),
+    0,
+  ]);
+  label(
+    board,
+    'PRIMARY · MAINS VOLTAGE',
+    [-mm(44), mm(1.2), D / 2 - mm(14)],
+    mm(64),
+    '#7d8a6e',
+  );
+  label(
+    board,
+    'SECONDARY · LOW VOLTAGE',
+    [mm(46), mm(1.2), D / 2 - mm(14)],
+    mm(64),
+    '#6e8a7f',
+  );
   add('psuboard', board, [0, boardY, 0], [0, -1.8, 0]);
 
   // ── Mains filter ────────────────────────────────────────────────────────
@@ -117,7 +147,11 @@ export function buildPowerSupply(tools: ModelTools, _root: T.Group) {
         material('#b0793f', 0.9, 0.34),
       );
       const a = (k / 9) * Math.PI * 2;
-      turn.position.set(i * mm(22) + Math.cos(a) * mm(11), mm(6), Math.sin(a) * mm(11));
+      turn.position.set(
+        i * mm(22) + Math.cos(a) * mm(11),
+        mm(6),
+        Math.sin(a) * mm(11),
+      );
       turn.rotation.y = -a;
       filter.add(turn);
     }
@@ -129,12 +163,21 @@ export function buildPowerSupply(tools: ModelTools, _root: T.Group) {
       mm(-26),
     ]);
   label(filter, 'EMI FILTER', [mm(10), mm(13), mm(20)], mm(44), '#9aa2a8');
-  add('psufilter', filter, [-W / 2 + mm(24), boardY + mm(2), mm(6)], [-1.4, 1.6, 0]);
+  add(
+    'psufilter',
+    filter,
+    [-W / 2 + mm(24), boardY + mm(2), mm(6)],
+    [-1.4, 1.6, 0],
+  );
 
   // ── Bridge rectifier ────────────────────────────────────────────────────
   const bridge = new T.Group();
   place(bridge, box([mm(18), mm(16), mm(6)], '#1c2023', 0.15), [0, mm(8), 0]);
-  place(bridge, box([mm(20), mm(22), mm(2)], '#8e979d', 0.9), [0, mm(11), -mm(4)]);
+  place(bridge, box([mm(20), mm(22), mm(2)], '#8e979d', 0.9), [
+    0,
+    mm(11),
+    -mm(4),
+  ]);
   for (let i = 0; i < 4; i++)
     place(bridge, box([mm(1.6), mm(8), mm(1.6)], '#b8bfc3', 0.92), [
       mm(-6 + i * 4),
@@ -179,15 +222,35 @@ export function buildPowerSupply(tools: ModelTools, _root: T.Group) {
 
   // ── Primary switches, transformer, secondary ────────────────────────────
   const primarySink = new T.Group();
-  const finsA = buildFinStack(material, 16, [mm(46), mm(1.4), mm(8)], mm(4.2), '#5c656c');
+  const finsA = buildFinStack(
+    material,
+    16,
+    [mm(46), mm(1.4), mm(8)],
+    mm(4.2),
+    '#5c656c',
+  );
   finsA.rotation.z = Math.PI / 2;
   place(primarySink, finsA, [0, mm(24), 0]);
-  place(primarySink, box([mm(66), mm(46), mm(3)], '#6a747b', 0.88), [0, mm(24), -mm(5)]);
+  place(primarySink, box([mm(66), mm(46), mm(3)], '#6a747b', 0.88), [
+    0,
+    mm(24),
+    -mm(5),
+  ]);
   const secondarySink = new T.Group();
-  const finsB = buildFinStack(material, 16, [mm(42), mm(1.4), mm(8)], mm(4.2), '#5c656c');
+  const finsB = buildFinStack(
+    material,
+    16,
+    [mm(42), mm(1.4), mm(8)],
+    mm(4.2),
+    '#5c656c',
+  );
   finsB.rotation.z = Math.PI / 2;
   place(secondarySink, finsB, [0, mm(22), 0]);
-  place(secondarySink, box([mm(66), mm(42), mm(3)], '#6a747b', 0.88), [0, mm(22), mm(5)]);
+  place(secondarySink, box([mm(66), mm(42), mm(3)], '#6a747b', 0.88), [
+    0,
+    mm(22),
+    mm(5),
+  ]);
   const sinks = new T.Group();
   place(sinks, primarySink, [-mm(18), 0, mm(16)]);
   place(sinks, secondarySink, [mm(22), 0, -mm(14)]);
@@ -200,14 +263,32 @@ export function buildPowerSupply(tools: ModelTools, _root: T.Group) {
       buildChip(material, [mm(13), mm(15), mm(4)], 3, false, '#17191b'),
       [mm(-20 + i * 13), mm(10), mm(12)],
     );
-  label(switches, 'PRIMARY SWITCHES', [mm(-2), mm(20), mm(12)], mm(56), '#9aa2a8');
+  label(
+    switches,
+    'PRIMARY SWITCHES',
+    [mm(-2), mm(20), mm(12)],
+    mm(56),
+    '#9aa2a8',
+  );
   add('psuswitch', switches, [mm(2), boardY, 0], [-0.4, 2.2, 0.8]);
 
   const transformer = new T.Group();
-  place(transformer, box([mm(34), mm(30), mm(36)], '#2a2d30', 0.25), [0, mm(17), 0]);
+  place(transformer, box([mm(34), mm(30), mm(36)], '#2a2d30', 0.25), [
+    0,
+    mm(17),
+    0,
+  ]);
   // Tape wrap around the middle, which is what makes a transformer legible.
-  place(transformer, box([mm(35), mm(12), mm(37)], '#6b5f3a', 0.2), [0, mm(17), 0]);
-  place(transformer, box([mm(38), mm(6), mm(14)], '#3a3f43', 0.4), [0, mm(31), 0]);
+  place(transformer, box([mm(35), mm(12), mm(37)], '#6b5f3a', 0.2), [
+    0,
+    mm(17),
+    0,
+  ]);
+  place(transformer, box([mm(38), mm(6), mm(14)], '#3a3f43', 0.4), [
+    0,
+    mm(31),
+    0,
+  ]);
   for (const s of [-1, 1])
     for (let i = 0; i < 5; i++)
       place(transformer, box([mm(1.4), mm(6), mm(1.4)], '#b8bfc3', 0.92), [
@@ -225,7 +306,13 @@ export function buildPowerSupply(tools: ModelTools, _root: T.Group) {
       buildChip(material, [mm(11), mm(13), mm(4)], 3, false, '#17191b'),
       [mm(-26 + i * 11), mm(9), 0],
     );
-  label(secondary, 'SYNCHRONOUS RECTIFICATION', [0, mm(18), 0], mm(72), '#8fae9c');
+  label(
+    secondary,
+    'SYNCHRONOUS RECTIFICATION',
+    [0, mm(18), 0],
+    mm(72),
+    '#8fae9c',
+  );
   add('psusecondary', secondary, [mm(26), boardY, -mm(20)], [0.6, 2.0, -0.8]);
 
   // ── Minor rails and output ──────────────────────────────────────────────
@@ -239,7 +326,11 @@ export function buildPowerSupply(tools: ModelTools, _root: T.Group) {
         mm(4),
         0,
       ]);
-    place(daughter, box([mm(8), mm(3), mm(8)], '#17191b', 0.12), [mm(12), mm(2), mm(7)]);
+    place(daughter, box([mm(8), mm(3), mm(8)], '#17191b', 0.12), [
+      mm(12),
+      mm(2),
+      mm(7),
+    ]);
     daughter.rotation.z = Math.PI / 2;
     place(dcdc, daughter, [i * mm(22), mm(16), 0]);
   }
@@ -263,19 +354,23 @@ export function buildPowerSupply(tools: ModelTools, _root: T.Group) {
   add('psuoutput', output, [W / 2 - mm(38), boardY, mm(6)], [1.4, 1.8, 0]);
 
   const supervisor = new T.Group();
-  place(supervisor, buildChip(material, [mm(12), mm(3), mm(8)], 7, true, '#17191b'), [0, mm(2), 0]);
-  place(supervisor, buildChip(material, [mm(9), mm(3), mm(6)], 5, true, '#17191b'), [
-    mm(16),
-    mm(2),
-    mm(6),
-  ]);
+  place(
+    supervisor,
+    buildChip(material, [mm(12), mm(3), mm(8)], 7, true, '#17191b'),
+    [0, mm(2), 0],
+  );
+  place(
+    supervisor,
+    buildChip(material, [mm(9), mm(3), mm(6)], 5, true, '#17191b'),
+    [mm(16), mm(2), mm(6)],
+  );
   label(supervisor, 'SUPERVISOR', [mm(8), mm(4), -mm(9)], mm(40), '#9aa2a8');
   add('psusupervisor', supervisor, [mm(30), boardY, mm(34)], [0.8, 1.4, 1.0]);
 
   // Output panel on the face that points into the machine.
   const panel = buildModularPanel(material, mm(76), mm(50), mm(4));
   panel.rotation.y = Math.PI / 2;
-  add('psumodular', panel, [W / 2 - mm(2), mm(44), 0], [3.6, 0.6, 0]);
+  add('psumodular', panel, [W / 2 + mm(1), mm(44), 0], [3.6, 0.6, 0]);
 
   // A scatter of small parts so the board is not bare between the stages.
   const smalls: Vec3[] = [];

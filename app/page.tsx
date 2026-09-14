@@ -12,6 +12,7 @@ import {
   ArrowLeft,
   X,
   Focus,
+  Eye,
   EyeOff,
   Box,
   Microscope,
@@ -25,6 +26,7 @@ import {
   HardDrive,
   Droplets,
   Code2,
+  Minimize,
 } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
@@ -110,6 +112,9 @@ export default function Home() {
     [about, setAbout] = useState(false),
     [layers, setLayers] = useState(false),
     [expanded, setExpanded] = useState<Category | null>(null),
+    [hiddenMenuOpen, setHiddenMenuOpen] = useState(false),
+    [fullscreen, setFullscreen] = useState(false),
+    [fullscreenError, setFullscreenError] = useState(''),
     // `null` until the viewer has reported for the first time. Zero means the
     // viewer is running and nothing is switched on, which is a different thing
     // to say to the reader, and saying the wrong one was what put "No
@@ -127,12 +132,16 @@ export default function Home() {
     menus = branches(),
     phases = level.phases,
     explodePercent = Math.round(state.explode);
+  const hiddenComponents = state.hidden.flatMap((id) =>
+    byId[id] ? [byId[id]] : [],
+  );
   // The subsystem whose menu is open. Follows wherever you are unless you
   // deliberately open another one.
   const [openMenu, setOpenMenu] = useState<LevelId | null>(null);
   const shownMenu = openMenu ?? menuRoot(state.level);
   const navigate = useCallback((level: LevelId) => {
     setPlaying(false);
+    setHiddenMenuOpen(false);
     setOpenMenu(menuRoot(level));
     setState((s) => ({
       ...s,
@@ -151,6 +160,7 @@ export default function Home() {
   }, []);
   const reset = useCallback(() => {
     setPlaying(false);
+    setHiddenMenuOpen(false);
     setOpenMenu(null);
     setState((s) => ({
       ...initialState,
@@ -187,6 +197,7 @@ export default function Home() {
   const arrive = useCallback(() => {
     const arrivedLevel = state.diveInto ? openLevel(state.diveInto) : null;
     if (!arrivedLevel) return;
+    setHiddenMenuOpen(false);
     setOpenMenu(menuRoot(arrivedLevel));
     setState((s) => {
       const target = s.diveInto ? openLevel(s.diveInto) : null;
@@ -264,6 +275,16 @@ export default function Home() {
     window.addEventListener('keydown', key);
     return () => window.removeEventListener('keydown', key);
   }, [about, navigate, search, state.level]);
+  useEffect(() => {
+    const syncFullscreen = () => {
+      setFullscreen(Boolean(document.fullscreenElement));
+      if (document.fullscreenElement) setFullscreenError('');
+    };
+    document.addEventListener('fullscreenchange', syncFullscreen);
+    syncFullscreen();
+    return () =>
+      document.removeEventListener('fullscreenchange', syncFullscreen);
+  }, []);
   // Runs the disassembly slowly enough to follow, and hands control straight
   // back the moment the viewer touches the slider or changes scale.
   useEffect(() => {
@@ -305,6 +326,32 @@ export default function Home() {
       isolated: false,
       focusRevision: 0,
     }));
+  const unhide = useCallback((id: string) => {
+    const category = byId[id]?.category;
+    setState((s) => ({
+      ...s,
+      visible:
+        category && !s.visible.includes(category)
+          ? [...s.visible, category]
+          : s.visible,
+      hidden: s.hidden.filter((hiddenId) => hiddenId !== id),
+      focusRevision: 0,
+    }));
+  }, []);
+  const toggleFullscreen = useCallback(async () => {
+    setFullscreenError('');
+    try {
+      if (document.fullscreenElement) await document.exitFullscreen();
+      else
+        await document.documentElement.requestFullscreen({
+          navigationUI: 'hide',
+        });
+    } catch {
+      setFullscreenError(
+        'Fullscreen is blocked by this browser. Press F11 instead.',
+      );
+    }
+  }, []);
   return (
     <main
       className={
@@ -694,19 +741,67 @@ export default function Home() {
           ))}
           <span />
           <button
-            title="Fit visible components"
-            aria-label="Fit visible components"
-            onClick={() =>
-              setState((s) => ({
-                ...s,
-                focusRevision: 0,
-                cameraRevision: s.cameraRevision + 1,
-              }))
-            }
+            title={fullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+            aria-label={fullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+            aria-pressed={fullscreen}
+            className={fullscreen ? 'active' : ''}
+            onClick={() => void toggleFullscreen()}
           >
-            <Maximize size={15} />
+            {fullscreen ? <Minimize size={15} /> : <Maximize size={15} />}
           </button>
         </div>
+        {hiddenComponents.length > 0 && (
+          <div className="hidden-tracker">
+            <button
+              className="hidden-tracker-toggle"
+              aria-expanded={hiddenMenuOpen}
+              aria-controls="hidden-components-menu"
+              onClick={() => setHiddenMenuOpen((open) => !open)}
+            >
+              <EyeOff size={15} />
+              <span>
+                {hiddenComponents.length} hidden component
+                {hiddenComponents.length === 1 ? '' : 's'}
+              </span>
+              <ChevronDown size={14} />
+            </button>
+            {hiddenMenuOpen && (
+              <div
+                className="hidden-components-menu"
+                id="hidden-components-menu"
+              >
+                <div className="hidden-menu-heading">
+                  <strong>Hidden on this scale</strong>
+                  <button
+                    onClick={() =>
+                      setState((s) => ({ ...s, hidden: [], focusRevision: 0 }))
+                    }
+                  >
+                    Show all
+                  </button>
+                </div>
+                <ul>
+                  {hiddenComponents.map((component) => (
+                    <li key={component.id}>
+                      <i style={{ background: colors[component.category] }} />
+                      <span>{component.shortName}</span>
+                      <button
+                        aria-label={`Show ${component.name}`}
+                        onClick={() => unhide(component.id)}
+                      >
+                        <Eye size={14} />
+                        Show
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+        {fullscreenError && (
+          <output className="fullscreen-error">{fullscreenError}</output>
+        )}
       </div>
       <section className="disassembly" aria-label="Explosion control">
         <div className="disassembly-intro">
@@ -947,15 +1042,18 @@ export default function Home() {
                   Focus
                 </button>
                 <button
-                  onClick={() =>
+                  onClick={() => {
+                    setHiddenMenuOpen(true);
                     setState((s) => ({
                       ...s,
-                      hidden: [...s.hidden, selected.id],
+                      hidden: s.hidden.includes(selected.id)
+                        ? s.hidden
+                        : [...s.hidden, selected.id],
                       selection: null,
                       isolated: false,
                       focusRevision: 0,
-                    }))
-                  }
+                    }));
+                  }}
                 >
                   <EyeOff size={14} />
                   Hide

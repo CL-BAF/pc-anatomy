@@ -44,7 +44,7 @@ Descending into a part rebuilds it at its own scale with its own timeline, so th
 
 ## The interface
 
-The rail on the left carries the scale tree and per-system visibility. The bar along the bottom is the disassembly timeline, with the **Auto** key at its left-hand end, the named phases above the slider, and a reset on the right. Left-click an explorable component to open it; right-click to inspect it and use the detail, hide, isolate and focus controls.
+The rail on the left carries the scale tree and per-system visibility. The bar along the bottom is the disassembly timeline, with the **Auto** key at its left-hand end, the named phases above the slider, and a reset on the right. Left-click an explorable component to open it; right-click to inspect it and use the detail, hide, isolate and focus controls. Hidden components remain available from the stage tracker until they are restored, the scale changes, or the explorer is reset. The corner expand control toggles browser fullscreen.
 
 | Workbench                                                                                                              | On a phone                                                                                                                                               |
 | ---------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
