@@ -109,6 +109,54 @@ await test('motherboard components stay on the 244 by 305 mm ATX outline', () =>
   }
 });
 
+await test('motherboard thermal armour keeps real clearance from sockets and slots', () => {
+  const motherboard = models.get('motherboard')!;
+  const pieces = (concept: string) =>
+    motherboard.pieces.filter((piece) => piece.concept === concept);
+  const footprint = (piece: Piece) => ({
+    minX: piece.base.x + piece.center.x - piece.extent.x / 2,
+    maxX: piece.base.x + piece.center.x + piece.extent.x / 2,
+    minZ: piece.base.z + piece.center.z - piece.extent.z / 2,
+    maxZ: piece.base.z + piece.center.z + piece.extent.z / 2,
+  });
+  const overlaps = (a: Piece, b: Piece) => {
+    const aa = footprint(a),
+      bb = footprint(b),
+      epsilon = 0.01;
+    return (
+      Math.min(aa.maxX, bb.maxX) - Math.max(aa.minX, bb.minX) > epsilon &&
+      Math.min(aa.maxZ, bb.maxZ) - Math.max(aa.minZ, bb.minZ) > epsilon
+    );
+  };
+  const clear = (left: string, right: string) => {
+    for (const a of pieces(left))
+      for (const b of pieces(right))
+        assert.ok(
+          !overlaps(a, b),
+          `${a.key} ${JSON.stringify(footprint(a))} clips ${b.key} ${JSON.stringify(footprint(b))}`,
+        );
+  };
+
+  clear('vrmheatsink', 'socket');
+  clear('vrmheatsink', 'dimmslot');
+  clear('vrmheatsink', 'eps8');
+  clear('vrmheatsink', 'mobofanheader');
+  clear('reario', 'vrmheatsink');
+  clear('m2heatsink', 'pcie16');
+  clear('m2heatsink', 'pcie1');
+  clear('m2heatsink', 'chipset');
+  clear('chipset', 'pcie16');
+  clear('cmos', 'chipset');
+  clear('cmos', 'm2heatsink');
+  clear('cmos', 'pcie1');
+  clear('lan', 'reario');
+  clear('lan', 'pcie16');
+  clear('audiocodec', 'pcie16');
+  clear('superio', 'm2heatsink');
+  clear('superio', 'frontheader');
+  clear('frontheader', 'mobofanheader');
+});
+
 await test('ray picking distinguishes the three fin banks instead of selecting duplicate fin IDs', () => {
   const fins = models
     .get('card')!

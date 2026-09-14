@@ -2,11 +2,9 @@ import * as T from 'three';
 import type { ModelTools } from './hardware.ts';
 import type { Vec3 } from './layout.ts';
 import {
-  buildBlockSink,
   buildCapacitor,
   buildChip,
   buildChoke,
-  buildFinStack,
   buildHeader,
   buildPort,
   buildScrew,
@@ -31,7 +29,6 @@ const mm = (v: number) => v / 22;
 
 const W = mm(244); // left to right when the board is viewed flat
 const D = mm(305); // rear-I/O/top edge to front-panel/bottom edge
-const SLOT_PITCH = mm(20.32);
 
 export function buildMotherboard(tools: ModelTools, _root: T.Group) {
   const { instances, box, pcb, material, label } = tools;
@@ -93,8 +90,11 @@ export function buildMotherboard(tools: ModelTools, _root: T.Group) {
   add('moboboard', board, [0, 0, 0], [0, -1.6, 0]);
 
   // ── Processor socket and CPU ────────────────────────────────────────────
-  const socketX = -mm(8),
-    socketZ = -mm(63);
+  // The reference puts AM5 just right of the board centreline. Keeping these
+  // dimensions in millimetres makes the socket, DIMM and VRM clearances easy
+  // to audit against the fixed 244 × 305 mm ATX outline.
+  const socketX = mm(8),
+    socketZ = -mm(64);
   const socket = new T.Group();
   place(socket, box([mm(56), mm(3), mm(56)], '#383e43', 0.6), [0, 0, 0]);
   const contact = new T.BoxGeometry(mm(0.9), mm(0.6), mm(0.9));
@@ -158,7 +158,7 @@ export function buildMotherboard(tools: ModelTools, _root: T.Group) {
 
   // ── Memory ──────────────────────────────────────────────────────────────
   const slotZ = socketZ + mm(8);
-  const dimmX = [mm(43), mm(56), mm(69), mm(82)];
+  const dimmX = [mm(64), mm(76), mm(88), mm(100)];
   for (let i = 0; i < 4; i++) {
     const slot = buildSlot(material, mm(133), i % 2 ? '#2f3439' : '#464e54', {
       width: mm(7),
@@ -204,15 +204,14 @@ export function buildMotherboard(tools: ModelTools, _root: T.Group) {
         mm(14),
         mm(-56 + j * 14),
       ]);
-    label(stick, 'DDR5', [0, mm(19.4), 0], mm(70), '#aeb6bb');
     add('ram', stick, [dimmX[i * 2 + 1], mm(22), slotZ], [0, 2.2, 0]);
   }
 
   // ── Voltage regulator ───────────────────────────────────────────────────
   const vrm = new T.Group();
-  const stageZ = socketZ - mm(46);
+  const stageZ = socketZ - mm(50);
   for (let i = 0; i < 10; i++) {
-    const x = mm(-96 + i * 15);
+    const x = mm(-38 + i * 10);
     const stage = buildChip(
       material,
       [mm(7), mm(2), mm(7)],
@@ -247,55 +246,70 @@ export function buildMotherboard(tools: ModelTools, _root: T.Group) {
   );
   add('cpuvrm', vrm, [0, mm(1.6), 0], [0, 1.2, -0.6], 0.08);
 
-  // VRM heatsinks: finned blocks joined by a heat pipe, as boards actually do.
-  const vrmSink = new T.Group();
-  const sinkA = buildFinStack(
-    material,
-    20,
-    [mm(30), mm(1.3), mm(26)],
-    mm(7.5),
-    '#525a60',
-  );
-  sinkA.rotation.z = Math.PI / 2;
-  place(vrmSink, sinkA, [-mm(30), mm(13), stageZ]);
-  place(vrmSink, box([mm(152), mm(4), mm(28)], '#5d666d', 0.88), [
-    -mm(30),
+  // Two low-profile, dark anodised VRM blocks. The old rotated fin stacks
+  // expanded to 152 mm and 112 mm, touching the socket and reading as bright
+  // tower coolers. These footprints follow the two separate blocks in the
+  // supplied board: one above AM5 and one between AM5 and the rear-I/O armour.
+  const topVrmSink = new T.Group();
+  place(topVrmSink, box([mm(100), mm(8), mm(38)], '#202428', 0.82, mm(1.2)), [
+    0,
     mm(5),
-    stageZ,
+    0,
   ]);
-  const sinkB = buildFinStack(
-    material,
-    8,
-    [mm(30), mm(1.3), mm(110)],
-    mm(3.5),
-    '#525a60',
+  for (let i = 0; i < 8; i++)
+    place(topVrmSink, box([mm(8), mm(2), mm(36)], '#32383d', 0.86, mm(0.5)), [
+      mm(-42 + i * 12),
+      mm(10),
+      0,
+    ]);
+  add(
+    'vrmheatsink',
+    topVrmSink,
+    [mm(8), mm(1.6), socketZ - mm(57)],
+    [0.4, 2.4, -0.8],
   );
-  sinkB.rotation.z = Math.PI / 2;
-  place(vrmSink, sinkB, [socketX - mm(46), mm(13), socketZ + mm(2)]);
-  place(vrmSink, box([mm(28), mm(4), mm(112)], '#5d666d', 0.88), [
-    socketX - mm(46),
-    mm(5),
-    socketZ + mm(2),
+
+  const sideVrmSink = new T.Group();
+  place(sideVrmSink, box([mm(26), mm(9), mm(104)], '#202428', 0.82, mm(1.2)), [
+    0,
+    mm(5.5),
+    0,
   ]);
-  const heatpipe = new T.Mesh(
-    new T.CylinderGeometry(mm(3), mm(3), mm(120), 12),
-    material('#b8834e', 0.94, 0.24),
+  for (let i = 0; i < 7; i++)
+    place(sideVrmSink, box([mm(24), mm(2), mm(10)], '#32383d', 0.86, mm(0.5)), [
+      0,
+      mm(11),
+      mm(-45 + i * 15),
+    ]);
+  add(
+    'vrmheatsink',
+    sideVrmSink,
+    [socketX - mm(52), mm(1.6), socketZ + mm(5)],
+    [-0.7, 2.4, -0.2],
   );
-  heatpipe.rotation.z = Math.PI / 2;
-  place(vrmSink, heatpipe, [-mm(48), mm(9), stageZ]);
-  add('vrmheatsink', vrmSink, [0, mm(1.6), 0], [0, 2.4, -0.4]);
 
   // ── Chipset, firmware, battery, controllers ─────────────────────────────
   const chipset = new T.Group();
-  place(chipset, box([mm(58), mm(2), mm(50)], '#1e2124', 0.18), [0, 0, 0]);
-  place(chipset, buildBlockSink(material, mm(62), mm(54), mm(14), '#4c545a'), [
+  place(chipset, box([mm(34), mm(2), mm(32)], '#15181a', 0.18), [0, 0, 0]);
+  place(chipset, box([mm(92), mm(5), mm(44)], '#202428', 0.82, mm(1.4)), [
     0,
-    mm(8),
+    mm(4),
     0,
   ]);
-  label(chipset, 'TUF GAMING', [0, mm(17), -mm(5)], mm(47), '#9fa8ad');
-  label(chipset, 'X670E', [0, mm(17), mm(12)], mm(25), '#737d83');
-  add('chipset', chipset, [mm(58), mm(2.6), mm(61)], [0.6, 1.4, 0.6]);
+  place(chipset, box([mm(68), mm(2), mm(31)], '#30363a', 0.8, mm(0.8)), [
+    mm(8),
+    mm(7.5),
+    0,
+  ]);
+  for (let i = 0; i < 6; i++)
+    place(chipset, box([mm(4), mm(0.8), mm(27)], '#171a1c', 0.62, mm(0.2)), [
+      mm(-16 + i * 10),
+      mm(8.8),
+      0,
+    ]);
+  label(chipset, 'TUF GAMING', [mm(9), mm(9.5), -mm(4)], mm(58), '#8b9499');
+  label(chipset, 'X670E', [mm(9), mm(9.5), mm(10)], mm(25), '#697278');
+  add('chipset', chipset, [mm(47), mm(2.6), mm(61)], [0.6, 1.4, 0.6]);
 
   const flash = new T.Group();
   place(
@@ -320,7 +334,7 @@ export function buildMotherboard(tools: ModelTools, _root: T.Group) {
   clip.rotation.x = Math.PI / 2;
   place(battery, clip, [0, -mm(0.6), 0]);
   label(battery, 'CR', [0, mm(1.8), 0], mm(9), '#666d71');
-  add('cmos', battery, [mm(98), mm(3.4), mm(83)], [1.2, 1.0, 0.6]);
+  add('cmos', battery, [-mm(98), mm(3.4), mm(88)], [-1.2, 1.0, 0.6]);
 
   const lan = new T.Group();
   place(
@@ -334,7 +348,7 @@ export function buildMotherboard(tools: ModelTools, _root: T.Group) {
     -mm(18),
   ]);
   label(lan, 'LAN', [0, mm(1.5), 0], mm(10), '#8a9297');
-  add('lan', lan, [-mm(100), mm(2.8), mm(8)], [-1.0, 1.2, -0.4]);
+  add('lan', lan, [-mm(112), mm(2.8), mm(36)], [-1.0, 1.2, -0.4]);
 
   const codec = new T.Group();
   place(
@@ -342,14 +356,14 @@ export function buildMotherboard(tools: ModelTools, _root: T.Group) {
     buildChip(material, [mm(14), mm(2.2), mm(14)], 7, true, '#1a1d20'),
     [0, 0, 0],
   );
-  for (let i = 0; i < 5; i++)
+  for (let i = 0; i < 4; i++)
     place(codec, buildCapacitor(material, mm(4), mm(10), '#2b3f4a'), [
-      mm(-18 + i * 9),
+      mm(-12 + i * 8),
       mm(5),
       mm(16),
     ]);
   label(codec, 'AUDIO', [0, mm(1.5), -mm(12)], mm(22), '#8a9297');
-  add('audiocodec', codec, [-mm(98), mm(2.8), mm(108)], [-1.0, 1.2, 0.6]);
+  add('audiocodec', codec, [-mm(106), mm(2.8), mm(108)], [-1.0, 1.2, 0.6]);
 
   const sensor = new T.Group();
   place(
@@ -358,10 +372,11 @@ export function buildMotherboard(tools: ModelTools, _root: T.Group) {
     [0, 0, 0],
   );
   label(sensor, 'IO', [0, mm(1.5), 0], mm(8), '#8a9297');
-  add('superio', sensor, [mm(84), mm(2.8), mm(115)], [0.9, 1.2, 0.8]);
+  add('superio', sensor, [mm(104), mm(2.8), mm(128)], [0.9, 1.2, 0.8]);
 
   // ── Expansion slots ─────────────────────────────────────────────────────
-  const pcieZ = socketZ + mm(96);
+  const pcieZ = mm(26),
+    lowerPcieZ = mm(128);
   for (let i = 0; i < 2; i++) {
     const slot = buildSlot(material, mm(89), i ? '#2f3439' : '#54454e', {
       width: mm(9),
@@ -373,7 +388,7 @@ export function buildMotherboard(tools: ModelTools, _root: T.Group) {
     add(
       'pcie16',
       slot,
-      [-mm(58), mm(6), pcieZ + i * SLOT_PITCH * 3],
+      [i ? -mm(40) : -mm(42), mm(6), i ? lowerPcieZ : pcieZ],
       [0, 1.1, 0],
       0.12,
     );
@@ -387,14 +402,18 @@ export function buildMotherboard(tools: ModelTools, _root: T.Group) {
         notch: 0.2,
         latch: true,
       }),
-      [-mm(78), mm(6), pcieZ + SLOT_PITCH * (i ? 5 : 1.5)],
+      [-mm(104), mm(6), i ? mm(109) : mm(70)],
       [0, 1.1, 0],
       0.12,
     );
 
   // ── M.2 storage ─────────────────────────────────────────────────────────
-  for (let i = 0; i < 2; i++) {
-    const z = pcieZ - SLOT_PITCH * 1.4 + i * SLOT_PITCH * 4.2;
+  const m2Layouts = [
+    { z: -mm(2), coverX: -mm(8), coverWidth: mm(104), coverDepth: mm(22) },
+    { z: mm(101), coverX: mm(2), coverWidth: mm(174), coverDepth: mm(24) },
+  ];
+  for (const layout of m2Layouts) {
+    const { z } = layout;
     const socketM2 = new T.Group();
     place(socketM2, box([mm(22), mm(3.4), mm(4)], '#333940', 0.24), [
       -mm(40),
@@ -430,17 +449,28 @@ export function buildMotherboard(tools: ModelTools, _root: T.Group) {
     add('nvme', drive, [-mm(4), mm(5), z], [0, 1.8, 0], 0.2);
 
     const cover = new T.Group();
-    const fins = buildFinStack(
-      material,
-      12,
-      [mm(8), mm(1.2), mm(26)],
-      mm(7),
-      '#636c72',
+    place(
+      cover,
+      box(
+        [layout.coverWidth, mm(3), layout.coverDepth],
+        '#202428',
+        0.84,
+        mm(0.8),
+      ),
+      [0, mm(1.5), 0],
     );
-    fins.rotation.z = Math.PI / 2;
-    place(cover, fins, [0, 0, 0]);
-    place(cover, box([mm(88), mm(3), mm(28)], '#6d767c', 0.88), [0, -mm(4), 0]);
-    add('m2heatsink', cover, [-mm(4), mm(13), z], [0, 2.6, 0]);
+    for (let j = 0; j < 4; j++) {
+      const slash = box([mm(10), mm(0.8), mm(1.4)], '#41484d', 0.8, mm(0.2));
+      slash.rotation.y = -0.55;
+      place(cover, slash, [
+        -layout.coverWidth / 2 + mm(22 + j * 8),
+        mm(3.4),
+        mm(3),
+      ]);
+    }
+    if (layout === m2Layouts[0])
+      label(cover, 'M.2 PCIe 5.0', [mm(16), mm(3.5), 0], mm(48), '#899196');
+    add('m2heatsink', cover, [layout.coverX, mm(5.8), z], [0, 2.6, 0]);
   }
 
   // ── Power connectors ────────────────────────────────────────────────────
@@ -451,7 +481,7 @@ export function buildMotherboard(tools: ModelTools, _root: T.Group) {
     add(
       'eps8',
       buildHeader(material, 4, 2, mm(4.2), '#22262a', mm(12)),
-      [socketX - mm(6) + i * mm(26), mm(6.5), -D / 2 + mm(8)],
+      [mm(-82 + i * 27), mm(6.5), -D / 2 + mm(8)],
       [0, 1.0, -1.2],
     );
 
@@ -481,12 +511,12 @@ export function buildMotherboard(tools: ModelTools, _root: T.Group) {
       [0.3, 0.8, 1.3],
     );
   const fanHeaders: Vec3[] = [
-    [socketX + mm(40), mm(5), -D / 2 + mm(12)],
-    [socketX - mm(40), mm(5), -D / 2 + mm(12)],
+    [mm(72), mm(5), -D / 2 + mm(12)],
+    [mm(93), mm(5), -D / 2 + mm(12)],
     [W / 2 - mm(9), mm(5), -mm(67)],
     [W / 2 - mm(9), mm(5), mm(94)],
-    [-mm(60), mm(5), D / 2 - mm(12)],
-    [mm(10), mm(5), -D / 2 + mm(12)],
+    [-mm(51), mm(5), D / 2 - mm(12)],
+    [mm(57), mm(5), D / 2 - mm(12)],
   ];
   for (const position of fanHeaders)
     add(
@@ -498,7 +528,21 @@ export function buildMotherboard(tools: ModelTools, _root: T.Group) {
 
   // ── Rear I/O stack ──────────────────────────────────────────────────────
   const io = new T.Group();
-  place(io, box([mm(158), mm(44), mm(18)], '#333940', 0.66), [0, mm(20), 0]);
+  place(io, box([mm(158), mm(44), mm(18)], '#1d2124', 0.66), [0, mm(20), 0]);
+  // The reference integrates the rear ports under a broad armour panel rather
+  // than exposing them as a thin silver rail. It stops short of the side VRM
+  // block so the two assemblies meet with a visible clearance seam.
+  place(io, box([mm(136), mm(10), mm(44)], '#202428', 0.82, mm(1.4)), [
+    0,
+    mm(18),
+    mm(22),
+  ]);
+  place(io, box([mm(112), mm(2), mm(37)], '#30363a', 0.78, mm(0.8)), [
+    mm(4),
+    mm(24),
+    mm(22),
+  ]);
+  label(io, 'TUF GAMING', [0, mm(25.2), mm(22)], mm(88), '#899196');
   // USB, display and network, as stacked shells with real openings.
   const ports: [Vec3, Vec3, string][] = [
     [[-mm(62), mm(10), mm(10)], [mm(15), mm(7), mm(14)], '#33455f'],
@@ -543,25 +587,51 @@ export function buildMotherboard(tools: ModelTools, _root: T.Group) {
       0.3,
     );
 
-  // Small passives filling the space between assemblies, as on a real board.
+  // Small passives fill genuinely open board regions. The previous scatter
+  // ignored sockets, slots and thermal covers, so gold pads visibly poked
+  // through the larger assemblies in the assembled view.
+  const keepouts: [number, number, number, number][] = [
+    [socketX, socketZ, mm(42), mm(42)],
+    [-mm(92), -mm(70), mm(31), mm(76)],
+    [mm(8), socketZ - mm(57), mm(53), mm(23)],
+    [socketX - mm(52), socketZ + mm(5), mm(18), mm(58)],
+    [mm(78), slotZ, mm(25), mm(72)],
+    [-mm(8), -mm(2), mm(56), mm(15)],
+    [mm(47), mm(61), mm(49), mm(25)],
+    [mm(2), mm(101), mm(90), mm(15)],
+    [-mm(58), pcieZ, mm(50), mm(8)],
+    [-mm(58), lowerPcieZ, mm(50), mm(8)],
+  ];
+  const reserved = (x: number, z: number) =>
+    keepouts.some(
+      ([cx, cz, halfX, halfZ]) =>
+        Math.abs(x - cx) < halfX && Math.abs(z - cz) < halfZ,
+    );
   const passives: Vec3[] = [];
   for (let i = 0; i < 120; i++) {
     const a = i * 2.399;
     const x = Math.cos(a) * (mm(20) + (i % 11) * mm(12)) + mm(20);
     const z = Math.sin(a * 1.31) * (mm(18) + (i % 9) * mm(11)) + mm(14);
-    if (Math.abs(x - socketX) < mm(38) && Math.abs(z - socketZ) < mm(38))
-      continue;
+    if (reserved(x, z)) continue;
     if (Math.abs(x) > W / 2 - mm(14) || Math.abs(z) > D / 2 - mm(14)) continue;
     passives.push([x, mm(1.9), z]);
   }
   instances('moboboard', passives, [mm(3.2), mm(1.5), mm(1.8)], 0, '#6e7a69');
   // A handful of taller electrolytics, so the board has vertical relief.
-  for (let i = 0; i < 7; i++) {
-    const a = i * 1.7;
+  const capacitorPositions: [number, number][] = [
+    [94, 78],
+    [106, 78],
+    [96, 90],
+    [108, 90],
+    [94, 119],
+    [106, 119],
+    [82, 126],
+  ];
+  for (const [x, z] of capacitorPositions) {
     add(
       'moboboard',
       buildCapacitor(material, mm(4.5), mm(11), '#23282c'),
-      [mm(80) + Math.cos(a) * mm(20), mm(7), mm(78) + Math.sin(a) * mm(30)],
+      [mm(x), mm(7), mm(z)],
       [0.8, 1.4, 0.4],
       0.34,
     );
