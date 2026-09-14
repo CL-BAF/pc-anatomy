@@ -354,18 +354,20 @@ export function createViewer(
             ? new T.Vector3(0, 0.05, 1)
             : state.view === 'back'
               ? new T.Vector3(0, 0.05, -1)
-              : // Look down on something flat like a card; stand nearer eye
-                // level for something tall like a tower, or the lid is all
-                // you see.
-                new T.Vector3(
-                  0.7,
-                  T.MathUtils.lerp(
-                    1,
-                    0.44,
-                    Math.min(1, size.y / Math.max(size.x, size.z, 0.001)),
-                  ),
-                  1.2,
-                );
+              : state.level === 'motherboard' && state.explode < 15 && !focus
+                ? new T.Vector3(0.18, 1.9, 0.55)
+                : // Look down on something flat like a card; stand nearer eye
+                  // level for something tall like a tower, or the lid is all
+                  // you see.
+                  new T.Vector3(
+                    0.7,
+                    T.MathUtils.lerp(
+                      1,
+                      0.44,
+                      Math.min(1, size.y / Math.max(size.x, size.z, 0.001)),
+                    ),
+                    1.2,
+                  );
     direction.normalize();
     // Fit the bounding sphere rather than guessing from width and height: a
     // flat card and a tall tower then frame the same way, at any aspect ratio.
@@ -375,7 +377,11 @@ export function createViewer(
     // A selected part needs breathing room inside the smaller stage left by
     // the detail panel. The old 0.8 multiplier cropped focused parts at every
     // edge, even though the ordinary whole-model fit looked intentional.
-    const padding = focus ? 1.16 : 0.8;
+    const padding = focus
+      ? 1.16
+      : state.level === 'card' && camera.aspect < 1
+        ? 1.05
+        : 0.8;
     const d = (radius / Math.sin(Math.min(vertical, horizontal) / 2)) * padding;
     targetPosition
       .copy(targetLook)

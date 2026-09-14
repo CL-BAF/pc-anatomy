@@ -12,6 +12,8 @@ import {
   buildMainsInlet,
   buildModularPanel,
   buildScrew,
+  buildPort,
+  buildHeader,
   glowMaterial,
 } from './parts.ts';
 import { buildChassis, plateWithHoles, type CaseShell } from './chassis.ts';
@@ -864,7 +866,7 @@ export function buildMachine(tools: ModelTools, root: T.Group) {
   // A card in a tower hangs cooler-downward, which is the half turn about X
   // below. The turn also swaps the card's two long edges, so the lit wordmark
   // is asked for on the far edge in order to end up facing the window.
-  const CARD_L = mm(350);
+  const CARD_L = mm(348);
   const parts = buildCardCooler(tools, finish, CARD_L, {
     logoEdge: -1,
     accent: ACCENT,
@@ -879,13 +881,25 @@ export function buildMachine(tools: ModelTools, root: T.Group) {
       [CARD.pcb.length * CARD_L, mm(1.6), CARD.pcb.width * CARD_L],
       'graphics',
     ),
-    [CARD_L * 0.08, seat.pcb, 0],
+    [CARD_L * CARD.pcb.centerX, seat.pcb, 0],
   );
   place(card, parts.shroud, [0, seat.shroud, 0]);
   place(card, parts.fins, [0, seat.fins, 0]);
   for (const fan of parts.fans) place(card, fan.object, [fan.x, seat.fan, 0]);
   place(card, parts.backplate, [0, seat.backplate, 0]);
   place(card, parts.bracket, [-CARD_L / 2 - mm(2), seat.bracket, 0]);
+  for (let i = 0; i < 5; i++) {
+    const port = buildPort(
+      material,
+      [mm(i >= 3 ? 14 : 16), mm(4.8), mm(15)],
+      '#73797d',
+    );
+    port.rotation.y = -Math.PI / 2;
+    place(card, port, [-mm(168), seat.bracket - mm(6.8), mm(-49.6 + i * 24.8)]);
+  }
+  const cardPower = buildHeader(material, 6, 2, mm(3.6), '#111416', mm(10));
+  cardPower.rotation.x = -Math.PI / 2;
+  place(card, cardPower, [mm(32), mm(8), -mm(63)]);
   const cardSpill = new T.PointLight(ACCENT, 5.5, 5.5, 2);
   cardSpill.position.set(CARD_L * 0.02, seat.shroud * 0.4, -cardWide * 0.6);
   card.add(cardSpill);

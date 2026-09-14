@@ -10,6 +10,20 @@ Reviewed 2026-09-12. PC Anatomy is independent of NVIDIA, Intel, AMD, JEDEC, PCI
 
 ## Representation limits
 
+### ASUS TUF RTX 5090 model update · September 15, 2026
+
+The selected exterior reference is now the ASUS TUF Gaming RTX 5090.
+[ASUS specifications](https://www.asus.com/uk/motherboards-components/graphics-cards/tuf-gaming/tuf-rtx5090-32g-gaming/techspec/)
+document a 348 × 146 × 72 mm envelope, 3.6-slot thickness, three DisplayPort
+2.1b and two HDMI 2.1b outputs, and one 16-pin power connector.
+[ASUS construction images](https://www.asus.com/uk/motherboards-components/graphics-cards/tuf-gaming/tuf-rtx5090-32g-gaming/)
+inform the angular shroud, brushed corner inserts, opposed centre fan, vented
+backplate, vapor chamber and twelve heatpipes. Fins remain one selectable
+heatsink assembly throughout dissection and inventory. GPU, memory and support
+circuit placement remains an educational approximation, not manufacturing CAD,
+an exact PCB netlist, or a service guide. Earlier generic cooler descriptions
+below record previous versions and are superseded by this reference.
+
 The physical assembly is an illustrative modern card, not an exact Founders Edition CAD model or repair guide. Board outline, traces, fasteners, fin count, passive placement and power stages are authored for clarity, not asserted engineering specifications. Internal views are logical diagrams with arbitrary block sizes and positions; transistor placement is not claimed. Repeated instances have stable identifiers but illustrative placement.
 
 ## Component expansion · September 12, 2026

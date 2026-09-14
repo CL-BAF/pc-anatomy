@@ -15,14 +15,13 @@ import { glowMaterial } from './parts.ts';
  * the card that had been in it. Everything below is the single source, and
  * both callers build from it.
  *
- * It is also now a triple-fan card, which is what a card in this class
- * actually is. Nearly every 5090 on sale is a three-fan, three-slot board from
- * a partner manufacturer; two fans belonged to a much smaller card.
+ * The exterior follows the ASUS TUF RTX 5090 reference selected by the user.
+ * The Founders Edition uses a different two-fan construction.
  *
  * ── Proportions ──────────────────────────────────────────────────────────
  * Everything is a fraction of the card's LENGTH, so one number sizes the whole
  * card and the two scales cannot disagree about its shape. The fractions are
- * taken from a 3.5-slot partner card of roughly 350 × 150 × 75 mm.
+ * based on ASUS's published 348 × 146 × 72 mm / 3.6-slot envelope.
  *
  * ── Local frame ──────────────────────────────────────────────────────────
  *   +X  along the card, away from the bracket   −X  the bracket end
@@ -35,9 +34,9 @@ import { glowMaterial } from './parts.ts';
  */
 export const CARD = {
   /** Across the slot, ÷ length. A 350 mm card stands about 150 mm tall. */
-  width: 0.428,
+  width: 146 / 348,
   /** Total thickness of the cooler, ÷ length: three and a half slots. */
-  depth: 0.214,
+  depth: 68 / 348,
   /**
    * Where the three fans sit along the card, ÷ length.
    *
@@ -51,7 +50,7 @@ export const CARD = {
   /** Fan radius ÷ length: about a 105 mm fan on a 350 mm card. */
   fanRadius: 0.15,
   /** The board inside is far shorter than the cooler around it. */
-  pcb: { length: 0.63, width: 0.33 },
+  pcb: { length: 0.66, width: 0.35, centerX: -0.15 },
 };
 
 /**
@@ -73,7 +72,7 @@ export function bladeGeometry() {
         const t = r / (rows - 1),
           u = c / (cols - 1) - 0.5;
         const radius = (0.32 + t * 1.13) / 1.45;
-        const angle = 0.35 * Math.pow(t, 1.3) + u * (0.52 - 0.11 * t);
+        const angle = 0.8 * Math.pow(t, 1.3) + u * (0.95 - 0.24 * t);
         const height =
           (0.12 * Math.sin(t * Math.PI * 0.85) + u * 0.24 * (0.25 + t)) / 1.45;
         verts.push(
@@ -112,11 +111,10 @@ export function bladeGeometry() {
 }
 
 /**
- * One fan: nine blades on a hub, inside a rim.
+ * One fan: seven blades on a hub, inside a rim.
  *
  * Blade count matters more than it looks. A card fan has an odd, prime-ish
- * count so the blades do not line up with the fins beneath and drone; nine is
- * the usual answer on a card this size.
+ * count so the blades do not line up with the fins beneath and drone; the seven broad blades here follow the TUF reference.
  */
 export function buildAxialFan(
   finish: Finisher,
@@ -125,10 +123,10 @@ export function buildAxialFan(
   detail: 'full' | 'plain' = 'full',
 ) {
   const fan = new T.Group();
-  const count = 9;
+  const count = 7;
   const impeller = new T.InstancedMesh(
     blades,
-    finish('plastic', '#191d20'),
+    finish('plastic', '#080a0c'),
     count,
   );
   const helper = new T.Object3D();
@@ -143,14 +141,14 @@ export function buildAxialFan(
   fan.add(impeller);
   // The hub, and the plate on top of it that carries the marking.
   const hub = new T.Mesh(
-    new T.CylinderGeometry(radius * 0.22, radius * 0.27, radius * 0.17, 40),
-    finish('plasticGloss', '#1b1f22'),
+    new T.CylinderGeometry(radius * 0.285, radius * 0.3, radius * 0.17, 40),
+    finish('plasticGloss', '#090b0d'),
   );
   hub.position.y = radius * 0.03;
   fan.add(hub);
   const cap = new T.Mesh(
-    new T.CylinderGeometry(radius * 0.165, radius * 0.165, radius * 0.01, 40),
-    finish('anodizedLight', '#7d868c'),
+    new T.CylinderGeometry(radius * 0.27, radius * 0.27, radius * 0.01, 40),
+    finish('plastic', '#111315'),
   );
   cap.position.y = radius * 0.12;
   fan.add(cap);
@@ -199,7 +197,43 @@ export function buildCardCooler(
     detail?: 'full' | 'plain';
   } = {},
 ): CardParts {
-  const { material, label } = tools;
+  const { material } = tools;
+  // Fit printed markings to their physical width, including short hub badges.
+  const label = (
+    parent: T.Group,
+    text: string,
+    pos: Vec3,
+    width: number,
+    color = '#b7bbbc',
+  ) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 192;
+    const ctx = canvas.getContext('2d')!;
+    ctx.font = '700 120px sans-serif';
+    ctx.fillStyle = color;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const measured = ctx.measureText(text)?.width || 480;
+    ctx.translate(256, 96);
+    ctx.scale(480 / measured, 1);
+    ctx.fillText(text, 0, 0);
+    const texture = new T.CanvasTexture(canvas);
+    texture.colorSpace = T.SRGBColorSpace;
+    texture.anisotropy = 8;
+    const plane = new T.Mesh(
+      new T.PlaneGeometry(width, width * 0.22),
+      new T.MeshBasicMaterial({
+        map: texture,
+        transparent: true,
+        depthWrite: false,
+        toneMapped: false,
+      }),
+    );
+    plane.rotation.x = -Math.PI / 2;
+    plane.position.set(...pos);
+    parent.add(plane);
+  };
   const { logoEdge = 1, accent = '#37d6ff', detail = 'full' } = options;
   const W = CARD.width * L,
     D = CARD.depth * L,
@@ -219,302 +253,292 @@ export function buildCardCooler(
     return obj;
   };
 
-  const dark = finish('anodized', '#23282d');
-  const mid = finish('anodized', '#31383e');
-  const bright = finish('anodizedLight', '#828b92');
-  const alu = finish('brushed', '#5e666c');
-
-  /**
-   * The top face, with three apertures cut in it.
-   *
-   * Cut, not covered: a plate with three discs laid on it reads as a sticker,
-   * and the rim round each opening is most of what tells you the shroud has
-   * thickness. Shapes with holes extrude cleanly, so this is one piece.
-   */
-  const shroud = new T.Group();
-  const face = new T.Shape();
-  const hx = L / 2,
-    hz = W / 2,
-    corner = L * 0.018;
-  face.moveTo(-hx + corner, -hz);
-  face.lineTo(hx - corner, -hz);
-  face.quadraticCurveTo(hx, -hz, hx, -hz + corner);
-  face.lineTo(hx, hz - corner);
-  face.quadraticCurveTo(hx, hz, hx - corner, hz);
-  face.lineTo(-hx + corner, hz);
-  face.quadraticCurveTo(-hx, hz, -hx, hz - corner);
-  face.lineTo(-hx, -hz + corner);
-  face.quadraticCurveTo(-hx, -hz, -hx + corner, -hz);
+  const dark = finish('anodized', '#101316', 0.7);
+  const mid = finish('anodized', '#25292d', 0.65);
+  const bright = finish('brushed', '#808589', 0.55);
+  dark.envMapIntensity = 0.28;
+  mid.envMapIntensity = 0.4;
+  bright.envMapIntensity = 0.65;
+  const steel = finish('brushed', '#82878a', 0.5);
+  const shapeMesh = (shape: T.Shape, thickness: number, mat: T.Material) => {
+    const g = new T.ExtrudeGeometry(shape, {
+      depth: thickness,
+      bevelEnabled: true,
+      bevelSize: L * 0.001,
+      bevelThickness: L * 0.0007,
+      bevelSegments: 2,
+      curveSegments: detail === 'full' ? 64 : 32,
+    });
+    g.rotateX(-Math.PI / 2);
+    return new T.Mesh(g, mat);
+  };
+  const outline = (halfX: number, halfZ: number, cut = L * 0.014) => {
+    const s = new T.Shape();
+    s.moveTo(-halfX + cut, -halfZ);
+    s.lineTo(halfX - cut, -halfZ);
+    s.lineTo(halfX, -halfZ + cut);
+    s.lineTo(halfX, halfZ - cut);
+    s.lineTo(halfX - cut, halfZ);
+    s.lineTo(-halfX + cut, halfZ);
+    s.lineTo(-halfX, halfZ - cut);
+    s.lineTo(-halfX, -halfZ + cut);
+    s.closePath();
+    return s;
+  };
+  const aperture = R * 1.025;
+  const face = outline(L / 2, W * 0.45);
   for (const f of CARD.fans) {
     const hole = new T.Path();
-    hole.absarc(f * L, 0, R, 0, Math.PI * 2, true);
+    hole.absarc(f * L, 0, aperture, 0, Math.PI * 2, true);
     face.holes.push(hole);
   }
-  const plate = new T.ExtrudeGeometry(face, {
-    depth: L * 0.012,
-    bevelEnabled: true,
-    bevelSegments: 2,
-    bevelSize: L * 0.003,
-    bevelThickness: L * 0.002,
-    curveSegments: detail === 'full' ? 44 : 22,
-  });
-  plate.rotateX(-Math.PI / 2);
-  put(shroud, new T.Mesh(plate, dark), [0, 0, 0]);
-
-  // A raised rim round each aperture, and the four-arm spider that would carry
-  // the motor. Both are what a fan opening actually looks like from above.
+  const shroud = new T.Group();
+  put(shroud, shapeMesh(face, L * 0.006, mid), [0, 0, 0]);
+  // Four brushed corner inserts share the circular cut-out of the main frame.
+  // Their inner arcs follow the fan rim rather than covering the blades.
+  for (const sx of [-1, 1])
+    for (const sz of [-1, 1]) {
+      const patch = new T.Shape();
+      const cx = sx * CARD.fans[2] * L;
+      const x0 = sx * L * 0.475,
+        x1 = sx * L * 0.375;
+      const z0 = sz * W * 0.435;
+      const arcZ = (x: number) =>
+        sz *
+        Math.max(
+          W * 0.22,
+          Math.sqrt(Math.max(0, aperture * aperture - (x - cx) * (x - cx))),
+        );
+      patch.moveTo(x0, z0);
+      patch.lineTo(x1, z0);
+      for (let i = 0; i <= 16; i++) {
+        const x = x1 + ((x0 - x1) * i) / 16;
+        patch.lineTo(x, arcZ(x));
+      }
+      patch.closePath();
+      put(shroud, shapeMesh(patch, L * 0.001, bright), [0, L * 0.007, 0]);
+      const screw = new T.Mesh(
+        new T.CylinderGeometry(L * 0.006, L * 0.006, L * 0.002, 20),
+        steel,
+      );
+      put(shroud, screw, [sx * L * 0.451, L * 0.01, sz * W * 0.375]);
+      put(shroud, slab([L * 0.006, L * 0.0005, L * 0.001], dark), [
+        sx * L * 0.451,
+        L * 0.0113,
+        sz * W * 0.375,
+      ]);
+    }
   for (const f of CARD.fans) {
     const rim = new T.Mesh(
-      new T.TorusGeometry(R * 1.015, L * 0.005, 8, detail === 'full' ? 56 : 28),
-      bright,
+      new T.TorusGeometry(aperture, L * 0.003, 8, 80),
+      dark,
     );
     rim.rotation.x = Math.PI / 2;
-    put(shroud, rim, [f * L, L * 0.006, 0]);
+    put(shroud, rim, [f * L, L * 0.008, 0]);
+    // Motor support struts are behind the impeller, not across its face.
+    for (const angle of [0, 2.1, 4.2]) {
+      const arm = slab([R * 1.05, L * 0.002, L * 0.012], dark);
+      arm.rotation.y = angle;
+      put(shroud, arm, [
+        f * L + Math.cos(angle) * R * 0.51,
+        -L * 0.043,
+        -Math.sin(angle) * R * 0.51,
+      ]);
+    }
   }
-
-  /**
-   * The sides and ends, which are bands rather than walls.
-   *
-   * A cooler closed on all four faces is a box, and a box is what this looked
-   * like: the fin stack, which is the entire point of the object, was sealed
-   * inside where nothing could see it. A real card is open below the shroud
-   * lip and open at both ends, because that is where the air leaves. So each
-   * side gets a deep band under the top face and a thin lip at the bottom,
-   * with the fins showing through the gap between them.
-   */
-  for (const sz of [-1, 1] as const) {
-    const z = sz * (W / 2 - W * 0.037);
-    put(shroud, slab([L, D * 0.4, W * 0.075], mid), [0, -D * 0.25, z]);
-    put(shroud, slab([L, D * 0.11, W * 0.075], mid), [0, -D * 0.805, z]);
-    // A chamfered arris along the top edge, which is the line that catches the
-    // light and gives the card its edge against a dark case.
-    put(shroud, slab([L * 0.985, L * 0.012, L * 0.012], bright), [
-      0,
-      -L * 0.004,
-      sz * (W / 2 - L * 0.008),
-    ]);
+  // Open exhaust rails and small structural pillars preserve visible fins.
+  for (const sz of [-1, 1]) {
+    const z = sz * (W / 2 - L * 0.009);
+    put(shroud, slab([L * 0.96, D * 0.15, L * 0.018], mid), [0, -D * 0.075, z]);
+    for (const [a, b] of sz < 0
+      ? [
+          [-0.48, -0.02],
+          [0.15, 0.48],
+        ]
+      : [[-0.48, 0.48]])
+      put(shroud, slab([L * (b - a), L * 0.009, L * 0.014], dark), [
+        (L * (a + b)) / 2,
+        -D * 0.87,
+        z,
+      ]);
+    for (const x of [-0.475, -0.16, 0.16, 0.475])
+      put(shroud, slab([L * 0.016, D * 0.67, L * 0.012], dark), [
+        x * L,
+        -D * 0.5,
+        z,
+      ]);
   }
-  // The ends, open below their own band so the stack vents out of the card.
-  for (const sx of [-1, 1] as const) {
-    put(shroud, slab([W * 0.05, D * 0.4, W], mid), [
-      sx * (L / 2 - W * 0.025),
-      -D * 0.25,
-      0,
-    ]);
-    put(shroud, slab([W * 0.05, D * 0.11, W], mid), [
-      sx * (L / 2 - W * 0.025),
-      -D * 0.805,
-      0,
-    ]);
-  }
-  // The angular facet across the top. Partner cards all carry some version of
-  // this crease; a flat rectangle with three holes in it is the one thing they
-  // never look like.
-  for (const f of [-0.1575, 0.1575]) {
-    const crease = slab([L * 0.03, L * 0.014, W * 0.94], alu);
-    crease.rotation.y = 0.13;
-    put(shroud, crease, [f * L, L * 0.004, 0]);
-  }
-
-  /**
-   * The lit wordmark down one edge, and the power socket on the top edge.
-   *
-   * The card is named nominatively, the way the rest of this project names the
-   * three parts it models as specific subjects. No manufacturer's own mark,
-   * shroud styling or trade dress is reproduced here: this is a generic
-   * partner-style cooler, not a copy of any one company's card.
-   */
-  const bar = new T.Mesh(
-    new T.PlaneGeometry(L * 0.34, L * 0.008),
-    glowMaterial(accent, 1.45),
+  for (const sx of [-1, 1])
+    for (const z of [-W * 0.38, W * 0.38])
+      put(shroud, slab([L * 0.012, D * 0.8, W * 0.12], mid), [
+        sx * L * 0.493,
+        -D * 0.45,
+        z,
+      ]);
+  label(
+    shroud,
+    'TUF GAMING',
+    [L * 0.17, L * 0.0085, -W * 0.38],
+    L * 0.13,
+    '#b7bbbc',
   );
-  // A plane faces +Z. Turning it half a turn about Y is what points it the
-  // other way; turning it about X *and* Y is a half turn about Z, which spins
-  // it in its own plane and leaves it still facing +Z.
-  if (logoEdge < 0) bar.rotation.y = Math.PI;
-  put(shroud, bar, [L * 0.06, -D * 0.12, logoEdge * (W / 2 + L * 0.001)]);
-  const wordmark = new T.Group();
-  label(wordmark, 'GEFORCE RTX 5090', [0, 0, 0], L * 0.26, '#aab3ba');
-  wordmark.rotation.x = Math.PI / 2;
-  if (logoEdge < 0) wordmark.rotation.z = Math.PI;
-  put(shroud, wordmark, [L * 0.06, -D * 0.3, logoEdge * (W / 2 + L * 0.002)]);
-
-  // The 12V-2x6 socket, on the top edge where a card of this draw puts it.
-  const socket = new T.Group();
-  put(
-    socket,
-    slab([L * 0.062, L * 0.03, L * 0.022], finish('plasticGloss')),
-    [0, 0, 0],
+  label(
+    shroud,
+    'GET TUF. GAME TOUGH.',
+    [-L * 0.16, L * 0.0085, W * 0.39],
+    L * 0.13,
+    '#8b9193',
   );
-  // Twelve high-current contacts in two rows, plus four smaller sense
-  // contacts. This is the feature that distinguishes 12V-2x6 / 12VHPWR from
-  // an ordinary PCIe 8-pin block at a glance.
-  for (let i = 0; i < 12; i++)
-    put(socket, slab([L * 0.007, L * 0.012, L * 0.008], finish('nickel')), [
-      -L * 0.021 + (i % 6) * L * 0.0084,
-      L * 0.006,
-      (Math.floor(i / 6) - 0.5) * L * 0.01,
+  for (let i = 0; i < 6; i++) {
+    const slash = slab([L * 0.008, L * 0.001, L * 0.018], bright);
+    slash.rotation.y = -0.6;
+    put(shroud, slash, [-L * 0.19 + i * L * 0.012, L * 0.008, W * 0.35]);
+  }
+  const mark = new T.Group();
+  label(mark, 'GEFORCE RTX', [0, 0, 0], L * 0.29, '#b6babc');
+  mark.rotation.x = Math.PI / 2;
+  if (logoEdge < 0) mark.rotation.z = Math.PI;
+  put(shroud, mark, [-L * 0.015, -D * 0.08, logoEdge * (W / 2 + L * 0.001)]);
+  // Restrained ARGB indicator confined to the distal TUF badge.
+  for (let i = 0; i < 5; i++) {
+    const light = new T.Mesh(
+      new T.PlaneGeometry(L * 0.004, L * 0.011),
+      glowMaterial(accent, 0.75),
+    );
+    if (logoEdge < 0) light.rotation.y = Math.PI;
+    put(shroud, light, [
+      L * (0.39 + i * 0.011),
+      -D * 0.07,
+      logoEdge * (W / 2 + L * 0.0015),
     ]);
-  for (let i = 0; i < 4; i++)
-    put(socket, slab([L * 0.003, L * 0.006, L * 0.004], finish('nickel')), [
-      -L * 0.0075 + i * L * 0.005,
-      L * 0.012,
-      L * 0.014,
-    ]);
-  put(shroud, socket, [L * 0.1, L * 0.012, -logoEdge * W * 0.2]);
+  }
 
-  /** Fin banks, one under each fan, visible through the apertures and ends. */
   const fins = new T.Group();
-  const finMaterial = material('#5f686e', 0.9, 0.3);
-  const finGeometry = new T.BoxGeometry(L * 0.0016, D * 0.62, W * 0.9);
-  const perBank = detail === 'full' ? 54 : 26;
-  for (const f of CARD.fans) {
-    const bank = new T.InstancedMesh(finGeometry, finMaterial, perBank);
-    const helper = new T.Object3D();
-    for (let i = 0; i < perBank; i++) {
+  const finMat = material('#4b5053', 0.82, 0.85);
+  finMat.envMapIntensity = 0.4;
+  const finHeight = D * 0.4;
+  const finGeometry = new T.BoxGeometry(L * 0.001, finHeight, W * 0.83);
+  // Two brazed banks with a break for the heatpipe bends; one inventory item.
+  for (const [start, stop] of [
+    [-0.46, -0.07],
+    [-0.03, 0.46],
+  ]) {
+    const count = detail === 'full' ? Math.round((stop - start) * 210) : 30;
+    const bank = new T.InstancedMesh(finGeometry, finMat, count),
+      helper = new T.Object3D();
+    for (let i = 0; i < count; i++) {
       helper.position.set(
-        f * L + (i - (perBank - 1) / 2) * ((R * 2.05) / perBank),
+        L * (start + ((stop - start) * i) / (count - 1)),
         0,
         0,
       );
-      helper.rotation.set(0, 0, 0);
-      helper.scale.set(1, 1, 1);
       helper.updateMatrix();
       bank.setMatrixAt(i, helper.matrix);
     }
     bank.castShadow = bank.receiveShadow = true;
     fins.add(bank);
   }
+  for (const z of [-W * 0.39, W * 0.39])
+    put(fins, slab([L * 0.92, L * 0.006, L * 0.013], finMat), [
+      0,
+      -finHeight * 0.46,
+      z,
+    ]);
 
-  /**
-   * The backplate, with the flow-through window at the far end.
-   *
-   * That opening is not decoration: the fin stack past the end of the board is
-   * open on both faces so the third fan can blow straight through the card
-   * instead of back into the case. It is the defining feature of the rear half
-   * of a modern card and the reason they are as long as they are.
-   */
   const backplate = new T.Group();
-  const bp = new T.Shape();
-  const bx = L / 2,
-    bz = W / 2;
-  bp.moveTo(-bx, -bz);
-  bp.lineTo(bx, -bz);
-  bp.lineTo(bx, bz);
-  bp.lineTo(-bx, bz);
+  const bp = outline(L / 2, W / 2);
   const vent = new T.Path();
-  const v0 = L * 0.17,
-    v1 = L * 0.46,
-    vz = W * 0.36;
-  vent.moveTo(v0, -vz);
-  vent.lineTo(v1, -vz);
-  vent.lineTo(v1, vz);
-  vent.lineTo(v0, vz);
+  vent.moveTo(L * 0.205, -W * 0.34);
+  vent.lineTo(L * 0.465, -W * 0.34);
+  vent.lineTo(L * 0.465, W * 0.34);
+  vent.lineTo(L * 0.205, W * 0.34);
+  vent.closePath();
   bp.holes.push(vent);
-  const bpGeometry = new T.ExtrudeGeometry(bp, {
-    depth: L * 0.008,
-    bevelEnabled: false,
-  });
-  bpGeometry.rotateX(-Math.PI / 2);
-  put(
-    backplate,
-    new T.Mesh(bpGeometry, finish('anodized', '#20252a')),
-    [0, 0, 0],
-  );
-  /**
-   * Everything on the backplate goes on its OUTER face, which is −Y here.
-   *
-   * The canonical card has its fans on +Y, so the backplate's outside points
-   * the other way. Decorating the +Y face puts the detail on the side that is
-   * pressed against the board, where it is invisible at this scale and buried
-   * at the other. And the outer face is not a minor one: in the tower the card
-   * hangs cooler-downward, so this plate is the whole of the card you see.
-   *
-   * It is also kept dark. A polished sheet at metalness 0.94 takes its colour
-   * from the room rather than from itself, and a large one over the middle of
-   * the card turned the whole top of it pale grey.
-   */
-  put(
-    backplate,
-    slab([L * 0.5, L * 0.005, W * 0.55], finish('anodized', '#262c31')),
-    [-L * 0.18, -L * 0.006, 0],
-  );
-  put(backplate, slab([L * 0.22, L * 0.004, W * 0.2], alu), [
-    -L * 0.3,
-    -L * 0.009,
-    0,
-  ]);
-  // Ribs and fixings, so the plate is not a blank sheet from above.
-  for (let i = 0; i < 5; i++)
-    put(
-      backplate,
-      slab([L * 0.012, L * 0.012, W * 0.66], finish('anodized', '#1b2024')),
-      [-L * 0.4 + i * L * 0.13, -L * 0.011, 0],
-    );
-  for (const sx of [-1, 1] as const)
-    for (const sz of [-1, 1] as const)
-      put(backplate, slab([L * 0.02, L * 0.012, L * 0.02], bright), [
-        sx * L * 0.44,
-        -L * 0.011,
-        sz * (W / 2 - L * 0.03),
-      ]);
-  for (const sz of [-1, 1] as const)
-    put(
-      backplate,
-      slab([L * 0.96, L * 0.01, L * 0.01], finish('anodized', '#343b41')),
-      [0, -L * 0.011, sz * (W / 2 - L * 0.012)],
-    );
-  const mark = new T.Group();
-  label(mark, 'RTX 5090', [0, 0, 0], L * 0.13, '#8b949a');
-  // The label plane faces +Y after `label` lays it flat, so it has to be
-  // turned over to be read from the outer face.
-  mark.rotation.x = Math.PI;
-  put(backplate, mark, [-L * 0.3, -L * 0.015, 0]);
+  put(backplate, shapeMesh(bp, L * 0.005, dark), [0, 0, 0]);
+  for (const z of [-W * 0.37, W * 0.37])
+    put(backplate, slab([L * 0.91, L * 0.004, L * 0.006], mid), [
+      0,
+      -L * 0.004,
+      z,
+    ]);
+  for (const x of [-0.44, -0.2, 0.12, 0.46])
+    for (const sz of [-1, 1]) {
+      const screw = new T.Mesh(
+        new T.CylinderGeometry(L * 0.004, L * 0.004, L * 0.002, 16),
+        steel,
+      );
+      put(backplate, screw, [x * L, -L * 0.002, sz * W * 0.43]);
+    }
+  const bpMark = new T.Group();
+  label(bpMark, 'TUF GAMING', [0, 0, 0], L * 0.24, '#82898c');
+  bpMark.rotation.x = Math.PI;
+  put(backplate, bpMark, [-L * 0.12, -L * 0.003, 0]);
+  for (let i = 0; i < 6; i++) {
+    const slash = slab([L * 0.007, L * 0.001, W * 0.36], mid);
+    slash.rotation.y = -0.65;
+    put(backplate, slash, [-L * 0.39 + i * L * 0.022, -L * 0.0025, 0]);
+  }
 
-  /**
-   * The bracket: the slot-width plate at the board end, with the display
-   * outputs and the vent above them.
-   */
+  // A perforated bracket, shared by the tower and the close-up card.
   const bracket = new T.Group();
-  // The plate lies in the Y-Z plane. Its long axis is the card's height, which
-  // is Z here, and its short axis is the two slots of thickness it occupies,
-  // which is Y. Building it the other way round stands the bracket on end and
-  // runs it out through the top of the cooler.
-  // The plate spans the card's own thickness. Hung below the board instead, it
-  // sticks out past the top of the card and stands proud of the rear panel.
-  const steel = finish('steel', '#8d959b');
-  put(bracket, slab([L * 0.012, D * 0.92, W * 0.92], steel), [0, 0, 0]);
-  // The folded tab that the case screws through, at the end that meets it.
-  put(bracket, slab([L * 0.03, D * 0.9, W * 0.1], steel), [
-    L * 0.012,
+  for (const y of [-D * 0.45, -D * 0.24, D * 0.04, D * 0.43])
+    put(bracket, slab([L * 0.004, L * 0.012, W * 0.9], steel), [0, y, 0]);
+  for (const z of [-W * 0.45, W * 0.45])
+    put(bracket, slab([L * 0.004, D * 0.9, L * 0.013], steel), [0, 0, z]);
+  for (let i = 0; i < 22; i++)
+    put(bracket, slab([L * 0.004, D * 0.36, L * 0.005], steel), [
+      0,
+      D * 0.235,
+      -W * 0.42 + i * W * 0.04,
+    ]);
+  for (let i = 0; i < 6; i++)
+    put(bracket, slab([L * 0.004, D * 0.26, L * 0.012], steel), [
+      0,
+      -D * 0.1,
+      -W * 0.425 + i * W * 0.17,
+    ]);
+  put(bracket, slab([L * 0.04, D * 0.85, L * 0.008], steel), [
+    L * 0.013,
     0,
-    W * 0.46,
+    W * 0.465,
   ]);
-  // Three DisplayPort and one HDMI: the output set on a card of this class,
-  // stacked down the bracket with the vent above them.
-  for (let i = 0; i < 4; i++)
-    put(
-      bracket,
-      slab([L * 0.016, D * 0.24, W * 0.16], finish('plasticGloss')),
-      [-L * 0.005, -D * 0.02, W * 0.29 - i * W * 0.2],
-    );
-  for (let i = 0; i < 24; i++)
-    put(
-      bracket,
-      slab([L * 0.005, D * 0.05, W * 0.03], finish('steel', '#434a50')),
-      [
-        L * 0.004,
-        D * 0.2 + (i % 2) * D * 0.12,
-        W * 0.38 - Math.floor(i / 2) * W * 0.055,
-      ],
-    );
-
   const blades = bladeGeometry();
-  const fans = CARD.fans.map((f) => ({
-    object: buildAxialFan(finish, R, blades, detail),
-    x: f * L,
-  }));
-
+  const fans = CARD.fans.map((f, index) => {
+    let blade = blades;
+    if (index === 1) {
+      blade = blades.clone().scale(1, 1, -1);
+      const ix = blade.getIndex()!;
+      for (let i = 0; i < ix.count; i += 3) {
+        const b = ix.getX(i + 1);
+        ix.setX(i + 1, ix.getX(i + 2));
+        ix.setX(i + 2, b);
+      }
+    }
+    const object = buildAxialFan(finish, R * 0.975, blade, detail);
+    object.traverse((o) => {
+      if (o.userData.spinRate) o.userData.spinRate = index === 1 ? -3.2 : 3.2;
+    });
+    const badge = new T.Group();
+    label(badge, index === 1 ? 'ASUS' : 'TUF', [0, 0, 0], R * 0.43, '#c6c9c7');
+    put(object, badge, [0, R * 0.126, 0]);
+    object.traverse((o) => {
+      if (
+        o instanceof T.Mesh &&
+        o.material instanceof T.MeshStandardMaterial &&
+        o.material.metalness < 0.1
+      )
+        o.material.envMapIntensity = 0.25;
+    });
+    for (const r of [0.235, 0.258]) {
+      const ring = new T.Mesh(
+        new T.TorusGeometry(R * r, R * 0.003, 4, 64),
+        steel,
+      );
+      ring.rotation.x = Math.PI / 2;
+      put(object, ring, [0, R * 0.124, 0]);
+    }
+    return { object, x: f * L };
+  });
   return { shroud, fans, backplate, bracket, fins };
 }
 
@@ -534,11 +558,11 @@ export function cardStack(L: number) {
     /** Fans, seated just inside their apertures. */
     fan: D - L * 0.03,
     /** The fin banks, filling the space between the fans and the board. */
-    fins: D * 0.5,
+    fins: D * 0.57,
     /** The board. */
     pcb: 0,
     /** The backplate, just under the board. */
-    backplate: -L * 0.019,
+    backplate: -L * 0.009,
     /** The bracket spans the card's thickness, so it is centred on it. */
     bracket: D * 0.46,
   };

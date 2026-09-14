@@ -7,6 +7,14 @@
  * machine.
  */
 export const sources = {
+  tuf5090: {
+    name: 'ASUS · TUF RTX 5090 construction and cooling',
+    url: 'https://www.asus.com/uk/motherboards-components/graphics-cards/tuf-gaming/tuf-rtx5090-32g-gaming/',
+  },
+  tuf5090specs: {
+    name: 'ASUS · TUF RTX 5090 specifications',
+    url: 'https://www.asus.com/uk/motherboards-components/graphics-cards/tuf-gaming/tuf-rtx5090-32g-gaming/techspec/',
+  },
   whitepaper: {
     name: 'NVIDIA · RTX Blackwell architecture',
     url: 'https://images.nvidia.com/aem-dam/Solutions/geforce/blackwell/nvidia-rtx-blackwell-gpu-architecture.pdf',

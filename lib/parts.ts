@@ -628,6 +628,8 @@ export function buildSlot(
     notch?: number;
     latch?: boolean;
     armour?: boolean;
+    latchColor?: string;
+    latchEnds?: 'both' | 'right';
   } = {},
 ) {
   const {
@@ -636,6 +638,8 @@ export function buildSlot(
     notch = 0.62,
     latch = false,
     armour = false,
+    latchColor = '#d8dce0',
+    latchEnds = 'both',
   } = options;
   const group = new T.Group();
   const body = material(color, 0.08, 0.58);
@@ -670,10 +674,10 @@ export function buildSlot(
     group.add(row);
   }
   if (latch)
-    for (const side of [-1, 1]) {
+    for (const side of latchEnds === 'right' ? [1] : [-1, 1]) {
       const clip = new T.Mesh(
         new T.BoxGeometry(width * 0.55, height * 1.5, width * 0.72),
-        material('#d8dce0', 0.2, 0.5),
+        material(latchColor, 0.2, 0.5),
       );
       clip.position.set((side * (length + width * 0.5)) / 2, height * 0.35, 0);
       group.add(clip);

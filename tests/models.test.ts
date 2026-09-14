@@ -71,10 +71,10 @@ await test('all repeated structures have globally unique, consecutive identities
       else assert.equal(p.object.userData.piece, p);
     }
   }
-  // Three fin banks of fifty-two, one under each of the card's three fans.
+  // Individual fins remain geometry inside one complete cooling assembly.
   assert.equal(
     models.get('card')!.pieces.filter((p) => p.concept === 'heatsink').length,
-    156,
+    1,
   );
 });
 
@@ -155,30 +155,146 @@ await test('motherboard thermal armour keeps real clearance from sockets and slo
   clear('superio', 'm2heatsink');
   clear('superio', 'frontheader');
   clear('frontheader', 'mobofanheader');
+  for (const armour of ['vrmheatsink', 'm2heatsink', 'chipset', 'reario'])
+    for (const connector of [
+      'atx24',
+      'sataport',
+      'frontheader',
+      'mobofanheader',
+    ])
+      clear(armour, connector);
+  clear('dimmslot', 'atx24');
+  clear('dimmslot', 'socket');
+  clear('chipset', 'pcie1');
+  clear('cmos', 'audiocodec');
 });
 
-await test('ray picking distinguishes the three fin banks instead of selecting duplicate fin IDs', () => {
+await test('M.2 flash packages fit entirely beneath their thermal covers', () => {
+  const { pieces } = models.get('motherboard')!;
+  const drives = pieces.filter((p) => p.concept === 'nvme');
+  const covers = pieces.filter((p) => p.concept === 'm2heatsink');
+  for (const drive of drives) {
+    const cover = covers.find((p) => p.base.z === drive.base.z)!;
+    assert.ok(cover, drive.key);
+    const driveTop = drive.base.y + drive.center.y + drive.extent.y / 2;
+    const coverBottom = cover.base.y + cover.center.y - cover.extent.y / 2;
+    assert.ok(
+      coverBottom - driveTop >= 0.5 / 22,
+      `${drive.key} pierces its cover`,
+    );
+  }
+});
+
+await test('installed DDR5 modules leave a real notch for the socket key', () => {
+  const { pieces, root } = models.get('motherboard')!;
+  root.updateMatrixWorld(true);
+  for (const ram of pieces.filter((p) => p.concept === 'ram')) {
+    const hitsAt = (z: number) =>
+      new T.Raycaster(
+        new T.Vector3(ram.base.x - 1, 5.2 / 22, ram.base.z + z / 22),
+        new T.Vector3(1, 0, 0),
+      ).intersectObject(ram.object, true);
+    assert.equal(hitsAt(-8).length, 0, `${ram.key} blocks its slot key`);
+    assert.ok(
+      hitsAt(-15).length > 0,
+      'the ray must cross the adjacent contact tab',
+    );
+  }
+});
+
+await test('every fin selects the complete heatsink, including after inventory movement', () => {
   const fins = models
     .get('card')!
     .pieces.filter((p) => p.concept === 'heatsink');
-  for (const p of fins) {
-    p.batch!.setMatrixAt(
-      p.index!,
-      new T.Matrix4().makeTranslation(...p.base.toArray()),
-    );
+  assert.equal(fins.length, 1);
+  const fin = fins[0];
+  const banks: T.InstancedMesh[] = [];
+  fin.object.traverse((o) => {
+    if (o instanceof T.InstancedMesh) banks.push(o);
+  });
+  assert.equal(banks.length, 2);
+  assert.ok(
+    banks.every((b) => b.count > 50),
+    'dense fin geometry is retained',
+  );
+  for (const offset of [new T.Vector3(), new T.Vector3(12, 4, -9)]) {
+    fin.object.position.copy(fin.base).add(offset);
+    fin.object.updateMatrixWorld(true);
+    for (const bank of banks)
+      for (const index of [0, bank.count - 1]) {
+        const matrix = new T.Matrix4();
+        bank.getMatrixAt(index, matrix);
+        const point = new T.Vector3()
+          .setFromMatrixPosition(matrix)
+          .applyMatrix4(bank.matrixWorld);
+        const ray = new T.Raycaster(
+          point.clone().add(new T.Vector3(0, 5, 0)),
+          new T.Vector3(0, -1, 0),
+        );
+        assert.equal(resolvePick(ray.intersectObject(fin.object, true)), fin);
+      }
   }
-  // The first and last fin of each of the three banks.
-  for (const index of [0, 51, 52, 103, 104, 155]) {
-    const fin = fins[index];
-    fin.batch!.computeBoundingSphere();
-    const ray = new T.Raycaster(
-      new T.Vector3(fin.base.x, 5, fin.base.z),
-      new T.Vector3(0, -1, 0),
-    );
-    const hit = ray.intersectObject(fin.batch!)[0];
-    assert.ok(hit, fin.key);
-    assert.equal(fin.batch!.userData.pieces[hit.instanceId!].instance, index);
+  fin.object.position.copy(fin.base);
+  fin.object.updateMatrixWorld(true);
+});
+
+await test('TUF 5090 has one backplate, three aligned fan motors and five outputs', () => {
+  const { pieces } = models.get('card')!;
+  const family = (id: string) => pieces.filter((p) => p.concept === id);
+  assert.equal(family('backplate').length, 1);
+  assert.equal(family('fan').length, 3);
+  assert.equal(family('fanmotor').length, 3);
+  assert.equal(family('displayport').length, 3);
+  assert.equal(family('hdmi').length, 2);
+  assert.equal(family('power').length, 1);
+  assert.equal(family('heatpipe').length, 12);
+  assert.equal(family('gddr7').length, 16);
+  family('fan').forEach((fan, i) =>
+    assert.ok(Math.abs(fan.base.x - family('fanmotor')[i].base.x) < 1e-6),
+  );
+  const board = family('pcb')[0];
+  const boardEnd = board.base.x + board.center.x + board.extent.x / 2;
+  assert.ok(
+    boardEnd < 8.93 * 0.205,
+    'PCB must not obstruct the rear flow-through window',
+  );
+  const heatsink = family('heatsink')[0];
+  const finTop = heatsink.base.y + heatsink.center.y + heatsink.extent.y / 2;
+  for (const fan of family('fan')) {
+    const bladeBottom = fan.base.y + fan.center.y - fan.extent.y / 2;
+    assert.ok(bladeBottom > finTop, 'fan rotors must clear the fin stack');
   }
+  const solids = pieces.filter((p) =>
+    [
+      'gddr7',
+      'package',
+      'vrm',
+      'powerstage',
+      'capacitor',
+      'pwm',
+      'bios',
+      'monitor',
+      'temperature',
+      'auxreg',
+      'esd',
+      'shunt',
+      'crystal',
+      'fuse',
+      'fanheader',
+      'standoff',
+    ].includes(p.concept),
+  );
+  for (const passive of pieces.filter((p) =>
+    ['resistor', 'mlcc'].includes(p.concept),
+  ))
+    for (const solid of solids)
+      assert.ok(
+        Math.abs(passive.base.x - solid.base.x - solid.center.x) >
+          (passive.extent.x + solid.extent.x) / 2 ||
+          Math.abs(passive.base.z - solid.base.z - solid.center.z) >
+            (passive.extent.z + solid.extent.z) / 2,
+        passive.key + ' clips ' + solid.key,
+      );
 });
 
 await test('hardware inventory packs actual footprints without overlap on narrow and wide screens', () => {

@@ -83,13 +83,114 @@ function rng(seed: number) {
 
 const cache = new Map<string, T.CanvasTexture>();
 
+/** Millimetre-registered artwork for the reference ATX board. */
+function motherboardTexture() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 1952;
+  canvas.height = 2440;
+  const c = canvas.getContext('2d')!;
+  c.fillStyle = '#121416';
+  c.fillRect(0, 0, canvas.width, canvas.height);
+  c.scale(8, 8);
+  c.translate(122, 152.5);
+  const rand = rng(9137);
+  c.lineWidth = 0.14;
+  for (let i = 0; i < 180; i++) {
+    const x = -115 + rand() * 225,
+      z = -145 + rand() * 285;
+    const run = 8 + rand() * 28;
+    c.strokeStyle = i % 4 ? '#25292c' : '#303438';
+    c.beginPath();
+    c.moveTo(x, z);
+    c.lineTo(x + run, z);
+    c.lineTo(x + run + 5, z + 5);
+    c.lineTo(x + run + 5, z + 18);
+    c.stroke();
+  }
+  // Fine surface-mount footprints and solder pads, with small reference IDs.
+  // They intentionally avoid the old oversized gold dots and phantom sockets.
+  for (let i = 0; i < 2200; i++) {
+    const x = -118 + rand() * 236,
+      z = -149 + rand() * 298;
+    c.fillStyle = '#747775';
+    c.fillRect(x - 0.8, z, 0.4, 0.65);
+    c.fillRect(x + 0.5, z, 0.4, 0.65);
+    c.fillStyle = i % 3 ? '#323538' : '#5c594e';
+    c.fillRect(x - 0.35, z, 0.8, 0.65);
+    if (i % 4 === 0) {
+      c.fillStyle = '#8b8e89';
+      c.font = '1.05px monospace';
+      c.fillText('R' + (100 + i), x - 1, z - 0.5);
+      c.strokeStyle = '#656966';
+      c.strokeRect(x - 1, z - 0.2, 2.1, 1.1);
+    }
+  }
+  // Length-matched DDR fan-out between the socket and the memory bank.
+  c.strokeStyle = '#363b3d';
+  c.lineWidth = 0.18;
+  for (let i = 0; i < 28; i++) {
+    const z = -98 + i * 2.2;
+    c.beginPath();
+    c.moveTo(41, z);
+    c.lineTo(48, z);
+    c.lineTo(52, z - 4);
+    c.lineTo(59, z - 4);
+    c.stroke();
+  }
+  c.strokeStyle = '#8b8f88';
+  c.lineWidth = 0.2;
+  c.strokeRect(-24, -102, 66, 76);
+  for (const x of [63, 73, 83, 93]) c.strokeRect(x - 4, -127, 8, 138);
+  c.strokeRect(-85, 26, 110, 12);
+  c.strokeRect(-85, 128, 110, 12);
+  // Isolated audio ground region down the left edge.
+  c.strokeStyle = '#9a8041';
+  c.lineWidth = 0.55;
+  c.beginPath();
+  c.moveTo(-117, 20);
+  c.lineTo(-117, 98);
+  c.lineTo(-98, 104);
+  c.lineTo(-98, 149);
+  c.stroke();
+  c.fillStyle = '#999d96';
+  c.font = '1.8px monospace';
+  for (const [text, x, z] of [
+    ['DDR5', 61, -132],
+    ['A1   A2   B1   B2', 58, 17],
+    ['PCIEX16_1', -82, 24],
+    ['PCIEX16_2', -82, 143],
+    ['M.2_1', -68, -2],
+    ['M.2_3', -63, 100],
+    ['CPU_FAN', 61, -147],
+    ['ATX_PWR', 104, -77],
+    ['AAFP', -81, 142],
+    ['USB_1', -35, 142],
+    ['USB_2', 10, 142],
+    ['PANEL', 65, 142],
+  ] as const)
+    c.fillText(text, x, z);
+  const texture = new T.CanvasTexture(canvas);
+  texture.colorSpace = T.SRGBColorSpace;
+  texture.anisotropy = 8;
+  return texture;
+}
+
 export function pcbTexture(variant: BoardVariant = 'motherboard') {
   const hit = cache.get(variant);
   if (hit) return hit;
+  if (variant === 'motherboard') {
+    const texture = motherboardTexture();
+    cache.set(variant, texture);
+    return texture;
+  }
 
+  return genericPcbTexture(variant);
+}
+
+function genericPcbTexture(variant: BoardVariant) {
   const wide = variant === 'memory' || variant === 'storage';
-  const W = wide ? 2048 : 1536,
-    H = wide ? 512 : 1536;
+  const W = wide || variant === 'graphics' ? 2048 : 1536,
+    H = wide ? 512 : variant === 'graphics' ? 1024 : 1536;
   const canvas = document.createElement('canvas');
   canvas.width = W;
   canvas.height = H;
@@ -97,9 +198,11 @@ export function pcbTexture(variant: BoardVariant = 'motherboard') {
   const p =
     variant === 'psu'
       ? DARK
-      : variant === 'motherboard' || variant === 'graphics'
-        ? BLACK
-        : GREEN;
+      : variant === 'graphics'
+        ? { ...BLACK, pad: '#909183', silk: '#92978e', traceBright: '#292d30' }
+        : variant === 'motherboard'
+          ? BLACK
+          : GREEN;
   const rand = rng(
     {
       motherboard: 9137,
@@ -235,10 +338,10 @@ export function pcbTexture(variant: BoardVariant = 'motherboard') {
   ctx.strokeStyle = p.silk;
   ctx.fillStyle = p.silk;
   const prefixes = ['R', 'C', 'U', 'L', 'Q', 'D', 'J'];
-  const parts = wide ? 26 : 86;
+  const parts = wide ? 26 : variant === 'graphics' ? 480 : 86;
   for (let i = 0; i < parts; i++) {
-    const w = 18 + rand() * 70,
-      h = 12 + rand() * 44;
+    const w = variant === 'graphics' ? 5 + rand() * 15 : 18 + rand() * 70,
+      h = variant === 'graphics' ? 4 + rand() * 10 : 12 + rand() * 44;
     const x = rand() * (W - w - 40) + 20,
       y = rand() * (H - h - 50) + 30;
     ctx.globalAlpha = 0.55;

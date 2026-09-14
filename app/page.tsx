@@ -139,25 +139,28 @@ export default function Home() {
   // deliberately open another one.
   const [openMenu, setOpenMenu] = useState<LevelId | null>(null);
   const shownMenu = openMenu ?? menuRoot(state.level);
-  const navigate = useCallback((level: LevelId) => {
-    setPlaying(false);
-    setHiddenMenuOpen(false);
-    setOpenMenu(menuRoot(level));
-    setState((s) => ({
-      ...s,
-      level,
-      diveInto: null,
-      explode: 0,
-      selection: null,
-      isolated: false,
-      focusRevision: 0,
-      cameraRevision: s.cameraRevision + 1,
-      visible: [...categories],
-      hidden: [],
-      view: 'perspective',
-    }));
-    setLayers(false);
-  }, []);
+  const navigate = useCallback(
+    (level: LevelId, selection: Selection | null = null) => {
+      setPlaying(false);
+      setHiddenMenuOpen(false);
+      setOpenMenu(menuRoot(level));
+      setState((s) => ({
+        ...s,
+        level,
+        diveInto: null,
+        explode: 0,
+        selection,
+        isolated: false,
+        focusRevision: 0,
+        cameraRevision: s.cameraRevision + 1,
+        visible: [...categories],
+        hidden: [],
+        view: 'perspective',
+      }));
+      setLayers(false);
+    },
+    [],
+  );
   const reset = useCallback(() => {
     setPlaying(false);
     setHiddenMenuOpen(false);
@@ -168,31 +171,41 @@ export default function Home() {
     }));
     setLayers(false);
   }, []);
-  // Descending is one continuous move owned by the scene: the stage clears
+  // Physical disassembly is one continuous move owned by the scene: the stage clears
   // around the part you clicked while the camera closes in on it, and when the
   // scene reports the stage is clear we swap in the deeper scale, which then
   // grows back out of the same spot. Nothing cuts to black, and no timer here
   // can drift out of step with the animation. `diveInto` is the whole record of
   // a dive in flight, so cancelling one is just clearing it.
-  const dive = useCallback((conceptId: string) => {
-    if (!openLevel(conceptId)) return false;
-    setPlaying(false);
-    setLayers(false);
-    setState((s) =>
-      s.diveInto
-        ? s
-        : {
-            ...s,
-            selection: { concept: conceptId },
-            isolated: false,
-            diveInto: conceptId,
-            diveRevision: s.diveRevision + 1,
-            focusRevision: s.focusRevision + 1,
-            cameraRevision: s.cameraRevision + 1,
-          },
-    );
-    return true;
-  }, []);
+  const dive = useCallback(
+    (conceptId: string) => {
+      const target = openLevel(conceptId);
+      if (!target) return false;
+      // GPU diagrams open directly. The outgoing isolation animation selected
+      // every repeated block and tinted the old scale green before replacing it.
+      if (levelPath(target).includes('card') && !isPhysical(target)) {
+        navigate(target, { concept: levels[target].concept });
+        return true;
+      }
+      setPlaying(false);
+      setLayers(false);
+      setState((s) =>
+        s.diveInto
+          ? s
+          : {
+              ...s,
+              selection: { concept: conceptId },
+              isolated: false,
+              diveInto: conceptId,
+              diveRevision: s.diveRevision + 1,
+              focusRevision: s.focusRevision + 1,
+              cameraRevision: s.cameraRevision + 1,
+            },
+      );
+      return true;
+    },
+    [navigate],
+  );
 
   const arrive = useCallback(() => {
     const arrivedLevel = state.diveInto ? openLevel(state.diveInto) : null;

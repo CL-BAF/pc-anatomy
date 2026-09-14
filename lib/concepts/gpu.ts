@@ -12,7 +12,7 @@ import { sources } from '../sources.ts';
 export const gpuConcepts: Concept[] = [
   concept({
     id: 'card',
-    name: 'GeForce RTX 5090',
+    name: 'ASUS TUF Gaming GeForce RTX 5090',
     shortName: 'RTX 5090',
     category: 'Graphics',
     // Was the root of the project. The card now hangs off the expansion slot
@@ -29,6 +29,8 @@ export const gpuConcepts: Concept[] = [
       GPU: 'GB202',
       'Graphics power': '575 W',
       Memory: '32 GB GDDR7',
+      'Exterior reference': 'ASUS TUF Gaming',
+      Dimensions: '348 × 146 × 72 mm · 3.6 slots',
     },
     representationType: 'physical',
   }),
@@ -55,7 +57,9 @@ export const gpuConcepts: Concept[] = [
     description: 'Rotating blades move air across the cooler.',
     purpose: 'Carries heat from the fins into the surrounding air.',
     quantity: '3 modeled fans',
-    specifications: { Design: 'Illustrative triple fan' },
+    specifications: {
+      Design: 'Three Axial-tech fans; centre rotates oppositely',
+    },
     representationType: 'physical',
     searchTerms: ['cooling', 'airflow'],
   }),
@@ -69,7 +73,7 @@ export const gpuConcepts: Concept[] = [
     description:
       'Closely spaced metal fins expose a large surface to moving air.',
     purpose: 'Releases the heat collected from the processor and memory.',
-    quantity: '3 modeled sections',
+    quantity: '1 complete assembly · 2 fin banks',
     specifications: { 'Fin spacing': 'Illustrative' },
     representationType: 'physical',
   }),
@@ -516,7 +520,7 @@ gpuConcepts.push(
     description:
       'Sealed thermal transport paths distribute heat across the fin arrays.',
     purpose: 'Carries heat away from the central heat pickup area.',
-    quantity: '6 illustrative paths',
+    quantity: '12 heatpipes · approximate routing',
     specifications: { Routing: 'Original approximate geometry' },
     representationType: 'physical',
   }),
@@ -596,13 +600,23 @@ gpuConcepts.push(
   }),
 );
 const fins = gpuConcepts.find((c) => c.id === 'heatsink')!;
-fins.name = 'Heatsink fins';
-fins.shortName = 'Cooling fin';
-fins.quantity = '152 individually modeled fins';
+fins.name = 'Heatsink assembly';
+fins.shortName = 'Heatsink';
+fins.quantity = '1 complete assembly · 2 fin banks';
 fins.specifications = {
-  'Array layout': '2 illustrative banks',
+  Inventory: 'Fin banks stay together as one part',
   'Physical fin count': 'Not claimed for the reference card',
 };
+for (const id of [
+  'card',
+  'shroud',
+  'fan',
+  'heatsink',
+  'vapor',
+  'heatpipe',
+  'backplate',
+])
+  gpuConcepts.find((c) => c.id === id)!.sources = ['tuf5090', 'tuf5090specs'];
 // Component families found in modern graphics cards. These are representative
 // educational assemblies, not an undocumented RTX 5090 bill of materials.
 const boardParts: [
@@ -845,6 +859,11 @@ for (const [
     }),
   );
 const inductor = gpuConcepts.find((c) => c.id === 'vrm')!;
+for (const id of ['hdmi', 'displayport', 'power'])
+  gpuConcepts.find((c) => c.id === id)!.sources = ['tuf5090specs'];
+gpuConcepts.find((c) => c.id === 'hdmi')!.quantity = '2 HDMI 2.1b ports';
+gpuConcepts.find((c) => c.id === 'displayport')!.quantity =
+  '3 DisplayPort 2.1b ports';
 inductor.name = 'VRM inductors / chokes';
 inductor.shortName = 'Inductor';
 inductor.description =
