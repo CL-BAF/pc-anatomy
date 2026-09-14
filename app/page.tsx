@@ -208,10 +208,19 @@ export default function Home() {
     });
   }, [state.diveInto]);
 
-  const choose = useCallback((selection: Selection | null) => {
-    setState((s) => ({ ...s, selection, isolated: false, focusRevision: 0 }));
-    setLayers(false);
-  }, []);
+  const choose = useCallback(
+    (selection: Selection | null, intent: 'open' | 'inspect' = 'inspect') => {
+      if (selection && intent === 'open' && dive(selection.concept)) return;
+      setState((s) => ({
+        ...s,
+        selection,
+        isolated: false,
+        focusRevision: 0,
+      }));
+      setLayers(false);
+    },
+    [dive],
+  );
   const selectResult = (id: string) => {
     setOpenMenu(menuRoot(byId[id].level));
     setState((s) => selectSearch(s, id));

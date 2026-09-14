@@ -4,7 +4,7 @@ import type { ExplorerState, Selection } from '@/lib/manifest';
 import type { createViewer } from '@/lib/scene';
 type Props = {
   state: ExplorerState;
-  onSelect: (v: Selection | null) => void;
+  onSelect: (v: Selection | null, intent: 'open' | 'inspect') => void;
   onCount: (v: number) => void;
   /** The scene has cleared the stage around the part being opened. */
   onDived: () => void;
@@ -32,7 +32,7 @@ export default function Viewer({ state, onSelect, onCount, onDived }: Props) {
         if (stopped || !host.current) return;
         try {
           engine.current = createViewer(host.current, latest.current.state, {
-            select: (v) => latest.current.onSelect(v),
+            select: (v, intent) => latest.current.onSelect(v, intent),
             stats: (v) => latest.current.onCount(v),
             dived: () => latest.current.onDived(),
             hover: (name, x, y, opens) =>
@@ -87,7 +87,7 @@ export default function Viewer({ state, onSelect, onCount, onDived }: Props) {
           {hover.name}
           <span>
             {hover.opens
-              ? 'Click to inspect · open from the panel'
+              ? 'Left-click to open · right-click to inspect'
               : 'Click to inspect'}
           </span>
         </div>

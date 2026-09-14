@@ -23,7 +23,7 @@ const MOUSE_AIM = 8,
   TOUCH_AIM = 14;
 
 export type SceneCallbacks = {
-  select: (selection: Selection | null) => void;
+  select: (selection: Selection | null, intent: 'open' | 'inspect') => void;
   /** The isolate-and-close-in ramp has finished; open the deeper scale now. */
   dived: () => void;
   hover: (name: string | null, x: number, y: number, opens: boolean) => void;
@@ -131,6 +131,8 @@ export function createViewer(
     autoCamera = true,
     disposed = false,
     dragStart: [number, number] = [0, 0],
+    rightDragStart: [number, number] = [0, 0],
+    rightGestureMoved = false,
     activePointer: number | null = null,
     gestureMoved = false,
     pointerPosition: { clientX: number; clientY: number } | null = null,
@@ -169,6 +171,8 @@ export function createViewer(
   };
   const activeTouches = new Set<number>(),
     selectionBounds = new T.Box3();
+  const boxCenter = new T.Vector3(),
+    boxSize = new T.Vector3();
   function matches(p: Piece, selection: Selection | null) {
     return (
       !!selection &&
@@ -378,13 +382,16 @@ export function createViewer(
       .addScaledVector(direction, Math.max(focus ? 3.2 : 6, d));
   }
   function boxFor(p: Piece, target: T.Box3) {
-    if (p.batch) {
-      const s = p.object.scale.x;
-      target.setFromCenterAndSize(
-        p.object.position,
-        p.extent.clone().multiplyScalar(s).addScalar(0.018),
-      );
-    } else target.setFromObject(p.object);
+    // Use the part's authored bounds instead of measuring its descendants on
+    // every frame. A rotating impeller changes its live axis-aligned bounds as
+    // each blade turns, which made the hover outline breathe in and out even
+    // though the fan itself never changed size.
+    const s = p.object.scale.x;
+    const { extent, centre } = posture(p, laidOut(amount));
+    target.setFromCenterAndSize(
+      boxCenter.copy(p.object.position).addScaledVector(centre, s),
+      boxSize.copy(extent).multiplyScalar(s).addScalar(0.018),
+    );
   }
   let lastTime = performance.now();
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -557,6 +564,12 @@ export function createViewer(
     return resolvePickNear(cast, radius);
   }
   function down(e: PointerEvent) {
+    if (e.pointerType === 'mouse' && e.button === 2) {
+      rightDragStart = [e.clientX, e.clientY];
+      rightGestureMoved = false;
+      return;
+    }
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
     if (e.pointerType === 'touch') activeTouches.add(e.pointerId);
     if (activeTouches.size > 1) {
       gestureMoved = true;
@@ -580,10 +593,20 @@ export function createViewer(
     )
       return;
     const p = hit(e, e.pointerType === 'touch' ? TOUCH_AIM : MOUSE_AIM);
-    callbacks.select(p ? { concept: p.concept, instance: p.instance } : null);
+    callbacks.select(
+      p ? { concept: p.concept, instance: p.instance } : null,
+      'open',
+    );
     wake();
   }
   function move(e: PointerEvent) {
+    if (
+      e.pointerType === 'mouse' &&
+      (e.buttons & 2) !== 0 &&
+      Math.hypot(e.clientX - rightDragStart[0], e.clientY - rightDragStart[1]) >
+        5
+    )
+      rightGestureMoved = true;
     if (
       activePointer === e.pointerId &&
       Math.hypot(e.clientX - dragStart[0], e.clientY - dragStart[1]) > 5
@@ -592,6 +615,19 @@ export function createViewer(
     pointerPosition = { clientX: e.clientX, clientY: e.clientY };
     if (e.buttons || e.pointerType === 'touch') return;
     updateHover(e);
+    wake();
+  }
+  function inspect(e: MouseEvent) {
+    e.preventDefault();
+    if (rightGestureMoved) {
+      rightGestureMoved = false;
+      return;
+    }
+    const p = hit(e, MOUSE_AIM);
+    callbacks.select(
+      p ? { concept: p.concept, instance: p.instance } : null,
+      'inspect',
+    );
     wake();
   }
   function updateHover(e: { clientX: number; clientY: number }) {
@@ -630,6 +666,7 @@ export function createViewer(
   canvas.addEventListener('pointermove', move);
   canvas.addEventListener('pointerleave', leave);
   canvas.addEventListener('pointercancel', leave);
+  canvas.addEventListener('contextmenu', inspect);
   canvas.addEventListener('webglcontextlost', lost);
   refresh();
   resize();
@@ -679,6 +716,7 @@ export function createViewer(
       canvas.removeEventListener('pointermove', move);
       canvas.removeEventListener('pointerleave', leave);
       canvas.removeEventListener('pointercancel', leave);
+      canvas.removeEventListener('contextmenu', inspect);
       canvas.removeEventListener('webglcontextlost', lost);
       disposeModel();
       selectedBox.geometry.dispose();
