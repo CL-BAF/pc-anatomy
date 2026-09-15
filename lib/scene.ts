@@ -224,8 +224,9 @@ export function createViewer(
     // strong environment lights the edges, the columns and every machined face
     // while leaving the coated panels as dark as they really are; turning the
     // key up instead would only wash those panels back to grey.
-    scene.environmentIntensity = hardwareScale ? 1.05 : 0.48;
-    key.intensity = hardwareScale ? 2.2 : 0.85;
+    scene.environmentIntensity =
+      state.level === 'pc' ? 0.82 : hardwareScale ? 1.05 : 0.48;
+    key.intensity = state.level === 'pc' ? 1.85 : hardwareScale ? 2.2 : 0.85;
     rim.intensity = hardwareScale ? 1.6 : 0.7;
     kick.intensity = hardwareScale ? 0.55 : 0.28;
     const visible = model.pieces.filter(shown);

@@ -34,6 +34,73 @@ after(() => {
 
 const models = new Map(levelIds.map((level) => [level, buildModel(level)]));
 
+await test('installed motherboard and GPU retain their full inspection geometry and parent picking identity', () => {
+  const triangles = (root: T.Object3D) => {
+    let count = 0;
+    root.traverse((o) => {
+      if (!(o instanceof T.Mesh)) return;
+      const vertices =
+        o.geometry.index?.count ?? o.geometry.getAttribute('position').count;
+      count += (vertices / 3) * (o instanceof T.InstancedMesh ? o.count : 1);
+    });
+    return count;
+  };
+  const pc = models.get('pc')!;
+  for (const [concept, level] of [
+    ['motherboard', 'motherboard'],
+    ['graphicscard', 'card'],
+  ] as const) {
+    const installed = pc.pieces.find((p) => p.concept === concept)!;
+    assert.equal(
+      triangles(installed.object),
+      triangles(models.get(level)!.root),
+      concept,
+    );
+    installed.object.traverse((object) => {
+      if (!(object instanceof T.Mesh)) return;
+      // Detailed children must open the component at PC scale, including
+      // batches that used to select individual RAM chips at the deeper scale.
+      assert.equal(
+        resolvePick([
+          { object, distance: 1, instanceId: 0, point: new T.Vector3() },
+        ]),
+        installed,
+      );
+      if (object instanceof T.InstancedMesh) {
+        const matrix = new T.Matrix4();
+        object.getMatrixAt(0, matrix);
+        assert.ok(
+          matrix.determinant() > 0,
+          'installed instances must be initialized',
+        );
+      }
+    });
+  }
+});
+
+await test('installed hardware fits the case and clears the power supply deck', () => {
+  const pc = models.get('pc')!;
+  pc.root.updateMatrixWorld(true);
+  const bounds = (id: string) =>
+    new T.Box3().setFromObject(pc.pieces.find((p) => p.concept === id)!.object);
+  const card = bounds('graphicscard');
+  const board = bounds('motherboard');
+  const cooler = bounds('cpucooler');
+  assert.ok(card.min.y > -3.35, 'GPU cooler must clear the PSU deck');
+  for (const box of [card, board, cooler]) {
+    assert.ok(
+      box.max.x < 6.3 && box.min.x > -6.65,
+      'hardware must fit between front and rear panels',
+    );
+    assert.ok(box.max.y < 6.4, 'hardware must clear the roof');
+    assert.ok(box.max.z < 3, 'hardware must clear the side glass');
+  }
+  assert.ok(
+    cooler.min.y > card.max.y,
+    'CPU cooler must clear the graphics card',
+  );
+});
+
 await test('every component family has real selectable geometry in its search context', () => {
   // Scales themselves have no piece of their own; everything else must.
   for (const concept of manifest.filter((c) => !isLevelRoot(c))) {

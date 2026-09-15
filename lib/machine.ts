@@ -2,22 +2,16 @@ import * as T from 'three';
 import type { ModelTools } from './hardware.ts';
 import type { Vec3 } from './layout.ts';
 import {
-  buildBlockSink,
   buildLightStrip,
-  buildCapacitor,
-  buildChoke,
   buildFan,
   buildFinStack,
   buildHoneycomb,
   buildMainsInlet,
   buildModularPanel,
   buildScrew,
-  buildPort,
-  buildHeader,
   glowMaterial,
 } from './parts.ts';
 import { buildChassis, plateWithHoles, type CaseShell } from './chassis.ts';
-import { buildCardCooler, CARD, cardStack } from './graphics-card.ts';
 import { finishes, type Finish } from './materials.ts';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 
@@ -67,7 +61,7 @@ const BOARD_Y0 = -2.95;
 const BOARD_Y = BOARD_Y0 + BOARD_H / 2;
 
 /** The primary ×16 slot, and the card installed in it. */
-const SLOT1_Y = BOARD_Y0 + mm(120);
+const SLOT1_Y = BOARD_Y - mm(32);
 
 /**
  * Lighting colours, swept front to back rather than scattered. Addressable
@@ -78,225 +72,18 @@ const SLOT1_Y = BOARD_Y0 + mm(120);
 const RGB = ['#2f6bff', '#7a3cff', '#c62ce0', '#ff3aa0'] as const;
 const ACCENT = '#37d6ff';
 
-/**
- * The board as one object, for the scale where the whole machine is on screen.
- * Parts stand off the surface properly so it reads in relief through the glass
- * rather than as a flat green rectangle. The motherboard scale rebuilds all of
- * this separately, at its own detail.
- */
-/** Shared with the machine below so the board's accent matches the build. */
-const BOARD_ACCENT = '#37d6ff';
-
+/** The inspection model installed vertically at the tower's physical scale. */
 export function buildMotherboardAssembly(tools: ModelTools) {
-  const { box, pcb, material, label } = tools;
+  const board = tools.assembly('motherboard');
+  board.scale.setScalar(22 / 35);
+  board.rotation.x = Math.PI / 2;
   const group = new T.Group();
-  const put = (obj: T.Object3D, pos: Vec3) => {
-    obj.position.set(...pos);
-    group.add(obj);
-    return obj;
-  };
-
-  put(pcb([BOARD_D, BOARD_H, 0.055], 'motherboard'), [0, 0, 0]);
-
-  // Rear I/O cover and the port stack showing through the case.
-  put(box([0.5, APERTURE_W, APERTURE_H * 0.92], '#40474d', 0.66), [
-    -BOARD_D / 2 + 0.25,
-    BOARD_H / 2 - APERTURE_W / 2 - 0.2,
-    APERTURE_H * 0.46 + 0.03,
-  ]);
-  const ioGlow = new T.Mesh(
-    new T.PlaneGeometry(APERTURE_W * 0.82, 0.1),
-    glowMaterial(BOARD_ACCENT, 1.7),
-  );
-  ioGlow.rotation.y = Math.PI / 2;
-  ioGlow.rotation.z = Math.PI / 2;
-  put(ioGlow, [
-    -BOARD_D / 2 + 0.51,
-    BOARD_H / 2 - APERTURE_W / 2 - 0.2,
-    APERTURE_H * 0.46 + 0.03,
-  ]);
-  for (let i = 0; i < 9; i++)
-    put(box([0.1, 0.3, 0.22], '#0e1112', 0.35), [
-      -BOARD_D / 2 + 0.02,
-      BOARD_H / 2 - 0.55 - i * 0.44,
-      0.28 + (i % 2) * 0.46,
-    ]);
-
-  const socketX = -0.55,
-    socketY = 1.55;
-  put(box([mm(56), mm(56), 0.06], '#2b3035', 0.4), [socketX, socketY, 0.05]);
-  for (const side of [-1, 1]) {
-    put(box([mm(60), 0.1, 0.2], '#a2aaae', 0.9), [
-      socketX,
-      socketY + side * mm(30),
-      0.13,
-    ]);
-    put(box([0.1, mm(60), 0.2], '#a2aaae', 0.9), [
-      socketX + side * mm(30),
-      socketY,
-      0.13,
-    ]);
-  }
-
-  // Memory: four slots, two populated, standing off the board.
-  //
-  // `memY` is a clearance, not a styling choice. A 133 mm module hung level
-  // with the socket reaches down past the primary ×16 slot and straight
-  // through the graphics card in it, which is what used to happen here. Real
-  // boards put the slots high, close to the top edge, for exactly this reason,
-  // so the modules are seated to leave the card its own air.
-  const memY = socketY + mm(32);
-  for (let i = 0; i < 4; i++) {
-    const x = socketX + mm(62) + i * mm(11);
-    put(box([mm(7.4), mm(133), 0.2], i % 2 ? '#33383d' : '#4c545a', 0.14), [
-      x,
-      memY,
-      0.11,
-    ]);
-    if (i % 2 === 1) {
-      put(box([mm(6.6), mm(131), 0.86], '#33393e', 0.72, 0.01), [
-        x,
-        memY,
-        0.58,
-      ]);
-      put(box([mm(7), mm(40), 0.08], '#7f888e', 0.92), [x, memY, 1.0]);
-      // Frosted diffuser along the top of the heatspreader.
-      const bar = new T.Mesh(
-        new T.BoxGeometry(mm(5), mm(124), 0.07),
-        glowMaterial(BOARD_ACCENT, 1.6),
-      );
-      put(bar, [x, memY, 1.02]);
-    }
-  }
-
-  for (let i = 0; i < 4; i++) {
-    const long = i === 0 || i === 2;
-    put(
-      box(
-        [long ? mm(89) : mm(25), mm(7.5), 0.2],
-        i === 0 ? '#7d6a74' : '#3a4146',
-        0.14,
-      ),
-      [
-        -BOARD_D / 2 + (long ? mm(58) : mm(26)),
-        SLOT1_Y - BOARD_Y - i * SLOT_PITCH * 1.6,
-        0.11,
-      ],
-    );
-  }
-
-  /**
-   * The rear I/O cover.
-   *
-   * Every current desktop board has one: a moulded shroud over the port stack
-   * and the regulator, carrying the board's own branding. Without it the top
-   * corner of the board is bare laminate with a few blocks on it, which is
-   * what a board looks like in a catalogue photograph of a bare PCB and not
-   * what one looks like installed.
-   */
-  const armour = new T.Group();
-  const onArmour = (obj: T.Object3D, pos: Vec3) => {
-    obj.position.set(...pos);
-    armour.add(obj);
-  };
-  onArmour(box([mm(96), mm(122), 0.7], '#1b1f23', 0.32, 0.03), [0, 0, 0]);
-  onArmour(box([mm(86), mm(112), 0.06], '#2d343a', 0.68), [0, 0, 0.38]);
-  const armourBar = new T.Mesh(
-    new T.PlaneGeometry(mm(62), mm(7)),
-    glowMaterial(BOARD_ACCENT, 1.5),
-  );
-  armourBar.position.set(0, -mm(34), 0.42);
-  armour.add(armourBar);
-  put(armour, [-BOARD_D / 2 + mm(58), BOARD_H / 2 - mm(74), 0.34]);
-  label(
-    group,
-    'ATX',
-    [-BOARD_D / 2 + mm(58), BOARD_H / 2 - mm(96), 0.44],
-    mm(40),
-    '#8e979d',
-  );
-
-  // Chipset block and the M.2 thermal covers.
-  const chipset = buildBlockSink(material, mm(48), mm(48), 0.38, '#3a4147');
-  chipset.rotation.x = Math.PI / 2;
-  put(chipset, [mm(34), -mm(92), 0.22]);
-  label(group, 'PCH', [mm(34), -mm(92), 0.46], mm(34), '#8d959b');
-  // M.2 covers: a thermal pad under a milled plate, the way they actually sit.
-  for (let i = 0; i < 2; i++) {
-    put(box([mm(88), mm(26), 0.16], '#242a2e', 0.55), [
-      -mm(18),
-      -mm(30) - i * mm(64),
-      0.1,
-    ]);
-    put(box([mm(80), mm(19), 0.05], '#4d565c', 0.86), [
-      -mm(18),
-      -mm(30) - i * mm(64),
-      0.2,
-    ]);
-    for (let g = 0; g < 5; g++)
-      put(box([mm(11), mm(15), 0.02], '#1a1f22', 0.5), [
-        -mm(52) + g * mm(17),
-        -mm(30) - i * mm(64),
-        0.23,
-      ]);
-  }
-
-  // Regulator heatsinks: the finned blocks above and beside the socket.
-  //
-  // `buildBlockSink` grows its fins along +Y, so `rotation.x = π/2` is the one
-  // turn that lifts them off the board. A second turn on Z used to stand the
-  // left sink on end, and it did not: composed in XYZ order the pair sends the
-  // block's 120 mm length along Z and its fins along −X, so that sink ran
-  // backwards through the board, through the tray and out of the rear panel.
-  // Passing the dimensions the right way round needs only the one turn.
-  for (const [w, h, x, y] of [
-    [mm(150), mm(30), socketX + mm(12), socketY + mm(78)],
-    [mm(28), mm(120), socketX - mm(70), socketY + mm(10)],
-  ] as const) {
-    const sink = buildBlockSink(material, w, h, 0.56, '#434b51');
-    sink.rotation.x = Math.PI / 2;
-    put(sink, [x, y, 0.3]);
-  }
-
-  const ramGlow = new T.PointLight(BOARD_ACCENT, 4.5, 4.5, 2);
-  ramGlow.position.set(socketX + mm(74), memY, 1.5);
-  group.add(ramGlow);
-
-  // Power connectors. The 24-pin sits high on the front edge and the 8-pin in
-  // the top corner clear of the regulator heatsink, which is where the cable
-  // runs below can actually reach them: down at the old positions both blocks
-  // stood inside the graphics card, and the 8-pin was buried in the sink.
-  put(box([mm(20), mm(52), 0.34], '#26292c', 0.1), [
-    BOARD_D / 2 - mm(18),
-    mm(48),
-    0.19,
-  ]);
-  put(box([mm(38), mm(16), 0.3], '#26292c', 0.1), [
-    -mm(101),
-    BOARD_H / 2 - mm(16),
-    0.17,
-  ]);
-
-  // Scattered small parts, so the empty board area is not a flat plane.
-  for (let i = 0; i < 16; i++) {
-    const a = i * 2.39;
-    const x = Math.cos(a) * (0.5 + (i % 7) * 0.36) + mm(10),
-      y = Math.sin(a * 1.7) * (0.9 + (i % 5) * 0.52) - mm(20);
-    if (i % 3 === 0) {
-      const cap = buildCapacitor(material, mm(4), mm(11), '#232a2e');
-      cap.rotation.x = Math.PI / 2;
-      put(cap, [x, y, 0.18]);
-    } else {
-      const choke = buildChoke(material, mm(9), mm(7), '#2b2f33');
-      choke.rotation.x = Math.PI / 2;
-      put(choke, [x, y, 0.13]);
-    }
-  }
+  group.add(board);
   return group;
 }
 
 export function buildMachine(tools: ModelTools, root: T.Group) {
-  const { add, instances, box, pcb, material, label } = tools;
+  const { add, instances, box, material, label } = tools;
   const place = (group: T.Group, obj: T.Object3D, pos: Vec3) => {
     obj.position.set(...pos);
     group.add(obj);
@@ -642,12 +429,39 @@ export function buildMachine(tools: ModelTools, root: T.Group) {
     const curve = new T.CatmullRomCurve3(
       points.map((p) => new T.Vector3(...p)),
     );
-    cables.add(
-      new T.Mesh(
-        new T.TubeGeometry(curve, 30, radius, 7, false),
-        material(color, 0.16, 0.7),
-      ),
-    );
+    const frames = curve.computeFrenetFrames(48, false);
+    // Individual sleeved conductors follow the same bend, held by cable combs.
+    for (let wire = 0; wire < 6; wire++) {
+      const offset = (wire - 2.5) * radius * 0.43;
+      const route = Array.from({ length: 49 }, (_, i) =>
+        curve.getPointAt(i / 48).addScaledVector(frames.binormals[i], offset),
+      );
+      cables.add(
+        new T.Mesh(
+          new T.TubeGeometry(
+            new T.CatmullRomCurve3(route),
+            48,
+            radius * 0.19,
+            6,
+            false,
+          ),
+          finish('rubber', wire % 2 ? color : '#30363b'),
+        ),
+      );
+    }
+    for (const t of [0.24, 0.56, 0.8]) {
+      const i = Math.round(t * 48);
+      const comb = slab([radius * 2.7, radius * 0.6, radius * 0.75], 'plastic');
+      comb.quaternion.setFromRotationMatrix(
+        new T.Matrix4().makeBasis(
+          frames.binormals[i],
+          frames.tangents[i],
+          frames.normals[i],
+        ),
+      );
+      comb.position.copy(curve.getPointAt(i / 48));
+      cables.add(comb);
+    }
   };
   // 24-pin: up through the shroud and along the front edge of the board, in
   // plain sight through the window, passing in front of the card rather than
@@ -658,8 +472,8 @@ export function buildMachine(tools: ModelTools, root: T.Group) {
       [1.7, FLOOR + 3.65, 1.9],
       [1.0, 0.2, 1.95],
       [0.72, BOARD_Y + mm(22), 1.6],
-      [0.52, BOARD_Y + mm(44), 0.1],
-      [0.42, BOARD_Y + mm(48), -2.36],
+      [BOARD_X + mm(127), BOARD_Y + mm(45), -1.5],
+      [BOARD_X + mm(115), BOARD_Y + mm(45), BOARD_Z + mm(10)],
     ],
     0.16,
     '#16191b',
@@ -681,9 +495,9 @@ export function buildMachine(tools: ModelTools, root: T.Group) {
       [REAR + 0.26, 3.6, -2.66],
       [REAR + 0.28, ROOF - 0.6, -2.62],
       [REAR + 0.46, ROOF - 0.42, -2.58],
-      [BOARD_X - mm(101) + 0.6, BOARD_Y + BOARD_H / 2 + 0.3, -2.54],
-      [BOARD_X - mm(101), BOARD_Y + BOARD_H / 2 - mm(8), -2.48],
-      [BOARD_X - mm(101), BOARD_Y + BOARD_H / 2 - mm(26), -2.44],
+      [BOARD_X - mm(73) + 0.6, BOARD_Y + BOARD_H / 2 + 0.3, -2.54],
+      [BOARD_X - mm(73), BOARD_Y + BOARD_H / 2 - mm(8), -2.48],
+      [BOARD_X - mm(73), BOARD_Y + mm(145), BOARD_Z + mm(10)],
     ],
     0.1,
     '#1f2325',
@@ -695,13 +509,13 @@ export function buildMachine(tools: ModelTools, root: T.Group) {
       [3.4, FLOOR + 3.1, 0.4],
       [2.3, FLOOR + 3.65, 1.5],
       [0.6, SLOT1_Y + 0.6, 1.9],
-      [-0.55, SLOT1_Y + 1.5, 0.7],
-      [-0.874, SLOT1_Y + 1.72, 0.12],
+      [-0.554, SLOT1_Y + 0.6, 1.75],
+      [-0.554, SLOT1_Y - mm(10), BOARD_Z + mm(139)],
     ],
     0.13,
     '#1d2124',
   );
-  add('psucable', cables, [0, 0, 0], [0, -1.4, 1.2], 0.02);
+  add('psucable', cables, [0, 0, 0], [0, -1.4, 1.2], 0);
 
   // ── Motherboard ─────────────────────────────────────────────────────────
   add(
@@ -727,14 +541,14 @@ export function buildMachine(tools: ModelTools, root: T.Group) {
   // Local frame: +Y up the tower, +X toward the front of the case (the way the
   // fan faces), +Z off the board. The coldplate is therefore thin in Z, lying
   // flat on the lid, and the fins are stacked along Y.
-  const SOCK_X = BOARD_X - 0.55,
-    SOCK_Y = BOARD_Y + 1.55,
-    SOCK_Z = BOARD_Z + 0.25; // on top of the socket retention frame
+  const SOCK_X = BOARD_X + mm(8),
+    SOCK_Y = BOARD_Y + mm(64),
+    SOCK_Z = BOARD_Z + mm(8); // on top of the socket retention frame
   const STACK_NEAR = mm(28), // clears the regulator heatsinks below it
     STACK_W = mm(120), // how far the stack reaches off the board
     STACK_D = mm(52), // depth along the airflow
     STACK_Z = STACK_NEAR + STACK_W / 2,
-    STACK_Y = mm(56);
+    STACK_Y = mm(42); // fan and cable tail stay below the roof at the AM5 socket
   const PIPE_X = [-1.5, -0.5, 0.5, 1.5];
 
   const tower = new T.Group();
@@ -856,53 +670,17 @@ export function buildMachine(tools: ModelTools, root: T.Group) {
 
   // ── Graphics card, in the primary slot ──────────────────────────────────
   //
-  // The card itself is `graphics-card.ts`, the same module its own scale
-  // builds from, so what is installed here and what you open up are one
-  // object rather than two drawings of one. Only the level of detail differs:
-  // inside the tower the card is a hundred pixels across, so it gets coarser
-  // fin banks and no blade rims, and it is added as one selectable part
-  // instead of the dozen the card's own scale breaks out.
+  // Reuse the complete inspection model, including its PCB components, dense
+  // fin banks and fan details. It remains one selectable assembly at PC scale.
   //
   // A card in a tower hangs cooler-downward, which is the half turn about X
   // below. The turn also swaps the card's two long edges, so the lit wordmark
   // is asked for on the far edge in order to end up facing the window.
   const CARD_L = mm(348);
-  const parts = buildCardCooler(tools, finish, CARD_L, {
-    logoEdge: -1,
-    accent: ACCENT,
-    detail: 'plain',
-  });
-  const seat = cardStack(CARD_L);
   const card = new T.Group();
-  const cardWide = CARD.width * CARD_L;
-  place(
-    card,
-    pcb(
-      [CARD.pcb.length * CARD_L, mm(1.6), CARD.pcb.width * CARD_L],
-      'graphics',
-    ),
-    [CARD_L * CARD.pcb.centerX, seat.pcb, 0],
-  );
-  place(card, parts.shroud, [0, seat.shroud, 0]);
-  place(card, parts.fins, [0, seat.fins, 0]);
-  for (const fan of parts.fans) place(card, fan.object, [fan.x, seat.fan, 0]);
-  place(card, parts.backplate, [0, seat.backplate, 0]);
-  place(card, parts.bracket, [-CARD_L / 2 - mm(2), seat.bracket, 0]);
-  for (let i = 0; i < 5; i++) {
-    const port = buildPort(
-      material,
-      [mm(i >= 3 ? 14 : 16), mm(4.8), mm(15)],
-      '#73797d',
-    );
-    port.rotation.y = -Math.PI / 2;
-    place(card, port, [-mm(168), seat.bracket - mm(6.8), mm(-49.6 + i * 24.8)]);
-  }
-  const cardPower = buildHeader(material, 6, 2, mm(3.6), '#111416', mm(10));
-  cardPower.rotation.x = -Math.PI / 2;
-  place(card, cardPower, [mm(32), mm(8), -mm(63)]);
-  const cardSpill = new T.PointLight(ACCENT, 5.5, 5.5, 2);
-  cardSpill.position.set(CARD_L * 0.02, seat.shroud * 0.4, -cardWide * 0.6);
-  card.add(cardSpill);
+  const detailedCard = tools.assembly('card');
+  detailedCard.scale.setScalar(CARD_L / 8.93);
+  card.add(detailedCard);
   // Cooler-downward, and seated on the slot rather than hovering over it: the
   // board inside the card lands on the connector, and the card's height then
   // reaches out from the tray toward the window.
@@ -910,7 +688,7 @@ export function buildMachine(tools: ModelTools, root: T.Group) {
   add(
     'graphicscard',
     card,
-    [REAR + 0.16 + CARD_L / 2, SLOT1_Y - mm(2), BOARD_Z + cardWide / 2 + 0.3],
+    [REAR + 0.16 + CARD_L / 2, SLOT1_Y - mm(2), BOARD_Z + mm(71)],
     [0, 0, 3.0],
   );
 }

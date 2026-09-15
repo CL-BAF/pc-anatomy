@@ -34,6 +34,7 @@
     "hooks/use-mobile.ts"
   ],
   "rules": {
+    "nextjs/no-html-link-for-pages": "off",
     "no-array-constructor": "error",
     "no-var": "error",
     "prefer-const": "error",

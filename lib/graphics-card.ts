@@ -396,8 +396,7 @@ export function buildCardCooler(
   }
   const mark = new T.Group();
   label(mark, 'GEFORCE RTX', [0, 0, 0], L * 0.29, '#b6babc');
-  mark.rotation.x = Math.PI / 2;
-  if (logoEdge < 0) mark.rotation.z = Math.PI;
+  mark.rotation.x = (logoEdge * Math.PI) / 2;
   put(shroud, mark, [-L * 0.015, -D * 0.08, logoEdge * (W / 2 + L * 0.001)]);
   // Restrained ARGB indicator confined to the distal TUF badge.
   for (let i = 0; i < 5; i++) {

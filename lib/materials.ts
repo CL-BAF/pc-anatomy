@@ -357,17 +357,18 @@ export function finishes() {
 export type Finisher = ReturnType<typeof finishes>;
 
 /** Low-iron tempered glass, as used for a case window. */
-export function temperedGlass(tint = '#5d6a74') {
+export function temperedGlass(tint = '#d6e6e8') {
   return new T.MeshPhysicalMaterial({
     color: tint,
     metalness: 0,
     roughness: 0.03,
-    transmission: 0.92,
-    thickness: 0.16,
+    transmission: 0.96,
+    thickness: 0.07,
     transparent: true,
     // Kept well under the threshold the picker uses to step past a surface, so
     // the window never answers for the part behind it.
-    opacity: 0.3,
+    opacity: 0.16,
+    depthWrite: false,
     ior: 1.52,
     clearcoat: 1,
     clearcoatRoughness: 0.02,

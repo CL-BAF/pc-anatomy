@@ -365,7 +365,8 @@ export function buildChassis(
 
   // ── Expansion slot covers ───────────────────────────────────────────────
   const covers = new T.Group();
-  for (let i = 0; i < s.slots; i++) {
+  // The installed 3.6-slot card occupies the first four openings.
+  for (let i = 4; i < s.slots; i++) {
     const cover = new T.Group();
     put(
       cover,
@@ -379,11 +380,7 @@ export function buildChassis(
       0.82,
     ]);
     put(cover, buildScrew(material, 0.07), [0.2, s.slotPitch * 0.42, 0.82]);
-    put(covers, cover, [
-      REAR + 0.16,
-      s.slotY - i * s.slotPitch,
-      MIDZ + s.slotZ,
-    ]);
+    put(covers, cover, [REAR + 0.16, s.slotY - i * s.slotPitch, s.slotZ]);
   }
   add('chassis', covers, [0, 0, 0], [-2.6, 0, 0]);
 
@@ -407,6 +404,9 @@ export function buildChassis(
     const across: Vec3 = axis === 'x' ? [1, 0, 0] : [0, 0, 1];
     const normal: Vec3 = axis === 'x' ? [0, 0, 1] : [1, 0, 0];
     panel.add(new T.Mesh(new T.BoxGeometry(...size), glassMaterial));
+    // A narrow ceramic border and polished trim make the clear pane
+    // readable without tinting away the hardware behind it.
+    const ceramic = finish('plasticGloss', '#111619');
     const edge = finish('anodized', '#454e55', 0.13);
     const bar = (along: 'across' | 'up', length: number): Vec3 => {
       const d: Vec3 = [0.06, 0.06, 0.06];
@@ -417,6 +417,9 @@ export function buildChassis(
     // Trim down all four edges, so the pane has a visible frame rather than
     // fading out into nothing where it meets the column.
     for (const sign of [-1, 1]) {
+      const seal = bar('across', w - 0.08);
+      seal[1] = 0.14;
+      put(panel, slab(seal, ceramic), [0, sign * (h / 2 - 0.09), 0]);
       put(panel, slab(bar('across', w), edge, 0.012), [0, (sign * h) / 2, 0]);
       put(panel, slab(bar('up', h), edge, 0.012), [
         (across[0] * sign * w) / 2,
@@ -479,11 +482,22 @@ export function buildChassis(
    * this one sits in its opening with the frame proud around it.
    */
   const top = new T.Group();
-  put(
-    top,
-    slab([DEPTH - COL * 2 - 0.16, 0.09, WIDTH - COL * 2 - 0.16], alu, 0.02),
-    [0, 0, 0],
-  );
+  const lidWidth = DEPTH - COL * 2 - 0.16;
+  const lidDepth = WIDTH - COL * 2 - 0.16;
+  // Open ventilation, with a folded perimeter and real rails underneath.
+  for (const [w, d, x, z] of plateWithHoles(lidWidth, lidDepth, [
+    [lidWidth - 0.55, lidDepth - 0.55, 0, 0],
+  ]))
+    put(top, slab([w, 0.09, d], alu, 0.02), [x, 0, z]);
+  for (const x of [-4.6, 0, 4.6]) {
+    put(top, slab([0.14, 0.1, lidDepth - 0.35], steelInner), [x, -0.09, 0]);
+    for (const z of [-1, 1])
+      put(top, buildScrew(material, 0.065), [
+        x,
+        0.08,
+        z * (lidDepth / 2 - 0.16),
+      ]);
+  }
   const lid = buildPerforation(
     material,
     DEPTH - COL * 2 - 0.7,

@@ -382,6 +382,13 @@ export default function Home() {
         </button>
         <div className="header-actions">
           <a
+            className="guide-link"
+            href="/guide/"
+            title="Learn about PC components"
+          >
+            Guide
+          </a>
+          <a
             className="byline"
             href={REPOSITORY}
             target="_blank"
@@ -1096,8 +1103,9 @@ export default function Home() {
         <DialogContent className="about-dialog">
           <DialogTitle>From the case down to a compute core.</DialogTitle>
           <DialogDescription>
-            PC Anatomy is an independent, open-source explorer of a whole
-            desktop computer.
+            PC Anatomy is a free, interactive 3D computer hardware explorer.
+            Learn how a desktop PC works by inspecting and disassembling its
+            components.
           </DialogDescription>
           <p>
             Start with an assembled ATX tower, take it apart, and keep going:
@@ -1121,6 +1129,10 @@ export default function Home() {
             representative full cluster, not an invented map of disabled units.
           </p>
           <h3>Research & credits</h3>
+          <a className="about-source" href="/guide/">
+            PC components: an illustrated beginner’s guide
+            <ArrowUpRight size={15} />
+          </a>
           {Object.entries(sources)
             .slice(0, 2)
             .map(([id, s]) => (

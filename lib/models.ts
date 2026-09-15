@@ -105,7 +105,7 @@ const builders: Record<LevelId, (tools: ModelTools, root: T.Group) => void> = {
   sm: (tools, root) => buildGpuArchitecture('sm', tools, root),
 };
 
-export function buildModel(level: LevelId) {
+export function buildModel(level: LevelId): { root: T.Group; pieces: Piece[] } {
   const root = new T.Group(),
     pieces: Piece[] = [];
   const geometry = new Map<string, T.BufferGeometry>(),
@@ -182,7 +182,10 @@ export function buildModel(level: LevelId) {
         child instanceof T.Mesh &&
         !(child.material instanceof T.MeshBasicMaterial)
       ) {
-        child.castShadow = true;
+        const mats = Array.isArray(child.material)
+          ? child.material
+          : [child.material];
+        child.castShadow = !mats.some((m) => m.transparent && m.opacity < 0.75);
         child.receiveShadow = true;
       }
     });
@@ -343,7 +346,30 @@ export function buildModel(level: LevelId) {
     plane.rotation.x = -Math.PI / 2;
     put(parent, plane, pos);
   }
-  builders[level]({ add, instances, box, pcb, material, label }, root);
+  const assembly: ModelTools['assembly'] = (level) => {
+    const model = buildModel(level);
+    // Freeze all instances at their assembled positions before handing the
+    // model to the parent scale. Only the parent owns picking and animation.
+    for (const piece of model.pieces) {
+      if (piece.batch) {
+        piece.batch.setMatrixAt(
+          piece.index!,
+          new T.Matrix4().makeTranslation(...piece.base.toArray()),
+        );
+        piece.batch.setColorAt(piece.index!, new T.Color('#ffffff'));
+        piece.batch.instanceMatrix.needsUpdate = true;
+      }
+    }
+    model.root.traverse((object) => {
+      delete object.userData.piece;
+      delete object.userData.pieces;
+    });
+    return model.root;
+  };
+  builders[level](
+    { add, instances, box, pcb, material, label, assembly },
+    root,
+  );
   // Consolidate authored submeshes within each selectable assembly. Lead pins,
   // frame rails and socket contacts retain the assembly's picking identity.
   const retired = new Set<T.BufferGeometry>();
@@ -382,7 +408,8 @@ export function buildModel(level: LevelId) {
         mesh.removeFromParent();
       }
       const mesh = new T.Mesh(merged, mat);
-      mesh.castShadow = mesh.receiveShadow = true;
+      mesh.castShadow = !(mat.transparent && mat.opacity < 0.75);
+      mesh.receiveShadow = true;
       child.add(mesh);
     }
   }

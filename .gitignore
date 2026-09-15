@@ -39,7 +39,9 @@ next-env.d.ts
 *.tsbuildinfo
 
 # private workspace artifacts
-/.openai/hosting.json
+.openai/
+.codex/
+.agents/
 /Claude outputs/
 /_pcanatomy-commit.ps1
 /HANDOFF.md

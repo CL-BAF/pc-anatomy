@@ -8,6 +8,8 @@ import { buildCardCooler, CARD, cardStack } from './graphics-card.ts';
 import { buildCapacitor, buildChip, buildHeader, buildScrew } from './parts.ts';
 
 export type ModelTools = {
+  /** Reuse a detailed scale as a single installed, selectable assembly. */
+  assembly: (level: 'motherboard' | 'card') => T.Group;
   add: (
     concept: string,
     object: T.Object3D,

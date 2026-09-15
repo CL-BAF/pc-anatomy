@@ -23,6 +23,19 @@
   --safe-b: env(safe-area-inset-bottom, 0px);
   --safe-l: env(safe-area-inset-left, 0px);
 }
+.guide-link {
+  color: var(--accent-muted);
+  font-size: 12px;
+  padding: 8px 4px;
+}
+.guide-link:hover {
+  color: #fff;
+}
+@media (max-width: 600px) {
+  .guide-link {
+    display: none;
+  }
+}
 * {
   box-sizing: border-box;
 }
