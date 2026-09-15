@@ -141,9 +141,8 @@ npm run lint
 npm test
 npm run build
 ```
-
-PC Anatomy is available under the [MIT License](LICENSE).
-
 ## AI-assisted development
 
 AI workflows were used as a tool during the development of PC Anatomy, including for coding, iteration, debugging, and documentation. The project direction, design decisions, integration, testing, and final implementation remain maintainer-controlled.
+
+PC Anatomy is available under the [MIT License](LICENSE).
