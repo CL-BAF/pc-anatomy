@@ -26,7 +26,7 @@ export const fanConcepts: Concept[] = [
     quantity: '1 modeled frame',
     specifications: { Format: '120 mm', Depth: '25 mm' },
     representationType: 'physical',
-    sources: [],
+    sources: ['fanconstruction'],
     searchTerms: ['frame', 'housing', 'body', 'mount'],
   }),
   concept({
@@ -42,7 +42,7 @@ export const fanConcepts: Concept[] = [
     quantity: '4 modeled pads',
     specifications: { Material: 'Elastomer, illustrative' },
     representationType: 'physical',
-    sources: [],
+    sources: ['fanconstruction'],
     searchTerms: ['rubber', 'pad', 'vibration', 'noise', 'damping'],
   }),
   concept({
@@ -59,7 +59,7 @@ export const fanConcepts: Concept[] = [
     quantity: '9 modeled blades',
     specifications: { Blades: '9', Form: 'Swept and cambered' },
     representationType: 'physical',
-    sources: [],
+    sources: ['fanconstruction'],
     searchTerms: ['impeller', 'blade', 'rotor', 'propeller', 'airflow'],
   }),
   concept({
@@ -108,9 +108,11 @@ export const fanConcepts: Concept[] = [
     purpose:
       'Carries the impeller with as little friction as possible, and decides how long the fan lasts and how it sounds as it ages.',
     quantity: '1 modeled bearing',
-    specifications: { Type: 'Sleeve, illustrative' },
+    specifications: {
+      Type: 'Sleeve, illustrative; reference compares bearing designs',
+    },
     representationType: 'physical',
-    sources: ['bldc'],
+    sources: ['bearing'],
     searchTerms: ['bearing', 'shaft', 'sleeve', 'friction', 'clip'],
   }),
   concept({
@@ -144,7 +146,7 @@ export const fanConcepts: Concept[] = [
     quantity: '1 modeled lead',
     specifications: { Contacts: '4-pin PWM' },
     representationType: 'physical',
-    sources: ['bldc'],
+    sources: ['mainboardmanual', 'bldc'],
     searchTerms: ['cable', 'lead', 'wire', 'connector', 'pwm', '4-pin'],
   }),
 ];

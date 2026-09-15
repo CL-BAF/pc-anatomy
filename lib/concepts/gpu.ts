@@ -655,7 +655,7 @@ const boardParts: [
     'Cooling',
     'card',
     'A thin interface fills microscopic gaps between the die and the cooler’s contact surface.',
-    'Reduces thermal contact resistance. Interface material depends on the card design; the RTX 5090 FE uses liquid metal.',
+    'Reduces thermal contact resistance. ASUS documents a phase-change GPU thermal pad on the TUF RTX 5090.',
     ['construction'],
     ['thermal paste', 'liquid metal', 'TIM'],
   ],
@@ -930,3 +930,37 @@ for (const [id, name, description, purpose, quantity] of [
       sources: id === 'command' ? ['whitepaper'] : ['specs'],
     }),
   );
+
+// Manufacturer architecture and circuit references for the modeled part families.
+// Circuit examples are not a bill of materials for the ASUS card.
+const componentReferences: Record<string, (keyof typeof sources)[]> = {
+  fuse: ['fuse'],
+  pcb: ['tuf5090', 'packaging'],
+  gddr7: ['whitepaper'],
+  capacitor: ['multiphase'],
+  pcie: ['pcie', 'tuf5090specs'],
+  thermalpad: ['tuf5090'],
+  powerstage: ['multiphase'],
+  mlcc: ['multiphase'],
+  resistor: ['multiphase'],
+  fastener: ['tuf5090'],
+  bracket: ['tuf5090'],
+  bga: ['packaging'],
+  tim: ['tuf5090'],
+  retention: ['tuf5090'],
+  standoff: ['tuf5090'],
+  crystal: ['crystal'],
+  fanheader: ['mainboardmanual', 'bldc'],
+  fancable: ['mainboardmanual', 'bldc'],
+  fanmotor: ['bldc'],
+  esd: ['esd'],
+  testpoint: ['acdc'],
+  nvenc: ['whitepaper'],
+  nvdec: ['whitepaper'],
+  displayengine: ['whitepaper'],
+  host: ['whitepaper', 'pcie'],
+};
+for (const entry of gpuConcepts) {
+  if (componentReferences[entry.id])
+    entry.sources = componentReferences[entry.id];
+}

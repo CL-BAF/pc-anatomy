@@ -87,6 +87,7 @@ const levelIcon: Record<LevelId, typeof Box> = {
   cooler: Fan,
   liquid: Droplets,
   ssd: HardDrive,
+  nvme: CircuitBoard,
   card: Box,
   die: Cpu,
   gpc: Layers3,
@@ -100,6 +101,7 @@ function menuRoot(level: LevelId) {
   );
 }
 import Viewer from './viewer';
+import PerformanceTip from './performance-tip';
 
 /** The project's source, linked from the header byline and the About panel. */
 const REPOSITORY = 'https://github.com/Yoosseph/gpu_anatomy';
@@ -380,25 +382,25 @@ export default function Home() {
           </span>
           <span>PC Anatomy</span>
         </button>
+        <a
+          className="byline"
+          href={REPOSITORY}
+          target="_blank"
+          rel="noreferrer"
+          title="PC Anatomy on GitHub"
+        >
+          <Code2 size={19} />
+          <span>
+            Created by <strong>Yoseph</strong>
+          </span>
+        </a>
         <div className="header-actions">
           <a
             className="guide-link"
-            href="/guide/"
+            href="/guide/index.html"
             title="Learn about PC components"
           >
             Guide
-          </a>
-          <a
-            className="byline"
-            href={REPOSITORY}
-            target="_blank"
-            rel="noreferrer"
-            title="PC Anatomy on GitHub"
-          >
-            <Code2 size={15} />
-            <span>
-              Made by <strong>Yoseph</strong>
-            </span>
           </a>
           <button
             className="mobile-layers"
@@ -426,6 +428,7 @@ export default function Home() {
           </button>
         </div>
       </header>
+      <PerformanceTip ready={count !== null && count > 0} />
       {layers && (
         // Without this the drawer floats over a live 3-D view: a tap meant to
         // dismiss it lands in the scene and selects whatever was behind it.
@@ -1082,6 +1085,11 @@ export default function Home() {
               <p className="accuracy">{selected.physicalAccuracy}</p>
               {selected.sources.length > 0 && (
                 <div className="source-links">
+                  <h3>References & architecture</h3>
+                  <p>
+                    Manufacturer documents and standards explain this component
+                    family. Illustrative geometry is not a product schematic.
+                  </p>
                   {selected.sources.map((s) => (
                     <a
                       key={s}
@@ -1129,7 +1137,10 @@ export default function Home() {
             representative full cluster, not an invented map of disabled units.
           </p>
           <h3>Research & credits</h3>
-          <a className="about-source" href="/guide/">
+          <a className="about-source" href="/guide/index.html#smoother-3d">
+            Browser hardware acceleration setup <ArrowUpRight size={15} />
+          </a>
+          <a className="about-source" href="/guide/index.html">
             PC components: an illustrated beginner’s guide
             <ArrowUpRight size={15} />
           </a>

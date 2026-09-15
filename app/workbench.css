@@ -158,7 +158,8 @@ a {
   position: absolute;
   inset: 0 0 auto;
   height: 76px;
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
   justify-content: space-between;
   padding: 0 28px;
@@ -215,29 +216,31 @@ a {
   background: var(--accent);
 }
 .header-actions {
+  justify-self: end;
   display: flex;
   align-items: center;
   gap: 14px;
 }
-/* Authorship, in the header rather than buried in the About panel. Quiet
-   enough that it never competes with the controls beside it, and it doubles
-   as the link to the source. */
+/* A centered, readable authorship link at every screen size. */
 .byline {
   display: flex;
   align-items: center;
   gap: 8px;
-  height: 36px;
-  padding: 0 11px;
+  min-height: 42px;
+  padding: 0 14px;
   border-radius: 5px;
-  color: #8f939a;
-  font-size: 12px;
+  color: #bdc3cc;
+  font-size: 16px;
+  white-space: nowrap;
+  background: #1b1d22;
+  border: 1px solid #363b47;
   letter-spacing: 0.2px;
   transition:
     color 0.15s ease,
     background 0.15s ease;
 }
 .byline strong {
-  color: #c8cbd0;
+  color: var(--accent-bright);
   font-weight: 600;
 }
 .byline:hover {
@@ -1583,7 +1586,7 @@ a {
     padding: 0 6px;
   }
   .byline span {
-    display: none;
+    display: inline;
   }
   .explorer {
     display: none;
@@ -1674,7 +1677,10 @@ a {
     gap: 17px;
   }
   .byline {
-    display: none;
+    display: flex;
+    font-size: 12px;
+    gap: 0;
+    padding: 0 7px;
   }
   .search-button {
     width: 30px;
@@ -2351,6 +2357,115 @@ a {
 @media (orientation: landscape) and (max-height: 440px) {
   .workbench {
     min-height: 0;
+  }
+}
+.source-links h3 {
+  margin: 0;
+  font-size: 12px;
+  color: #cbd2db;
+}
+.source-links p {
+  margin: 0 0 4px;
+  font-size: 11px;
+  line-height: 1.6;
+  color: #9ca5b2;
+}
+
+.performance-tip {
+  position: absolute;
+  right: calc(24px + var(--safe-r));
+  bottom: calc(170px + var(--safe-b));
+  z-index: 24;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: min(360px, calc(100% - 32px));
+  padding: 16px;
+  border: 1px solid #454c5c;
+  border-radius: 10px;
+  background: #1c2029;
+  box-shadow: 0 12px 36px #0005;
+  color: #e8ecf2;
+  font-size: 13px;
+  animation: tip-appear 200ms ease-out;
+}
+.performance-tip > svg {
+  flex-shrink: 0;
+  color: var(--accent-bright);
+}
+.performance-tip strong {
+  font-size: 14px;
+}
+.performance-tip .tip-copy {
+  display: block;
+  margin: 5px 0 10px;
+  line-height: 1.5;
+  color: #bbc3cf;
+}
+.performance-tip a {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+  color: var(--accent-bright);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.performance-tip > button {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  margin: -8px -8px 0 0;
+  border-radius: 5px;
+}
+.performance-tip > button:hover {
+  background: #343b49;
+}
+@keyframes tip-appear {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .performance-tip {
+    animation: none;
+  }
+}
+@media (max-width: 1100px) {
+  .header-actions .search-button > span,
+  .header-actions .search-button kbd {
+    display: none;
+  }
+}
+@media (max-width: 600px) {
+  .topbar {
+    padding-inline: 12px;
+    gap: 6px;
+  }
+  .brand {
+    gap: 0;
+  }
+  .brand > span:last-child {
+    display: none;
+  }
+  .byline > svg {
+    display: none;
+  }
+  .header-actions {
+    gap: 7px;
+  }
+  .header-actions .guide-link {
+    display: none;
+  }
+  .performance-tip {
+    right: 16px;
+    bottom: calc(158px + var(--safe-b));
   }
 }
 @media (pointer: coarse) and (orientation: landscape) and (max-height: 500px) {

@@ -8,6 +8,7 @@ import { buildFanUnit } from './fan-unit.ts';
 import { buildCooler } from './cooler.ts';
 import { buildLiquid } from './liquid.ts';
 import { buildSsd } from './ssd.ts';
+import { buildNvme } from './nvme.ts';
 import { buildCoreUltra, buildRyzen } from './processor.ts';
 import { buildCoreIo, buildRyzenIo } from './io-die.ts';
 import { packageTexture, surfaceTexture } from './surfaces.ts';
@@ -98,6 +99,7 @@ const builders: Record<LevelId, (tools: ModelTools, root: T.Group) => void> = {
   cooler: buildCooler,
   liquid: buildLiquid,
   ssd: buildSsd,
+  nvme: buildNvme,
   card: (tools) => buildHardware(tools),
   die: (tools, root) => buildGpuArchitecture('die', tools, root),
   gpc: (tools, root) => buildGpuArchitecture('gpc', tools, root),

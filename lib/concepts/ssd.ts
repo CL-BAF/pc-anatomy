@@ -19,7 +19,7 @@ export const ssdConcepts: Concept[] = [
     specifications: { Format: '2.5-inch · 7 mm' },
     representationType: 'physical',
     physicalAccuracy: standard,
-    sources: ['sata'],
+    sources: ['samsungsata'],
     searchTerms: ['case', 'shell', 'enclosure', 'tray'],
   }),
   concept({
@@ -36,7 +36,7 @@ export const ssdConcepts: Concept[] = [
     specifications: { Material: 'Stamped metal' },
     representationType: 'physical',
     physicalAccuracy: internals,
-    sources: [],
+    sources: ['samsungsata'],
     searchTerms: ['lid', 'top', 'shell'],
   }),
   concept({
@@ -54,7 +54,7 @@ export const ssdConcepts: Concept[] = [
     specifications: { Interface: 'SATA 6 Gb/s' },
     representationType: 'physical',
     physicalAccuracy: internals,
-    sources: ['sata'],
+    sources: ['samsungsata', 'ssdarchitecture'],
     searchTerms: ['pcb', 'board', 'circuit'],
   }),
   concept({
@@ -72,7 +72,7 @@ export const ssdConcepts: Concept[] = [
     specifications: { Roles: 'FTL · ECC · wear levelling' },
     representationType: 'physical',
     physicalAccuracy: internals,
-    sources: ['sata'],
+    sources: ['ssdarchitecture', 'samsungsata'],
     searchTerms: ['flash translation layer', 'ecc', 'wear leveling'],
   }),
   concept({
@@ -90,7 +90,7 @@ export const ssdConcepts: Concept[] = [
     specifications: { Storage: 'Non-volatile NAND flash' },
     representationType: 'physical',
     physicalAccuracy: internals,
-    sources: [],
+    sources: ['samsungsata', 'ssdarchitecture'],
     searchTerms: ['flash', 'memory', 'chips', 'storage cells'],
   }),
   concept({
@@ -107,7 +107,7 @@ export const ssdConcepts: Concept[] = [
     specifications: { Role: 'Mapping and write cache' },
     representationType: 'physical',
     physicalAccuracy: internals,
-    sources: [],
+    sources: ['samsungsata', 'ssdarchitecture'],
     searchTerms: ['cache', 'dram', 'buffer'],
   }),
   concept({
@@ -124,7 +124,7 @@ export const ssdConcepts: Concept[] = [
     specifications: { Contacts: '7-pin', Link: 'SATA 6 Gb/s' },
     representationType: 'physical',
     physicalAccuracy: standard,
-    sources: ['sata'],
+    sources: ['sata', 'samsungsata'],
     searchTerms: ['sata', 'data cable', '7 pin'],
   }),
   concept({
@@ -141,7 +141,7 @@ export const ssdConcepts: Concept[] = [
     specifications: { Contacts: '15-pin', Rails: '3.3 V · 5 V · 12 V defined' },
     representationType: 'physical',
     physicalAccuracy: standard,
-    sources: ['sata'],
+    sources: ['sata', 'psu'],
     searchTerms: ['sata', 'power cable', '15 pin'],
   }),
 ];

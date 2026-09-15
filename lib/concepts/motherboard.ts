@@ -27,7 +27,7 @@ export const motherboardConcepts: Concept[] = [
     },
     representationType: 'physical',
     physicalAccuracy: standard,
-    sources: ['atx'],
+    sources: ['mainboardmanual'],
     searchTerms: ['pcb', 'substrate', 'traces', 'layers'],
   }),
   concept({
@@ -47,7 +47,7 @@ export const motherboardConcepts: Concept[] = [
       Retention: 'Lever and load plate',
     },
     representationType: 'physical',
-    sources: ['ryzen', 'coolermount'],
+    sources: ['mainboardmanual', 'ryzen'],
     searchTerms: ['am5', 'lga', 'socket', 'retention', 'contacts', 'zif'],
   }),
   concept({
@@ -68,7 +68,7 @@ export const motherboardConcepts: Concept[] = [
       Lid: 'Integrated heat spreader',
     },
     representationType: 'physical',
-    sources: ['ryzen', 'coolermount'],
+    sources: ['ryzen', 'zen5'],
     searchTerms: ['processor', 'cpu', 'chip', 'core', 'package'],
   }),
   concept({
@@ -86,7 +86,7 @@ export const motherboardConcepts: Concept[] = [
     specifications: { Contacts: '288-pin DDR5', Channels: '2' },
     representationType: 'physical',
     physicalAccuracy: standard,
-    sources: ['ddr5'],
+    sources: ['mainboardmanual', 'ddr5architecture'],
     searchTerms: ['dimm', 'slot', 'memory', 'channel'],
   }),
   concept({
@@ -108,7 +108,7 @@ export const motherboardConcepts: Concept[] = [
     },
     representationType: 'physical',
     physicalAccuracy: standard,
-    sources: ['ddr5'],
+    sources: ['ddr5architecture', 'ddr5'],
     searchTerms: ['ram', 'ddr5', 'memory', 'dimm', 'module'],
   }),
   concept({
@@ -127,7 +127,7 @@ export const motherboardConcepts: Concept[] = [
       Cooling: 'Passive heatsink',
     },
     representationType: 'physical',
-    sources: ['pcie'],
+    sources: ['mainboardmanual'],
     searchTerms: ['chipset', 'southbridge', 'phc', 'hub', 'io'],
   }),
   concept({
@@ -160,7 +160,7 @@ export const motherboardConcepts: Concept[] = [
     quantity: '1 modeled cell',
     specifications: { Type: 'Lithium coin cell' },
     representationType: 'physical',
-    sources: ['atx'],
+    sources: ['mainboardmanual'],
     searchTerms: ['battery', 'cmos', 'clock', 'rtc', 'coin cell'],
   }),
   concept({
@@ -182,7 +182,7 @@ export const motherboardConcepts: Concept[] = [
     },
     representationType: 'physical',
     physicalAccuracy: standard,
-    sources: ['pcie'],
+    sources: ['mainboardmanual', 'pcie'],
     searchTerms: ['pcie', 'slot', 'expansion', 'x16', 'graphics'],
   }),
   concept({
@@ -199,7 +199,7 @@ export const motherboardConcepts: Concept[] = [
     quantity: '2 modeled slots',
     specifications: { Generation: 'PCI Express', Lanes: '×1' },
     representationType: 'physical',
-    sources: ['pcie'],
+    sources: ['mainboardmanual', 'pcie'],
     searchTerms: ['pcie', 'x1', 'slot', 'expansion'],
   }),
   concept({
@@ -217,11 +217,12 @@ export const motherboardConcepts: Concept[] = [
     specifications: { Format: '2280', Interface: 'PCIe' },
     representationType: 'physical',
     physicalAccuracy: standard,
-    sources: ['nvme'],
+    sources: ['mainboardmanual', 'samsungnvme'],
     searchTerms: ['m.2', 'm2', 'socket', 'nvme', 'ssd'],
   }),
   concept({
     id: 'nvme',
+    open: 'nvme',
     name: 'NVMe solid-state drive',
     shortName: 'NVMe SSD',
     category: 'Storage',
@@ -239,7 +240,7 @@ export const motherboardConcepts: Concept[] = [
     },
     representationType: 'physical',
     physicalAccuracy: standard,
-    sources: ['nvme', 'pcie'],
+    sources: ['samsungnvme', 'ssdarchitecture', 'nvme'],
     searchTerms: ['nvme', 'ssd', 'm.2', 'storage', 'flash', 'drive'],
   }),
   concept({
@@ -255,7 +256,7 @@ export const motherboardConcepts: Concept[] = [
     quantity: '2 modeled covers',
     specifications: { Contact: 'Thermal pad' },
     representationType: 'physical',
-    sources: [],
+    sources: ['mainboardmanual'],
     searchTerms: ['heatsink', 'cover', 'thermal', 'm.2'],
   }),
   concept({
@@ -275,7 +276,7 @@ export const motherboardConcepts: Concept[] = [
       Input: '+12 V',
     },
     representationType: 'physical',
-    sources: ['powerdesign'],
+    sources: ['multiphase', 'mainboardmanual'],
     searchTerms: ['vrm', 'power', 'phase', 'regulator', 'buck', 'mosfet'],
   }),
   concept({
@@ -291,7 +292,7 @@ export const motherboardConcepts: Concept[] = [
     quantity: '2 modeled heatsinks',
     specifications: { Contact: 'Thermal pad' },
     representationType: 'physical',
-    sources: [],
+    sources: ['mainboardmanual'],
     searchTerms: ['heatsink', 'vrm', 'cooling', 'fins'],
   }),
   concept({
@@ -342,7 +343,7 @@ export const motherboardConcepts: Concept[] = [
     specifications: { Rate: '6 Gb/s' },
     representationType: 'physical',
     physicalAccuracy: standard,
-    sources: ['sata'],
+    sources: ['mainboardmanual', 'sata'],
     searchTerms: ['sata', 'port', 'drive', 'connector', 'storage'],
   }),
   concept({
@@ -360,7 +361,7 @@ export const motherboardConcepts: Concept[] = [
     specifications: { Aperture: '158.75 × 44.45 mm' },
     representationType: 'physical',
     physicalAccuracy: standard,
-    sources: ['atx'],
+    sources: ['mainboardmanual'],
     searchTerms: ['usb', 'ethernet', 'audio', 'ports', 'rear', 'io'],
   }),
   concept({
@@ -377,7 +378,7 @@ export const motherboardConcepts: Concept[] = [
     quantity: '1 modeled controller',
     specifications: { Interface: 'Wired Ethernet' },
     representationType: 'physical',
-    sources: [],
+    sources: ['mainboardmanual'],
     searchTerms: ['ethernet', 'lan', 'network', 'nic', 'rj45'],
   }),
   concept({
@@ -394,7 +395,7 @@ export const motherboardConcepts: Concept[] = [
     quantity: '1 modeled codec',
     specifications: { Isolation: 'Separated ground area' },
     representationType: 'physical',
-    sources: [],
+    sources: ['mainboardmanual'],
     searchTerms: ['audio', 'codec', 'sound', 'jack', 'analog'],
   }),
   concept({
@@ -411,7 +412,7 @@ export const motherboardConcepts: Concept[] = [
     quantity: '1 modeled controller',
     specifications: { Role: 'Monitoring and fan control' },
     representationType: 'physical',
-    sources: ['temperature'],
+    sources: ['mainboardmanual', 'temperature'],
     searchTerms: ['super i/o', 'sensor', 'fan control', 'monitoring', 'pwm'],
   }),
   concept({
@@ -427,7 +428,7 @@ export const motherboardConcepts: Concept[] = [
     quantity: '6 modeled headers',
     specifications: { Contacts: '4-pin PWM' },
     representationType: 'physical',
-    sources: ['bldc'],
+    sources: ['mainboardmanual', 'bldc'],
     searchTerms: ['fan', 'header', 'pwm', 'connector'],
   }),
   concept({
@@ -444,7 +445,7 @@ export const motherboardConcepts: Concept[] = [
     quantity: '4 modeled headers',
     specifications: { Types: 'Front panel · USB · audio' },
     representationType: 'physical',
-    sources: ['atx'],
+    sources: ['mainboardmanual'],
     searchTerms: ['header', 'front panel', 'usb', 'power button'],
   }),
 ];

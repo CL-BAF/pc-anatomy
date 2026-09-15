@@ -1,6 +1,48 @@
 # Technical provenance
 
-Reviewed 2026-09-12. PC Anatomy is independent of NVIDIA, Intel, AMD, JEDEC, PCI-SIG and Human Atlas. All geometry is original.
+Reviewed 2026-09-15. PC Anatomy is independent of the manufacturers cited here. All geometry is original.
+
+## Current component reference audit
+
+All 183 component entries now have references in their detail panels. The complete
+[component-to-document index](docs/component-references.md) records those mappings.
+The registry in `lib/sources.ts` is authoritative for current app links; older notes
+below preserve the research history.
+
+- CPU and GPU internals use NVIDIA's RTX Blackwell white paper, AMD's Zen 5
+  microarchitecture guide, and Intel's Core Ultra 200S architecture/interface
+  datasheet, alongside SKU specifications.
+- Motherboard layout, slots, headers, audio and network connectivity use the ASUS
+  X670E manual. Micron and Kingston document DDR5 module architecture.
+- Samsung's 870 EVO and 990 PRO datasheets document the SATA and M.2 drive families.
+  The 950 PRO white paper explains SSD controller/flash architecture; it does not
+  establish the exact controller implementation in the illustrative models.
+- Intel's **multi-rail ATX** power guide replaces the mismatched ATX12VO reference.
+  TI's TIDA-010015 schematics explain PFC, LLC conversion and rectification. That
+  reference design is a 24 V industrial supply, so it supports circuit principles,
+  not the modeled ATX output voltages or a particular PC PSU's topology.
+- Noctua's fan and tower-cooler documents, ARCTIC's liquid-cooler construction, and
+  Fractal Design's case manual support the mechanical component families. Their
+  dimensions, counts and proprietary designs are not claimed for our generic models.
+  In particular, the fan's sleeve is illustrative, not a reproduction of Noctua's
+  SSO bearing; the decorative tower top cover is an original model detail.
+- TI packaging, regulator, oscillator and ESD documentation and Littelfuse fuse
+  documentation replace generic GPU-specification links for board-level components.
+  No exact TI or Littelfuse IC or part is asserted to be populated on the ASUS card.
+
+The old ATX archive, JEDEC landing page and SATA-IO homepage could not be verified
+with the browsing tool during this audit. Current app links instead point to
+manufacturer construction manuals, Micron's DDR5 white paper and TE Connectivity's
+7+15-contact SATA connector drawings. Document links were checked through web
+retrieval/search; automated direct HTTP checks were unavailable in this environment.
+
+### M.2 SSD model scope
+
+The Storage menu now exposes both the 2.5-inch SATA SSD and M.2 NVMe SSD. The latter
+also opens from the motherboard. Its nominal 22 × 80 mm module has a mounting
+notch, an M-key contact gap, a controller, DRAM and two NAND packages. BGA joints
+are beneath the chips. Package count, contact count and routing are illustrative.
+The model is an educational assembly, not a reproduction of the Samsung 990 PRO PCB.
 
 ## Architecture and specifications
 

@@ -31,7 +31,7 @@ export const pcConcepts: Concept[] = [
     },
     representationType: 'physical',
     physicalAccuracy: standard,
-    sources: ['atx'],
+    sources: ['chassis'],
     searchTerms: ['computer', 'machine', 'tower', 'build', 'system'],
   }),
 
@@ -54,7 +54,7 @@ export const pcConcepts: Concept[] = [
     },
     representationType: 'physical',
     physicalAccuracy: standard,
-    sources: ['atx'],
+    sources: ['chassis'],
     searchTerms: ['case', 'tower', 'tray', 'steel', 'skeleton'],
   }),
   concept({
@@ -71,7 +71,7 @@ export const pcConcepts: Concept[] = [
     quantity: '2 modeled panels',
     specifications: { Window: 'Illustrative tempered-glass panel' },
     representationType: 'physical',
-    sources: ['atx'],
+    sources: ['chassis'],
     searchTerms: ['glass', 'window', 'cover', 'panel'],
   }),
   concept({
@@ -87,7 +87,7 @@ export const pcConcepts: Concept[] = [
     quantity: '1 modeled panel',
     specifications: { Intake: 'Illustrative mesh' },
     representationType: 'physical',
-    sources: ['atx'],
+    sources: ['chassis'],
     searchTerms: ['bezel', 'mesh', 'intake', 'front'],
   }),
   concept({
@@ -101,7 +101,7 @@ export const pcConcepts: Concept[] = [
     quantity: '1 modeled panel',
     specifications: { Venting: 'Illustrative' },
     representationType: 'physical',
-    sources: ['atx'],
+    sources: ['chassis'],
     searchTerms: ['lid', 'exhaust', 'roof', 'vent'],
   }),
   concept({
@@ -117,7 +117,7 @@ export const pcConcepts: Concept[] = [
     quantity: '1 modeled cover',
     specifications: { Geometry: 'Approximate' },
     representationType: 'physical',
-    sources: ['atx'],
+    sources: ['chassis'],
     searchTerms: ['cover', 'basement', 'shroud'],
   }),
   concept({
@@ -132,7 +132,7 @@ export const pcConcepts: Concept[] = [
     quantity: '1 modeled tray',
     specifications: { Format: '2.5-inch' },
     representationType: 'physical',
-    sources: ['atx'],
+    sources: ['chassis'],
     searchTerms: ['bay', 'bracket', 'tray', 'ssd'],
   }),
   concept({
@@ -150,7 +150,7 @@ export const pcConcepts: Concept[] = [
     specifications: { Pattern: 'ATX mounting holes' },
     representationType: 'physical',
     physicalAccuracy: standard,
-    sources: ['atx'],
+    sources: ['chassis'],
     searchTerms: ['screw', 'mount', 'spacer', 'pillar'],
   }),
   concept({
@@ -168,7 +168,7 @@ export const pcConcepts: Concept[] = [
     specifications: { Aperture: '158.75 × 44.45 mm' },
     representationType: 'physical',
     physicalAccuracy: standard,
-    sources: ['atx'],
+    sources: ['chassis'],
     searchTerms: ['backplate', 'ports', 'rear', 'shield'],
   }),
 
@@ -193,7 +193,7 @@ export const pcConcepts: Concept[] = [
     },
     representationType: 'physical',
     physicalAccuracy: standard,
-    sources: ['atx', 'pcie'],
+    sources: ['mainboardmanual'],
     searchTerms: ['mainboard', 'mobo', 'board', 'logic board'],
   }),
   concept({
@@ -214,7 +214,7 @@ export const pcConcepts: Concept[] = [
       Specimen: 'GeForce RTX 5090',
     },
     representationType: 'physical',
-    sources: ['specs', 'pcie'],
+    sources: ['tuf5090', 'whitepaper'],
     searchTerms: ['gpu', 'video card', 'rtx', 'graphics', 'nvidia'],
   }),
   concept({
@@ -281,7 +281,7 @@ export const pcConcepts: Concept[] = [
       'Heat pipes': '4 modeled pipes',
     },
     representationType: 'physical',
-    sources: ['coolermount'],
+    sources: ['aircooler'],
     searchTerms: ['heatsink', 'tower', 'fan', 'thermal', 'air cooler'],
   }),
   concept({
@@ -333,7 +333,7 @@ export const pcConcepts: Concept[] = [
     quantity: '4 modeled fans',
     specifications: { Layout: '3 front intake · 1 rear exhaust' },
     representationType: 'physical',
-    sources: ['bldc'],
+    sources: ['fanconstruction', 'bldc'],
     searchTerms: ['fan', 'airflow', 'intake', 'exhaust', 'cooling'],
   }),
   concept({
@@ -352,7 +352,7 @@ export const pcConcepts: Concept[] = [
     specifications: { Interface: 'SATA 6 Gb/s', Format: '2.5-inch' },
     representationType: 'physical',
     physicalAccuracy: standard,
-    sources: ['sata'],
+    sources: ['samsungsata', 'ssdarchitecture'],
     searchTerms: ['ssd', 'sata', 'flash', 'drive', 'storage'],
   }),
 ];

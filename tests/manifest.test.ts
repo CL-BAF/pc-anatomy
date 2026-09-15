@@ -17,15 +17,21 @@ import {
   spatialInventory,
   type Vec3,
 } from '../lib/layout.ts';
-import { branchRoot, levelIds, levels, rootLevel } from '../lib/levels.ts';
+import {
+  branches,
+  branchRoot,
+  levelIds,
+  levels,
+  rootLevel,
+} from '../lib/levels.ts';
 import { sources } from '../lib/sources.ts';
 
 await test('all concepts have unique identities, reciprocal parents, sources and no cycles', () => {
   assert.equal(new Set(manifest.map((c) => c.id)).size, manifest.length);
   for (const c of manifest) {
     assert.ok(c.description && c.purpose && c.quantity);
-    // A citation must resolve. An empty list is honest: some parts are just
-    // sheet metal, and pointing at a vendor page for them would be a fiction.
+    // Every family needs relevant documentation; geometry remains illustrative.
+    assert.ok(c.sources.length > 0, 'missing reference for ' + c.id);
     assert.equal(
       new Set(c.sources).size,
       c.sources.length,
@@ -49,6 +55,18 @@ await test('all concepts have unique identities, reciprocal parents, sources and
       id = byId[id].parent;
     }
   }
+});
+await test('M.2 is reachable from its motherboard and the Storage menu without duplication', () => {
+  assert.equal(byId.nvme.open, 'nvme');
+  assert.deepEqual(levelPath('nvme'), ['pc', 'motherboard', 'nvme']);
+  assert.deepEqual(branches().find((b) => b.label === 'Storage')?.levels, [
+    'ssd',
+    'nvme',
+  ]);
+  const menus = branches().flatMap((b) => b.levels);
+  assert.equal(new Set(menus).size, menus.length);
+  assert.equal(menus.length, levelIds.length - 1);
+  assert.equal(selectSearch(initialState, 'nvmenand').level, 'nvme');
 });
 await test('shipping SKU counts are distinct from full-chip capacity', () => {
   assert.equal(byId.die.specifications.SMs, '170');

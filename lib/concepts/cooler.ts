@@ -25,7 +25,7 @@ export const coolerConcepts: Concept[] = [
     quantity: '1 modeled block',
     specifications: { Material: 'Nickel-plated copper' },
     representationType: 'physical',
-    sources: ['coolermount'],
+    sources: ['aircooler'],
     searchTerms: ['coldplate', 'base', 'copper', 'contact', 'lapped'],
   }),
   concept({
@@ -42,7 +42,7 @@ export const coolerConcepts: Concept[] = [
     quantity: '1 modeled layer',
     specifications: { Thickness: 'As thin as contact allows' },
     representationType: 'physical',
-    sources: ['coolermount'],
+    sources: ['aircooler'],
     searchTerms: ['paste', 'compound', 'tim', 'thermal', 'grease'],
   }),
   concept({
@@ -59,7 +59,7 @@ export const coolerConcepts: Concept[] = [
     quantity: '4 modeled pipes',
     specifications: { Construction: 'Sealed copper, wicked' },
     representationType: 'physical',
-    sources: [],
+    sources: ['aircooler'],
     searchTerms: ['heat pipe', 'copper', 'vapour', 'wick', 'phase change'],
   }),
   concept({
@@ -76,7 +76,7 @@ export const coolerConcepts: Concept[] = [
     quantity: '48 modeled fins',
     specifications: { Material: 'Aluminium', Pitch: 'Illustrative' },
     representationType: 'physical',
-    sources: [],
+    sources: ['aircooler'],
     searchTerms: ['fins', 'stack', 'aluminium', 'surface area', 'radiator'],
   }),
   concept({
@@ -88,11 +88,11 @@ export const coolerConcepts: Concept[] = [
     level: 'cooler',
     description: 'A brushed plate capping the stack, often lit.',
     purpose:
-      'Closes the top of the fin stack so air is drawn through the fins rather than over them, and carries the branding.',
+      'Finishes the top of the cooler and provides a surface for branding. This decorative cover is an illustrative addition; the reference documents the underlying heat-pipe tower.',
     quantity: '1 modeled cover',
     specifications: { Finish: 'Brushed, illustrative' },
     representationType: 'physical',
-    sources: [],
+    sources: ['aircooler'],
     searchTerms: ['cover', 'cap', 'top', 'plate', 'lid'],
   }),
   concept({
@@ -109,7 +109,7 @@ export const coolerConcepts: Concept[] = [
     quantity: '1 modeled fan',
     specifications: { Format: '120 mm', Control: '4-pin PWM' },
     representationType: 'physical',
-    sources: ['bldc'],
+    sources: ['fanconstruction'],
     searchTerms: ['fan', 'airflow', 'pwm', '120mm'],
   }),
   concept({
@@ -125,7 +125,7 @@ export const coolerConcepts: Concept[] = [
     quantity: '2 modeled clips',
     specifications: { Material: 'Spring steel' },
     representationType: 'physical',
-    sources: [],
+    sources: ['aircooler'],
     searchTerms: ['clip', 'wire', 'spring', 'bracket', 'mount'],
   }),
   concept({
@@ -142,7 +142,7 @@ export const coolerConcepts: Concept[] = [
     quantity: '1 modeled set',
     specifications: { Load: 'Spring-limited', Fit: 'Socket-specific bracket' },
     representationType: 'physical',
-    sources: ['coolermount'],
+    sources: ['aircooler', 'mainboardmanual'],
     searchTerms: ['backplate', 'bracket', 'screw', 'standoff', 'mount', 'clamp'],
   }),
 ];

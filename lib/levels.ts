@@ -19,6 +19,7 @@ export type LevelId =
   | 'cooler'
   | 'liquid'
   | 'ssd'
+  | 'nvme'
   | 'card'
   | 'die'
   | 'gpc'
@@ -50,7 +51,7 @@ export interface LevelDef {
   /** Marked false while a branch is still a placeholder. */
   detailed: boolean;
   /**
-   * Set on the levels directly under the machine. It names the subsystem menu
+   * Set on a subsystem root, including nested roots such as an M.2 drive. It names the subsystem menu
    * that this scale and everything beneath it are listed under, so a viewer
    * picks "GPU" and then chooses a scale, rather than tunnelling through the
    * card to reach the die.
@@ -233,6 +234,20 @@ export const levels: Record<LevelId, LevelDef> = {
     phases: dissectionPhases,
     detailed: true,
   },
+  nvme: {
+    id: 'nvme',
+    parent: 'motherboard',
+    name: 'M.2 NVMe SSD',
+    title: 'Inside an M.2 SSD.',
+    caption: 'M.2 2280 · NVMe OVER PCIe',
+    summary: 'Controller, NAND flash, DRAM and keyed edge contacts',
+    kind: 'physical',
+    branchLabel: 'Storage',
+    concept: 'nvme',
+    spread: 1.5,
+    phases: dissectionPhases,
+    detailed: true,
+  },
   card: {
     id: 'card',
     parent: 'pc',
@@ -327,10 +342,10 @@ export const levelNames = Object.fromEntries(
   levelIds.map((id) => [id, levels[id].name]),
 ) as Record<LevelId, string>;
 
-/** The scale directly under the machine that this one belongs to. */
+/** The nearest ancestor (or this level) declaring a subsystem menu. */
 export function branchRoot(id: LevelId): LevelId | null {
   const path = levelPath(id);
-  return path.length > 1 ? path[1] : null;
+  return path.reverse().find((level) => levels[level].branchLabel) ?? null;
 }
 
 export interface Branch {
@@ -348,7 +363,7 @@ export interface Branch {
  */
 export function branches(): Branch[] {
   const grouped = new Map<string, LevelId[]>();
-  for (const root of levelIds.filter((id) => levels[id].parent === rootLevel)) {
+  for (const root of levelIds.filter((id) => levels[id].branchLabel)) {
     const label = levels[root].branchLabel ?? levels[root].name;
     grouped.set(label, [
       ...(grouped.get(label) ?? []),

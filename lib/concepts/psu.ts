@@ -45,7 +45,7 @@ export const psuConcepts: Concept[] = [
     quantity: '1 modeled fan',
     specifications: { Intake: 'Underside', Control: 'Thermally regulated' },
     representationType: 'physical',
-    sources: ['bldc'],
+    sources: ['fanconstruction', 'bldc'],
     searchTerms: ['fan', 'intake', 'cooling', 'airflow'],
   }),
   concept({
@@ -62,7 +62,7 @@ export const psuConcepts: Concept[] = [
     quantity: '1 modeled board',
     specifications: { Isolation: 'Primary / secondary barrier' },
     representationType: 'physical',
-    sources: ['psu'],
+    sources: ['acdc', 'psu'],
     searchTerms: ['pcb', 'board', 'isolation', 'primary', 'secondary'],
   }),
   concept({
@@ -97,7 +97,7 @@ export const psuConcepts: Concept[] = [
     quantity: '2 modeled chokes',
     specifications: { Parts: 'Common-mode chokes · X and Y capacitors' },
     representationType: 'physical',
-    sources: ['powerdesign'],
+    sources: ['acdc'],
     searchTerms: ['emi', 'filter', 'choke', 'noise', 'x capacitor'],
   }),
   concept({
@@ -114,7 +114,7 @@ export const psuConcepts: Concept[] = [
     quantity: '1 modeled bridge',
     specifications: { Devices: '4 diodes in one package' },
     representationType: 'physical',
-    sources: ['powerdesign'],
+    sources: ['acdc'],
     searchTerms: ['bridge', 'rectifier', 'diode', 'ac to dc'],
   }),
   concept({
@@ -131,7 +131,7 @@ export const psuConcepts: Concept[] = [
     quantity: '1 modeled boost stage',
     specifications: { Topology: 'Boost converter, illustrative' },
     representationType: 'physical',
-    sources: ['powerdesign'],
+    sources: ['acdc'],
     searchTerms: ['pfc', 'power factor', 'boost', 'inductor', 'choke'],
   }),
   concept({
@@ -148,7 +148,7 @@ export const psuConcepts: Concept[] = [
     quantity: '1 modeled capacitor',
     specifications: { Role: 'High-voltage energy store' },
     representationType: 'physical',
-    sources: ['powerdesign'],
+    sources: ['acdc'],
     searchTerms: ['capacitor', 'bulk', 'hold-up', 'electrolytic', 'can'],
   }),
   concept({
@@ -165,7 +165,7 @@ export const psuConcepts: Concept[] = [
     quantity: '4 modeled devices',
     specifications: { Role: 'High-side / low-side switching' },
     representationType: 'physical',
-    sources: ['powerdesign'],
+    sources: ['acdc'],
     searchTerms: ['mosfet', 'switch', 'transistor', 'primary', 'inverter'],
   }),
   concept({
@@ -182,7 +182,7 @@ export const psuConcepts: Concept[] = [
     quantity: '1 modeled transformer',
     specifications: { Core: 'Ferrite', Role: 'Step-down and isolation' },
     representationType: 'physical',
-    sources: ['powerdesign'],
+    sources: ['acdc'],
     searchTerms: ['transformer', 'ferrite', 'isolation', 'winding', 'core'],
   }),
   concept({
@@ -199,7 +199,7 @@ export const psuConcepts: Concept[] = [
     quantity: '2 modeled heatsinks',
     specifications: { Placement: 'Primary and secondary side' },
     representationType: 'physical',
-    sources: [],
+    sources: ['acdc'],
     searchTerms: ['heatsink', 'fins', 'cooling', 'aluminium'],
   }),
   concept({
@@ -216,7 +216,7 @@ export const psuConcepts: Concept[] = [
     quantity: '6 modeled devices',
     specifications: { Method: 'Synchronous rectification' },
     representationType: 'physical',
-    sources: ['powerdesign'],
+    sources: ['acdc'],
     searchTerms: ['synchronous', 'rectifier', 'secondary', '12v', 'mosfet'],
   }),
   concept({
@@ -233,7 +233,7 @@ export const psuConcepts: Concept[] = [
     quantity: '2 modeled converters',
     specifications: { Rails: '+5 V · +3.3 V' },
     representationType: 'physical',
-    sources: ['psu'],
+    sources: ['multiphase', 'psu'],
     searchTerms: ['dc-dc', 'buck', '5v', '3.3v', 'rail', 'daughterboard'],
   }),
   concept({
@@ -250,7 +250,7 @@ export const psuConcepts: Concept[] = [
     quantity: '8 modeled capacitors',
     specifications: { Type: 'Low-ESR electrolytic and polymer' },
     representationType: 'physical',
-    sources: ['powerdesign'],
+    sources: ['acdc'],
     searchTerms: ['capacitor', 'output', 'ripple', 'filter', 'esr'],
   }),
   concept({
@@ -267,7 +267,7 @@ export const psuConcepts: Concept[] = [
     quantity: '2 modeled controllers',
     specifications: { Signals: 'Power-on · power-good' },
     representationType: 'physical',
-    sources: ['psu', 'monitor'],
+    sources: ['psu', 'acdc'],
     searchTerms: ['supervisor', 'controller', 'protection', 'power good', 'ocp'],
   }),
   concept({
@@ -301,7 +301,7 @@ export const psuConcepts: Concept[] = [
     quantity: '1 modeled grille',
     specifications: { Pattern: 'Hexagonal perforation' },
     representationType: 'physical',
-    sources: [],
+    sources: ['psu'],
     searchTerms: ['grille', 'vent', 'exhaust', 'honeycomb', 'mesh'],
   }),
 ];

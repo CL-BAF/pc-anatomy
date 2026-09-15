@@ -152,6 +152,30 @@ await test('the SATA SSD exposes flash and two distinct interfaces', () => {
   assert.equal(ssd.pieces.filter((p) => p.concept === 'ssdpower').length, 1);
 });
 
+await test('M.2 packages and keyed contacts fit a 2280 module and stay pickable', () => {
+  const model = models.get('nvme')!;
+  assert.equal(model.pieces.filter((p) => p.concept === 'nvmenand').length, 2);
+  for (const piece of model.pieces) {
+    if (piece.concept === 'nvmefastener') continue;
+    const extentX =
+      Math.abs(piece.base.x + piece.center.x) + piece.extent.x / 2;
+    const extentZ =
+      Math.abs(piece.base.z + piece.center.z) + piece.extent.z / 2;
+    assert.ok(extentX <= 40 / 6 + 0.01, piece.key + ' exceeds 80 mm length');
+    assert.ok(extentZ <= 11 / 6 + 0.01, piece.key + ' exceeds 22 mm width');
+    piece.object.traverse((object) => {
+      if (object instanceof T.Mesh)
+        assert.equal(
+          resolvePick([
+            { object, distance: 1, instanceId: 0, point: new T.Vector3() },
+          ]),
+          piece,
+          piece.key,
+        );
+    });
+  }
+});
+
 await test('the assembled motherboard never invents parts mid-dissection', () => {
   const motherboard = models.get('motherboard')!;
   assert.ok(motherboard.pieces.length > 0);
