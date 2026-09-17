@@ -6,6 +6,8 @@ PC Anatomy is an open-source 3D explorer that takes a desktop computer apart fro
 
 Ideas worth building are collected on the [**roadmap and Kanban board →**](https://github.com/users/Yoosseph/projects/1). If you would like to contribute but have nothing particular in mind, start there: the Backlog column holds the suggestions and feedback waiting to be picked up.
 
+Before changing any code, read [**ARCHITECTURE.md →**](ARCHITECTURE.md). It is the full technical picture of the project — the scale tree, where every module lives, the conventions behind the geometry, and the traps that are not obvious from reading the source. It is written to be read start to finish by whoever is doing the work, person or language model.
+
 Every polygon is generated in TypeScript with three.js. There are no imported models, image textures, or other runtime asset files. The roughly 300 selectable components each carry a name, a description, an explanation of their purpose, specifications, and citations instead of stopping at a label.
 
 ![An assembled ATX tower in PC Anatomy: a dual-glass aluminium case with the motherboard, graphics card, cooler and power supply visible through the window](docs/screenshots/pc-assembled.png)
@@ -95,47 +97,11 @@ After deployment, submit `https://pc-anatomy.com/sitemap.xml` in Google Search C
 
 The browser and search icons are derived from `public/favicon.svg`. Run `node scripts/generate-icons.mjs` to regenerate the PNG and multi-resolution ICO variants (uses Playwright and Microsoft Edge). `public/pc-assembled.png` is a capture of the actual model; `public/social-preview.png` is its sharing card.
 
-## Project layout
+## Working on the code
 
-| Path                         | Purpose                                                              |
-| ---------------------------- | -------------------------------------------------------------------- |
-| `index.html`, `app/main.tsx` | Vite entry point and React mount                                     |
-| `app/page.tsx`               | Explorer interface, navigation, search, timeline, and detail panel   |
-| `app/viewer.tsx`             | Canvas host and lazy scene loading                                   |
-| `app/workbench.css`          | Desktop, responsive, and touch layout                                |
-| `lib/scene.ts`               | Renderer, camera, picking, dive animation, and explode interpolation |
-| `lib/levels.ts`              | Scale tree and per-scale presentation metadata                       |
-| `lib/models.ts`              | Builder registry and shared geometry tools                           |
-| `lib/concepts/*.ts`          | Written component catalogue, organized by subsystem                  |
-| `lib/manifest.ts`            | Catalogue composition, search, and explorer state helpers            |
-| `lib/*.ts` builder modules   | Code-generated geometry for each physical or logical scale           |
-| `lib/card-kit.ts`            | Shared millimetre-scale parts for the RX 9070 XT and Arc B580 cards  |
-| `tests/*.test.ts`            | Data integrity, layout, picking, and geometry-presence tests         |
-| `SOURCES.md`                 | Research and dimensional references                                  |
+The technical detail lives in **[ARCHITECTURE.md](ARCHITECTURE.md)**, next to this file. It covers how to run and check the project, the full scale tree, where every module lives and what it answers for, the interface a geometry builder is handed, the conventions that keep the models consistent, how to add a component or a whole new scale, the sourcing rules, and what the tests do and do not verify.
 
-## Adding a component
-
-A component joins the written catalogue to selectable geometry through its concept ID.
-
-1. Add the concept to the relevant file in `lib/concepts/`. Follow a neighboring entry and provide its unique `id`, scale, parent, category, representation type, explanation, specifications, accuracy note, and source IDs.
-2. In that scale's builder, create the geometry and pass the same concept ID to the shared `add` or `instances` helper. The helper supplies selection identity, explode placement, inventory layout, and counting.
-3. Add any new references to `lib/sources.ts` and document them in `SOURCES.md`.
-4. If the concept lives in a new catalogue file, export its array and compose it into `lib/manifest.ts`.
-5. Run the checks below. The tests reject anonymous geometry, duplicate concept IDs, broken parent links, and scales with nothing to render.
-
-Do not introduce delayed reveal thresholds for assembled geometry. A component that exists in the assembled product should exist at slider position zero and move continuously as the product comes apart.
-
-## Adding a scale
-
-A new scale has five integration points:
-
-1. Add its ID and definition to `lib/levels.ts`, including its parent, kind, concept, phases, and navigation text.
-2. Implement its geometry builder and register that builder in `lib/models.ts`.
-3. Add its written catalogue in `lib/concepts/`.
-4. Put `open: '<new-level-id>'` on the concept in the parent scale that leads into it. A complete alternative product that the machine does not carry, such as the second and third graphics cards, sets `alternative: true` instead and is reached from its subsystem menu; `submenu` gives it a dropdown of its own inside that menu.
-5. Export and compose the new concepts in `lib/manifest.ts`.
-
-The scale tree drives navigation, breadcrumbs, lighting, and the disassembly timeline. Avoid adding a second hand-written route table. When a model is rebuilt, `lib/scene.ts` must also clear its cached `layoutSignature` so the new inventory is packed from its own pieces.
+Read it before the first edit. It is kept current with the code, and a change that moves a module or settles a decision should update it in the same commit.
 
 ## Accuracy and sources
 
@@ -147,7 +113,7 @@ Product and company names are used nominatively to identify the hardware being d
 
 ## Contributing
 
-Issues and focused pull requests are welcome, and the [roadmap and Kanban board](https://github.com/users/Yoosseph/projects/1) lists what is open. Keep written claims cited, preserve the distinction between physical models and logical diagrams, and run the full local checks before opening a change:
+Issues and focused pull requests are welcome, and the [roadmap and Kanban board](https://github.com/users/Yoosseph/projects/1) lists what is open. Start with [ARCHITECTURE.md](ARCHITECTURE.md), keep written claims cited, preserve the distinction between physical models and logical diagrams, and run the full local checks before opening a change:
 
 ```bash
 npm run check
