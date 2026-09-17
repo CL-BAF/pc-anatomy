@@ -396,16 +396,21 @@ a {
 .systems-section {
   padding: 22px 0 20px;
   display: flex;
-  flex: 0 0 auto;
+  /* Takes whatever height the scale tree leaves, so the component list shows
+     as many rows as the rail can fit before it has to scroll at all. */
+  flex: 1 1 auto;
   min-height: 0;
   flex-direction: column;
 }
 .layer-scroll {
-  flex: none;
+  /* Grows into whatever height the scale tree leaves, so on a normal window
+     every system fits and there is nothing to scroll. Never shrinks below the
+     old fixed height, so a short window scrolls the rail instead of
+     collapsing the list to a sliver. */
+  flex: 1 1 112px;
   width: 100%;
-  height: clamp(112px, 24vh, 250px);
-  min-height: 0;
-  overflow-y: scroll;
+  min-height: 112px;
+  overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: #60636a transparent;
   scrollbar-gutter: stable;
@@ -490,33 +495,6 @@ a {
   flex: 1;
   text-align: left;
   color: #a7aab0;
-}
-.reference-stats {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px 8px;
-  margin-top: auto;
-  padding-top: 20px;
-  border-top: 1px solid #34373c;
-}
-.reference-stats > div:last-child {
-  display: none;
-}
-.reference-stats strong {
-  display: block;
-  font-size: 23px;
-  font-weight: 400;
-  color: #f1f1f2;
-  letter-spacing: -0.5px;
-}
-.reference-stats strong small {
-  font: 10px monospace;
-  color: #80848c;
-}
-.reference-stats span {
-  font: 9px monospace;
-  letter-spacing: 0.6px;
-  color: #797d85;
 }
 .stage-heading {
   position: absolute;
@@ -1487,10 +1465,6 @@ a {
   .systems-section {
     padding: 16px 0;
   }
-  .reference-stats {
-    gap: 10px;
-    margin-top: 12px;
-  }
   .stage-heading {
     top: 106px;
   }
@@ -1614,9 +1588,6 @@ a {
   }
   .mobile-close {
     display: block;
-  }
-  .reference-stats {
-    margin-top: 20px;
   }
   .stage-heading {
     top: 98px;
@@ -2138,10 +2109,6 @@ a {
   .systems-section {
     padding-top: 18px;
     padding-bottom: 16px;
-  }
-  .reference-stats {
-    padding-top: 16px;
-    gap: 10px;
   }
 }
 

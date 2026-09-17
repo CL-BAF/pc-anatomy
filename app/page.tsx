@@ -698,24 +698,6 @@ export default function Home() {
             ))}
           </div>
         </div>
-        <div className="reference-stats">
-          <div>
-            <strong>
-              305 <small>MM</small>
-            </strong>
-            <span>ATX BOARD</span>
-          </div>
-          <div>
-            <strong>
-              5.0 <small>GEN</small>
-            </strong>
-            <span>PCI EXPRESS</span>
-          </div>
-          <div>
-            <strong>{manifest.length}</strong>
-            <span>CONCEPTS</span>
-          </div>
-        </div>
       </aside>
       <section className="stage-heading">
         <div>
