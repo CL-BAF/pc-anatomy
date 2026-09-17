@@ -1,7 +1,7 @@
 import * as T from 'three';
 import type { ModelTools } from './hardware.ts';
 import type { Vec3 } from './layout.ts';
-import { byId } from './manifest.ts';
+import { diagramKit, put, type DiagramPalette } from './diagram-kit.ts';
 
 /**
  * The logical scales inside Navi 48: the die, a shader engine, a workgroup
@@ -15,68 +15,24 @@ import { byId } from './manifest.ts';
 
 type Level = 'navi48' | 'rxse' | 'rxwgp' | 'rxcu';
 
-const put = (parent: T.Group, obj: T.Object3D, pos: Vec3) => {
-  obj.position.set(...pos);
-  parent.add(obj);
-  return obj;
+/** Warm greys, so an AMD scale is recognisable beside the other two chips. */
+const palette: DiagramPalette = {
+  panel: '#21171a',
+  rail: '#7a5a55',
+  caption: '#a88580',
+  text: '#e6d6d2',
 };
-
-/** Scenery under a diagram, so the blocks read as sitting on something. */
-function backdrop(
-  root: T.Group,
-  box: ModelTools['box'],
-  label: ModelTools['label'],
-  size: [number, number],
-  caption: string,
-) {
-  const frame = new T.Group();
-  frame.userData.contextFrame = true;
-  put(frame, box([size[0], 0.09, size[1]], '#21171a', 0.55), [0, -0.08, 0]);
-  for (const side of [-1, 1])
-    put(frame, box([size[0] * 0.98, 0.045, 0.025], '#7a5a55', 0.7), [
-      0,
-      0.01,
-      side * (size[1] / 2 - 0.1),
-    ]);
-  label(
-    frame,
-    caption,
-    [-size[0] / 2 + 1.2, 0.01, -size[1] / 2 + 0.25],
-    2,
-    '#a88580',
-  );
-  root.add(frame);
-}
 
 export function buildRadeonArchitecture(
   level: Level,
-  { add, instances, box, material, label }: ModelTools,
+  tools: ModelTools,
   root: T.Group,
 ) {
-  /** A single labelled block, added as one selectable part. */
-  const block = (
-    id: string,
-    size: Vec3,
-    pos: Vec3,
-    color: string,
-    text = byId[id].shortName.toUpperCase(),
-    delta: Vec3 = [0, 1, Math.sign(pos[2]) * 0.4],
-    textColor = '#e6d6d2',
-  ) => {
-    const group = new T.Group();
-    put(group, box(size, color, 0.45), [0, 0, 0]);
-    label(
-      group,
-      text,
-      [0, size[1] / 2 + 0.01, 0],
-      Math.min(size[0] * 0.86, text.length * 0.2 + 0.4),
-      textColor,
-    );
-    return add(id, group, pos, delta);
-  };
+  const { add, instances, box, material, label } = tools;
+  const { backdrop, block } = diagramKit(tools, palette);
 
   if (level === 'navi48') {
-    backdrop(root, box, label, [11.6, 7.6], 'NAVI 48 · 356.5 MM²');
+    backdrop(root, [11.6, 7.6], 'NAVI 48 · 356.5 MM²');
     const seX = [-3.9, -1.3, 1.3, 3.9];
     instances(
       'rxse',
@@ -124,7 +80,7 @@ export function buildRadeonArchitecture(
         [(i - 0.5) * 0.8, 0.6, 1.1],
       );
   } else if (level === 'rxse') {
-    backdrop(root, box, label, [9.6, 7.8], 'SHADER ENGINE · 1 OF 4');
+    backdrop(root, [9.6, 7.8], 'SHADER ENGINE · 1 OF 4');
     instances(
       'rxwgp',
       Array.from(
@@ -170,7 +126,7 @@ export function buildRadeonArchitecture(
       '#58465e',
     ).forEach((p) => p.delta.set(p.base.x * 0.1, 0.7, 1.2));
   } else if (level === 'rxwgp') {
-    backdrop(root, box, label, [8.6, 7.4], 'WORKGROUP PROCESSOR');
+    backdrop(root, [8.6, 7.4], 'WORKGROUP PROCESSOR');
     instances(
       'rxcu',
       [
@@ -194,7 +150,7 @@ export function buildRadeonArchitecture(
       'SHARED MEMORY · 128 KB',
     );
   } else {
-    backdrop(root, box, label, [10.2, 7.6], 'COMPUTE UNIT');
+    backdrop(root, [10.2, 7.6], 'COMPUTE UNIT');
     // Two 32-wide ALUs: drawn as one block each with their lanes marked on
     // top, because AMD names each unit, not its lanes.
     const lanes = (

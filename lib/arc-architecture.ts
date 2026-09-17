@@ -1,7 +1,7 @@
 import * as T from 'three';
 import type { ModelTools } from './hardware.ts';
 import type { Vec3 } from './layout.ts';
-import { byId } from './manifest.ts';
+import { diagramKit, put, type DiagramPalette } from './diagram-kit.ts';
 
 /**
  * The logical scales inside BMG-G21: the die, a render slice, an Xe-core and
@@ -14,65 +14,24 @@ import { byId } from './manifest.ts';
 
 type Level = 'bmg' | 'xeslice' | 'xecore' | 'xve';
 
-const put = (parent: T.Group, obj: T.Object3D, pos: Vec3) => {
-  obj.position.set(...pos);
-  parent.add(obj);
-  return obj;
+/** Cool blues, so an Intel scale is recognisable beside the other two chips. */
+const palette: DiagramPalette = {
+  panel: '#141d26',
+  rail: '#4f7390',
+  caption: '#7ea3bf',
+  text: '#d6e4ee',
 };
-
-function backdrop(
-  root: T.Group,
-  box: ModelTools['box'],
-  label: ModelTools['label'],
-  size: [number, number],
-  caption: string,
-) {
-  const frame = new T.Group();
-  frame.userData.contextFrame = true;
-  put(frame, box([size[0], 0.09, size[1]], '#141d26', 0.55), [0, -0.08, 0]);
-  for (const side of [-1, 1])
-    put(frame, box([size[0] * 0.98, 0.045, 0.025], '#4f7390', 0.7), [
-      0,
-      0.01,
-      side * (size[1] / 2 - 0.1),
-    ]);
-  label(
-    frame,
-    caption,
-    [-size[0] / 2 + 1.2, 0.01, -size[1] / 2 + 0.25],
-    2,
-    '#7ea3bf',
-  );
-  root.add(frame);
-}
 
 export function buildArcArchitecture(
   level: Level,
-  { add, instances, box, material, label }: ModelTools,
+  tools: ModelTools,
   root: T.Group,
 ) {
-  const block = (
-    id: string,
-    size: Vec3,
-    pos: Vec3,
-    color: string,
-    text = byId[id].shortName.toUpperCase(),
-    delta: Vec3 = [0, 1, Math.sign(pos[2]) * 0.4],
-  ) => {
-    const group = new T.Group();
-    put(group, box(size, color, 0.45), [0, 0, 0]);
-    label(
-      group,
-      text,
-      [0, size[1] / 2 + 0.01, 0],
-      Math.min(size[0] * 0.86, text.length * 0.2 + 0.4),
-      '#d6e4ee',
-    );
-    return add(id, group, pos, delta);
-  };
+  const { add, instances, box, material, label } = tools;
+  const { backdrop, block } = diagramKit(tools, palette);
 
   if (level === 'bmg') {
-    backdrop(root, box, label, [11.2, 7.6], 'BMG-G21 · XE2-HPG');
+    backdrop(root, [11.2, 7.6], 'BMG-G21 · XE2-HPG');
     instances(
       'xeslice',
       Array.from({ length: 5 }, (_, i) => [(i - 2) * 2.08, 0.2, -0.35] as Vec3),
@@ -120,7 +79,7 @@ export function buildArcArchitecture(
       [0, 0.7, 0.9],
     );
   } else if (level === 'xeslice') {
-    backdrop(root, box, label, [8.4, 7.8], 'RENDER SLICE · 1 OF 5');
+    backdrop(root, [8.4, 7.8], 'RENDER SLICE · 1 OF 5');
     instances(
       'xecore',
       [
@@ -149,7 +108,7 @@ export function buildArcArchitecture(
       '#664f78',
     ).forEach((p) => p.delta.set(p.base.x * 0.2, 0.7, 1.2));
   } else if (level === 'xecore') {
-    backdrop(root, box, label, [11, 7.4], 'XE-CORE');
+    backdrop(root, [11, 7.4], 'XE-CORE');
     instances(
       'xve',
       Array.from(
@@ -206,7 +165,7 @@ export function buildArcArchitecture(
     }
     add('arcrtu', rtu, [4.4, 0.12, 0], [1.0, 1.2, 0]);
   } else {
-    backdrop(root, box, label, [10.4, 7.6], 'XE VECTOR ENGINE');
+    backdrop(root, [10.4, 7.6], 'XE VECTOR ENGINE');
     const alu: Vec3[] = [];
     for (let i = 0; i < 16; i++)
       alu.push([

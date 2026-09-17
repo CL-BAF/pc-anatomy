@@ -2,6 +2,7 @@ import * as T from 'three';
 import type { ModelTools } from './hardware.ts';
 import type { Vec3 } from './layout.ts';
 import { byId } from './manifest.ts';
+import { put } from './diagram-kit.ts';
 
 /**
  * The logical scales inside the graphics processor: die, GPC, TPC and SM.
@@ -15,11 +16,6 @@ export function buildGpuArchitecture(
   { add, instances, box, material, label }: ModelTools,
   root: T.Group,
 ) {
-  const put = (parent: T.Group, obj: T.Object3D, pos: Vec3) => {
-    obj.position.set(...pos);
-    parent.add(obj);
-    return obj;
-  };
   if (level === 'die') {
     const services: [string, number, number, string][] = [
       ['nvenc', 3, -4.1, '#76654a'],
