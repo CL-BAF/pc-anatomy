@@ -380,7 +380,8 @@ export function createViewer(
     // edge, even though the ordinary whole-model fit looked intentional.
     const padding = focus
       ? 1.16
-      : (state.level === 'card' || state.level === 'nvme') && camera.aspect < 1
+      : ['card', 'rx9070', 'arcb580', 'nvme'].includes(state.level) &&
+          camera.aspect < 1
         ? 1.05
         : 0.8;
     const d = (radius / Math.sin(Math.min(vertical, horizontal) / 2)) * padding;

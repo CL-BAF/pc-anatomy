@@ -24,7 +24,17 @@ export type LevelId =
   | 'die'
   | 'gpc'
   | 'tpc'
-  | 'sm';
+  | 'sm'
+  | 'rx9070'
+  | 'navi48'
+  | 'rxse'
+  | 'rxwgp'
+  | 'rxcu'
+  | 'arcb580'
+  | 'bmg'
+  | 'xeslice'
+  | 'xecore'
+  | 'xve';
 
 export interface LevelDef {
   id: LevelId;
@@ -57,6 +67,15 @@ export interface LevelDef {
    * card to reach the die.
    */
   branchLabel?: string;
+  /**
+   * A nested dropdown inside the subsystem menu. The GPU menu holds three
+   * different cards, and each card's scales belong together: an RDNA 4 shader
+   * engine is not a step inside the RTX 5090. Set on the card that starts a
+   * sub-menu; every scale beneath it is listed under the same heading.
+   */
+  submenu?: string;
+  /** One line under the sub-menu heading: who makes it and on what architecture. */
+  submenuNote?: string;
   /**
    * Multiplies how far pieces travel as they come apart. A tower needs much
    * bigger gaps than a card before its subsystems stop touching.
@@ -257,6 +276,8 @@ export const levels: Record<LevelId, LevelDef> = {
     summary: 'The whole graphics card',
     kind: 'physical',
     branchLabel: 'GPU',
+    submenu: 'RTX 5090',
+    submenuNote: 'NVIDIA · Blackwell',
     concept: 'card',
     phases: dissectionPhases,
     detailed: true,
@@ -309,6 +330,139 @@ export const levels: Record<LevelId, LevelDef> = {
     phases: dissectionPhases,
     detailed: true,
   },
+  rx9070: {
+    id: 'rx9070',
+    parent: 'pc',
+    // The tower is built around the RTX 5090, and one primary slot holds one
+    // card. The Radeon is a second, complete card you can take apart from the
+    // GPU menu, not something the machine carries at the same time.
+    alternative: true,
+    name: 'RX 9070 XT',
+    title: 'A Radeon, fully assembled.',
+    caption: 'SAPPHIRE NITRO+ · RX 9070 XT',
+    summary: 'The whole graphics card',
+    kind: 'physical',
+    branchLabel: 'GPU',
+    submenu: 'RX 9070 XT',
+    submenuNote: 'AMD · RDNA 4',
+    concept: 'rxcard',
+    phases: dissectionPhases,
+    detailed: true,
+  },
+  navi48: {
+    id: 'navi48',
+    parent: 'rx9070',
+    name: 'Navi 48',
+    title: 'Inside the Navi 48 processor.',
+    caption: 'NAVI 48 · RDNA 4',
+    summary: 'Inside the RDNA 4 chip',
+    kind: 'logical',
+    concept: 'rxgpu',
+    phases: dissectionPhases,
+    detailed: true,
+  },
+  rxse: {
+    id: 'rxse',
+    parent: 'navi48',
+    name: 'Shader engine',
+    title: 'A shader engine.',
+    caption: 'SE · ONE OF FOUR',
+    summary: 'Eight workgroup processors and a raster pipeline',
+    kind: 'logical',
+    concept: 'rxse',
+    phases: dissectionPhases,
+    detailed: true,
+  },
+  rxwgp: {
+    id: 'rxwgp',
+    parent: 'rxse',
+    name: 'Workgroup processor',
+    title: 'A workgroup processor.',
+    caption: 'WGP · DUAL COMPUTE UNIT',
+    summary: 'A pair of compute units',
+    kind: 'logical',
+    concept: 'rxwgp',
+    phases: dissectionPhases,
+    detailed: true,
+  },
+  rxcu: {
+    id: 'rxcu',
+    parent: 'rxwgp',
+    name: 'Compute unit',
+    title: 'A compute unit.',
+    caption: 'CU · EXECUTION RESOURCES',
+    summary: 'Inside an RDNA 4 compute unit',
+    kind: 'logical',
+    concept: 'rxcu',
+    phases: dissectionPhases,
+    detailed: true,
+  },
+  arcb580: {
+    id: 'arcb580',
+    parent: 'pc',
+    // Like the Radeon, a complete second card listed under GPU rather than a
+    // part fitted to the tower.
+    alternative: true,
+    name: 'Arc B580',
+    title: 'An Arc card, fully assembled.',
+    caption: 'INTEL ARC B580 · LIMITED EDITION',
+    summary: 'The whole graphics card',
+    kind: 'physical',
+    branchLabel: 'GPU',
+    submenu: 'Arc B580',
+    submenuNote: 'Intel · Xe2',
+    concept: 'arccard',
+    phases: dissectionPhases,
+    detailed: true,
+  },
+  bmg: {
+    id: 'bmg',
+    parent: 'arcb580',
+    name: 'BMG-G21',
+    title: 'Inside the Battlemage processor.',
+    caption: 'BMG-G21 · XE2-HPG',
+    summary: 'Inside the Xe2 chip',
+    kind: 'logical',
+    concept: 'arcgpu',
+    phases: dissectionPhases,
+    detailed: true,
+  },
+  xeslice: {
+    id: 'xeslice',
+    parent: 'bmg',
+    name: 'Render slice',
+    title: 'A render slice.',
+    caption: 'RENDER SLICE · ONE OF FIVE',
+    summary: 'Four Xe-cores with texture and pixel hardware',
+    kind: 'logical',
+    concept: 'xeslice',
+    phases: dissectionPhases,
+    detailed: true,
+  },
+  xecore: {
+    id: 'xecore',
+    parent: 'xeslice',
+    name: 'Xe-core',
+    title: 'An Xe-core.',
+    caption: 'XE2 CORE',
+    summary: 'Eight vector engines, a ray tracing unit and cache',
+    kind: 'logical',
+    concept: 'xecore',
+    phases: dissectionPhases,
+    detailed: true,
+  },
+  xve: {
+    id: 'xve',
+    parent: 'xecore',
+    name: 'Vector engine',
+    title: 'A vector engine.',
+    caption: 'XVE · EXECUTION RESOURCES',
+    summary: 'Inside an Xe2 vector engine',
+    kind: 'logical',
+    concept: 'xve',
+    phases: dissectionPhases,
+    detailed: true,
+  },
 };
 
 export const levelIds = Object.keys(levels) as LevelId[];
@@ -348,12 +502,33 @@ export function branchRoot(id: LevelId): LevelId | null {
   return path.reverse().find((level) => levels[level].branchLabel) ?? null;
 }
 
+export interface Submenu {
+  /** The scale that starts the sub-menu, used as its stable key. */
+  root: LevelId;
+  label: string;
+  /** Maker and architecture, shown under the heading. */
+  note: string;
+  /** Every scale in the sub-menu, outermost first. */
+  levels: LevelId[];
+}
+
 export interface Branch {
   /** The first scale in the menu, used as its stable key. */
   root: LevelId;
   label: string;
   /** Every scale under this heading, outermost first. */
   levels: LevelId[];
+  /**
+   * Nested dropdowns, when the menu holds several distinct products. Empty for
+   * an ordinary menu; otherwise every scale in `levels` sits in exactly one.
+   */
+  submenus: Submenu[];
+}
+
+/** The nearest ancestor (or this level) that starts a nested dropdown. */
+export function submenuRoot(id: LevelId): LevelId | null {
+  const path = levelPath(id);
+  return path.reverse().find((level) => levels[level].submenu) ?? null;
 }
 
 /**
@@ -370,9 +545,15 @@ export function branches(): Branch[] {
       ...levelIds.filter((id) => branchRoot(id) === root),
     ]);
   }
-  return [...grouped].map(([label, scales]) => ({
-    root: scales[0],
-    label,
-    levels: scales,
-  }));
+  return [...grouped].map(([label, scales]) => {
+    const submenus: Submenu[] = [];
+    for (const root of scales.filter((id) => levels[id].submenu))
+      submenus.push({
+        root,
+        label: levels[root].submenu!,
+        note: levels[root].submenuNote ?? '',
+        levels: scales.filter((id) => submenuRoot(id) === root),
+      });
+    return { root: scales[0], label, levels: scales, submenus };
+  });
 }

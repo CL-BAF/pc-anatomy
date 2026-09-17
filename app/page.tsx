@@ -71,6 +71,7 @@ import {
   isPhysical,
   levels,
   rootLevel,
+  submenuRoot,
   type LevelId,
 } from '@/lib/levels';
 
@@ -93,6 +94,16 @@ const levelIcon: Record<LevelId, typeof Box> = {
   gpc: Layers3,
   tpc: Layers3,
   sm: Microscope,
+  rx9070: Box,
+  navi48: Cpu,
+  rxse: Layers3,
+  rxwgp: Layers3,
+  rxcu: Microscope,
+  arcb580: Box,
+  bmg: Cpu,
+  xeslice: Layers3,
+  xecore: Layers3,
+  xve: Microscope,
 };
 
 function menuRoot(level: LevelId) {
@@ -100,6 +111,9 @@ function menuRoot(level: LevelId) {
     branches().find((branch) => branch.levels.includes(level))?.root ?? null
   );
 }
+
+/** Graphics cards whose chip diagrams open directly, without a dive. */
+const gpuRoots = new Set<LevelId>(['card', 'rx9070', 'arcb580']);
 import Viewer from './viewer';
 import PerformanceTip from './performance-tip';
 
@@ -141,11 +155,19 @@ export default function Home() {
   // deliberately open another one.
   const [openMenu, setOpenMenu] = useState<LevelId | null>(null);
   const shownMenu = openMenu ?? menuRoot(state.level);
+  // The card dropdown open inside the GPU menu. `null` follows wherever you
+  // are; `'none'` means you deliberately folded it away.
+  const [openSubmenu, setOpenSubmenu] = useState<LevelId | 'none' | null>(
+    null,
+  );
+  const shownSubmenu =
+    openSubmenu === 'none' ? null : (openSubmenu ?? submenuRoot(state.level));
   const navigate = useCallback(
     (level: LevelId, selection: Selection | null = null) => {
       setPlaying(false);
       setHiddenMenuOpen(false);
       setOpenMenu(menuRoot(level));
+      setOpenSubmenu(null);
       setState((s) => ({
         ...s,
         level,
@@ -167,6 +189,7 @@ export default function Home() {
     setPlaying(false);
     setHiddenMenuOpen(false);
     setOpenMenu(null);
+    setOpenSubmenu(null);
     setState((s) => ({
       ...initialState,
       cameraRevision: s.cameraRevision + 1,
@@ -185,7 +208,10 @@ export default function Home() {
       if (!target) return false;
       // GPU diagrams open directly. The outgoing isolation animation selected
       // every repeated block and tinted the old scale green before replacing it.
-      if (levelPath(target).includes('card') && !isPhysical(target)) {
+      if (
+        levelPath(target).some((id) => gpuRoots.has(id)) &&
+        !isPhysical(target)
+      ) {
         navigate(target, { concept: levels[target].concept });
         return true;
       }
@@ -214,6 +240,7 @@ export default function Home() {
     if (!arrivedLevel) return;
     setHiddenMenuOpen(false);
     setOpenMenu(menuRoot(arrivedLevel));
+    setOpenSubmenu(null);
     setState((s) => {
       const target = s.diveInto ? openLevel(s.diveInto) : null;
       if (!target || target !== arrivedLevel) return s;
@@ -249,6 +276,7 @@ export default function Home() {
   );
   const selectResult = (id: string) => {
     setOpenMenu(menuRoot(byId[id].level));
+    setOpenSubmenu(null);
     setState((s) => selectSearch(s, id));
     setSearch(false);
     setQuery('');
@@ -471,10 +499,28 @@ export default function Home() {
               <ChevronRight size={15} />
             </button>
 
-            {menus.map(({ root, label, levels: scales }, index) => {
+            {menus.map(({ root, label, levels: scales, submenus }, index) => {
               const Icon = levelIcon[root];
               const open = shownMenu === root;
               const here = menuRoot(state.level) === root;
+              const scaleButton = (id: LevelId) => (
+                <button
+                  key={id}
+                  className={id === state.level ? 'active' : ''}
+                  aria-current={id === state.level ? 'true' : undefined}
+                  onClick={() => navigate(id)}
+                >
+                  <i />
+                  <div>
+                    {levels[id].name}
+                    <small>
+                      {levels[id].detailed
+                        ? levels[id].summary
+                        : levels[id].summary + ' · placeholder'}
+                    </small>
+                  </div>
+                </button>
+              );
               return (
                 <div
                   className={
@@ -492,32 +538,57 @@ export default function Home() {
                     <div>
                       {label}
                       <small>
-                        {scales.length}{' '}
-                        {scales.length === 1 ? 'scale' : 'scales'} inside
+                        {submenus.length > 0
+                          ? `${submenus.length} cards · ${scales.length} scales`
+                          : `${scales.length} ${scales.length === 1 ? 'scale' : 'scales'} inside`}
                       </small>
                     </div>
                     <ChevronDown size={15} />
                   </button>
-                  {open && (
+                  {open && submenus.length === 0 && (
                     <div className="branch-scales">
-                      {scales.map((id) => (
-                        <button
-                          key={id}
-                          className={id === state.level ? 'active' : ''}
-                          aria-current={id === state.level ? 'true' : undefined}
-                          onClick={() => navigate(id)}
-                        >
-                          <i />
-                          <div>
-                            {levels[id].name}
-                            <small>
-                              {levels[id].detailed
-                                ? levels[id].summary
-                                : levels[id].summary + ' · placeholder'}
-                            </small>
+                      {scales.map(scaleButton)}
+                    </div>
+                  )}
+                  {open && submenus.length > 0 && (
+                    <div className="branch-scales branch-submenus">
+                      {submenus.map((sub) => {
+                        const subOpen = shownSubmenu === sub.root;
+                        const subHere = submenuRoot(state.level) === sub.root;
+                        return (
+                          <div
+                            key={sub.root}
+                            className={
+                              'submenu' +
+                              (subOpen ? ' open' : '') +
+                              (subHere ? ' here' : '')
+                            }
+                          >
+                            <button
+                              className="submenu-head"
+                              aria-expanded={subOpen}
+                              onClick={() =>
+                                setOpenSubmenu(subOpen ? 'none' : sub.root)
+                              }
+                            >
+                              <i />
+                              <div>
+                                {sub.label}
+                                <small>
+                                  {sub.note ? sub.note + ' · ' : ''}
+                                  {sub.levels.length} scales
+                                </small>
+                              </div>
+                              <ChevronDown size={13} />
+                            </button>
+                            {subOpen && (
+                              <div className="submenu-scales">
+                                {sub.levels.map(scaleButton)}
+                              </div>
+                            )}
                           </div>
-                        </button>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>

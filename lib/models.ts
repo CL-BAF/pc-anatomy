@@ -1,6 +1,10 @@
 import { resourceTexture, siliconColor } from './silicon-texture.ts';
 import { buildHardware, type ModelTools } from './hardware.ts';
 import { buildGpuArchitecture } from './gpu-architecture.ts';
+import { buildRadeonCard } from './radeon-card.ts';
+import { buildRadeonArchitecture } from './radeon-architecture.ts';
+import { buildArcCard } from './arc-card.ts';
+import { buildArcArchitecture } from './arc-architecture.ts';
 import { buildMachine } from './machine.ts';
 import { buildMotherboard } from './mainboard.ts';
 import { buildPowerSupply } from './power-supply.ts';
@@ -105,6 +109,16 @@ const builders: Record<LevelId, (tools: ModelTools, root: T.Group) => void> = {
   gpc: (tools, root) => buildGpuArchitecture('gpc', tools, root),
   tpc: (tools, root) => buildGpuArchitecture('tpc', tools, root),
   sm: (tools, root) => buildGpuArchitecture('sm', tools, root),
+  rx9070: (tools) => buildRadeonCard(tools),
+  navi48: (tools, root) => buildRadeonArchitecture('navi48', tools, root),
+  rxse: (tools, root) => buildRadeonArchitecture('rxse', tools, root),
+  rxwgp: (tools, root) => buildRadeonArchitecture('rxwgp', tools, root),
+  rxcu: (tools, root) => buildRadeonArchitecture('rxcu', tools, root),
+  arcb580: (tools) => buildArcCard(tools),
+  bmg: (tools, root) => buildArcArchitecture('bmg', tools, root),
+  xeslice: (tools, root) => buildArcArchitecture('xeslice', tools, root),
+  xecore: (tools, root) => buildArcArchitecture('xecore', tools, root),
+  xve: (tools, root) => buildArcArchitecture('xve', tools, root),
 };
 
 export function buildModel(level: LevelId): { root: T.Group; pieces: Piece[] } {
@@ -267,6 +281,26 @@ export function buildModel(level: LevelId): { root: T.Group; pieces: Piece[] } {
         'gddr7',
         'vrm',
         'powerstage',
+        // RX 9070 XT
+        'rxse',
+        'rxwgp',
+        'rxcu',
+        'rxinfinity',
+        'rxmemctl',
+        'rxmatrix',
+        'rxgddr6',
+        'rxvrm',
+        'rxpowerstage',
+        // Arc B580
+        'xeslice',
+        'xecore',
+        'xve',
+        'arcalu',
+        'arcthread',
+        'arcsampler',
+        'arcgddr6',
+        'arcvrm',
+        'arcpowerstage',
       ].includes(concept)
     ) {
       const top = new T.MeshStandardMaterial({

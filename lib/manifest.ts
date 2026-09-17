@@ -5,6 +5,8 @@ import { ssdConcepts } from './concepts/ssd.ts';
 import { nvmeConcepts } from './concepts/nvme.ts';
 import { fanConcepts } from './concepts/fan.ts';
 import { gpuConcepts } from './concepts/gpu.ts';
+import { radeonConcepts } from './concepts/radeon.ts';
+import { arcConcepts } from './concepts/arc.ts';
 import { motherboardConcepts } from './concepts/motherboard.ts';
 import { pcConcepts } from './concepts/pc.ts';
 import { psuConcepts } from './concepts/psu.ts';
@@ -49,6 +51,8 @@ export const manifest: Concept[] = [
   ...ssdConcepts,
   ...nvmeConcepts,
   ...gpuConcepts,
+  ...radeonConcepts,
+  ...arcConcepts,
 ];
 
 export const byId = Object.fromEntries(

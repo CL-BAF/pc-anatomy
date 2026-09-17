@@ -81,7 +81,16 @@ export function boardTexture() {
 }
 
 /** Quiet laser markings for physical packages; architecture has its own diagram language. */
-export function packageTexture(id: string) {
+export function packageTexture(concept: string) {
+  // The second and third cards prefix their ids (`rxgddr6`, `arcvrm`), so
+  // match the family by suffix.
+  const id = concept.endsWith('vrm')
+    ? 'vrm'
+    : concept.endsWith('gddr6')
+      ? 'gddr6'
+      : concept.endsWith('gddr7')
+        ? 'gddr7'
+        : concept;
   const canvas = document.createElement('canvas');
   canvas.width = canvas.height = 512;
   const ctx = canvas.getContext('2d')!;
@@ -99,13 +108,23 @@ export function packageTexture(id: string) {
   ctx.fill();
   ctx.font = '30px monospace';
   ctx.fillText(
-    id === 'gddr7' ? 'GDDR7' : id === 'vrm' ? 'R22' : 'DrMOS',
+    id === 'gddr7'
+      ? 'GDDR7'
+      : id === 'gddr6'
+        ? 'GDDR6'
+        : id === 'vrm'
+          ? 'R22'
+          : 'DrMOS',
     52,
     190,
   );
   ctx.font = '19px monospace';
   ctx.fillText(
-    id === 'gddr7' ? '2 GB · BGA' : id === 'vrm' ? 'INDUCTOR' : 'POWER STAGE',
+    id === 'gddr7' || id === 'gddr6'
+      ? '2 GB · BGA'
+      : id === 'vrm'
+        ? 'INDUCTOR'
+        : 'POWER STAGE',
     52,
     234,
   );

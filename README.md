@@ -25,11 +25,22 @@ Desktop PC
 │   ├── CPU cooler
 │   └── Liquid cooling
 ├── SATA SSD
-└── RTX 5090
-    └── GB202 processor
-        └── Graphics processing cluster (GPC)
-            └── Texture processing cluster (TPC)
-                └── Streaming multiprocessor (SM)
+└── GPU
+    ├── RTX 5090
+    │   └── GB202 processor
+    │       └── Graphics processing cluster (GPC)
+    │           └── Texture processing cluster (TPC)
+    │               └── Streaming multiprocessor (SM)
+    ├── Radeon RX 9070 XT
+    │   └── Navi 48 processor
+    │       └── Shader engine
+    │           └── Workgroup processor (WGP)
+    │               └── Compute unit (CU)
+    └── Arc B580
+        └── BMG-G21 processor
+            └── Render slice
+                └── Xe-core
+                    └── Xe vector engine (XVE)
 ```
 
 The slider moves each scale from its assembled state to a laid-out inventory. Search can jump directly to a component at any depth, while breadcrumbs and the scale navigator move back through the machine.
@@ -44,7 +55,7 @@ Descending into a part rebuilds it at its own scale with its own timeline, so th
 
 ## The interface
 
-The rail on the left carries the scale tree and per-system visibility. The bar along the bottom is the disassembly timeline, with the **Auto** key at its left-hand end, the named phases above the slider, and a reset on the right. Left-click an explorable component to open it; right-click to inspect it and use the detail, hide, isolate and focus controls. Hidden components remain available from the stage tracker until they are restored, the scale changes, or the explorer is reset. The corner expand control toggles browser fullscreen.
+The rail on the left carries the scale tree and per-system visibility. The GPU menu holds three cards, the RTX 5090, Radeon RX 9070 XT and Arc B580, each with its own dropdown of scales. The bar along the bottom is the disassembly timeline, with the **Auto** key at its left-hand end, the named phases above the slider, and a reset on the right. Left-click an explorable component to open it; right-click to inspect it and use the detail, hide, isolate and focus controls. Hidden components remain available from the stage tracker until they are restored, the scale changes, or the explorer is reset. The corner expand control toggles browser fullscreen.
 
 | Workbench                                                                                                              | On a phone                                                                                                                                               |
 | ---------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -96,6 +107,7 @@ The browser and search icons are derived from `public/favicon.svg`. Run `node sc
 | `lib/concepts/*.ts`          | Written component catalogue, organized by subsystem                  |
 | `lib/manifest.ts`            | Catalogue composition, search, and explorer state helpers            |
 | `lib/*.ts` builder modules   | Code-generated geometry for each physical or logical scale           |
+| `lib/card-kit.ts`            | Shared millimetre-scale parts for the RX 9070 XT and Arc B580 cards  |
 | `tests/*.test.ts`            | Data integrity, layout, picking, and geometry-presence tests         |
 | `SOURCES.md`                 | Research and dimensional references                                  |
 
@@ -118,14 +130,14 @@ A new scale has five integration points:
 1. Add its ID and definition to `lib/levels.ts`, including its parent, kind, concept, phases, and navigation text.
 2. Implement its geometry builder and register that builder in `lib/models.ts`.
 3. Add its written catalogue in `lib/concepts/`.
-4. Put `open: '<new-level-id>'` on the concept in the parent scale that leads into it.
+4. Put `open: '<new-level-id>'` on the concept in the parent scale that leads into it. A complete alternative product that the machine does not carry, such as the second and third graphics cards, sets `alternative: true` instead and is reached from its subsystem menu; `submenu` gives it a dropdown of its own inside that menu.
 5. Export and compose the new concepts in `lib/manifest.ts`.
 
 The scale tree drives navigation, breadcrumbs, lighting, and the disassembly timeline. Avoid adding a second hand-written route table. When a model is rebuilt, `lib/scene.ts` must also clear its cached `layoutSignature` so the new inventory is packed from its own pieces.
 
 ## Accuracy and sources
 
-The machine follows published ATX dimensions where those dimensions are standardized. Three products are named and modeled as specific subjects: the GeForce RTX 5090, AMD Ryzen 9 9950X, and Intel Core Ultra 9 285K. The rest is an illustrative desktop build that explains representative construction and relationships rather than reproducing a particular bill of materials.
+The machine follows published ATX dimensions where those dimensions are standardized. Five products are named and modeled as specific subjects: the GeForce RTX 5090, AMD Radeon RX 9070 XT, Intel Arc B580, AMD Ryzen 9 9950X, and Intel Core Ultra 9 285K. The RTX 5090 is the card installed in the tower; the Radeon (after the Sapphire NITRO+) and the Arc (Intel Limited Edition) are complete alternative cards opened from the GPU menu. The rest is an illustrative desktop build that explains representative construction and relationships rather than reproducing a particular bill of materials.
 
 Processor and GPU floorplans are explanatory diagrams of documented logical architecture. They are not semiconductor mask layouts and do not claim exact transistor-level placement. See [SOURCES.md](SOURCES.md) for standards, product documentation, architecture references, and the scope of each source.
 

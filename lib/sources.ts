@@ -1,10 +1,15 @@
 /**
  * Every technical claim in the manifest points at one of these.
  *
- * Standards bodies and vendor documentation only. A source backs the operating
+ * Standards bodies and vendor documentation first. A source backs the operating
  * principle and the published specification of a component *family*. It is
  * never evidence that a particular modeled part is populated on a particular
  * machine.
+ *
+ * One exception, named as such: a retail card's internal construction (heat
+ * pipe count, power phases, board length) is rarely published by its maker.
+ * Where a model follows a specific card, a hands-on teardown review is cited
+ * for that construction alone, and its name says it is an independent review.
  */
 export const sources = {
   tuf5090: {
@@ -155,6 +160,68 @@ export const sources = {
   chassis: {
     name: 'Fractal Design · ATX case assembly and drive-mount diagrams',
     url: 'https://www.fractal-design.com/app/uploads/2023/08/Define-7-Manual-V.3-2023-08-21.pdf',
+  },
+  // ── AMD Radeon RX 9070 XT ───────────────────────────────────────────────
+  rdna4: {
+    name: 'AMD · RDNA 4 Radeon 9000 series architecture (Hot Chips 2025)',
+    url: 'https://hc2025.hotchips.org/assets/program/conference/day1/8_amd_pomianowski_final.pdf',
+  },
+  rx9070xt: {
+    name: 'AMD · Radeon RX 9070 XT specifications',
+    url: 'https://www.amd.com/en/products/graphics/desktops/radeon/9000-series/amd-radeon-rx-9070xt.html',
+  },
+  rdna4guide: {
+    name: 'AMD · RDNA 4 quick reference guide',
+    url: 'https://www.amd.com/content/dam/amd/en/documents/partner-hub/radeon/amd-rdna-4-quick-reference-guide.pdf',
+  },
+  nitro9070: {
+    name: 'Sapphire · NITRO+ Radeon RX 9070 XT OC product page',
+    url: 'https://www.sapphiretech.com/en/consumer/nitro-radeon-rx-9070-xt-16g-gddr6',
+  },
+  nitroteardown: {
+    name: 'KitGuru (independent review) · Sapphire RX 9070 XT Nitro+ construction and PCB',
+    url: 'https://www.kitguru.net/components/graphic-cards/dominic-moass/sapphire-rx-9070-xt-nitro-review/all/1/',
+  },
+  mpsphase: {
+    name: 'MPS · Intelli-Phase integrated driver and MOSFET power stages',
+    url: 'https://www.monolithicpower.com/en/products/power-management/multi-phase-controllers-intelli-phase/processor-core-power-intelli-phase-monolithic-drmos.html',
+  },
+  mpscontroller: {
+    name: 'MPS · Digital multi-phase processor core controllers',
+    url: 'https://www.monolithicpower.com/en/products/power-management/multi-phase-controllers-intelli-phase/processor-core-power-controllers.html',
+  },
+  gddr6: {
+    name: 'Samsung · GDDR6 graphics DRAM',
+    url: 'https://semiconductor.samsung.com/dram/gddr/gddr6/',
+  },
+  // ── Intel Arc B580 ───────────────────────────────────────────────────────
+  arcb580: {
+    name: 'Intel · Arc B580 Graphics specifications',
+    url: 'https://www.intel.com/content/www/us/en/products/sku/241598/intel-arc-b580-graphics/specifications.html',
+  },
+  xe2deck: {
+    name: 'Intel · Arc B580 and B570 launch briefing: Xe2 architecture',
+    url: 'https://download.intel.com/newsroom/2024/client-computing/Intel-Arc-B580-B570-Media-Deck.pdf',
+  },
+  xearchitecture: {
+    name: 'Intel · oneAPI GPU optimization guide: Xe GPU architecture',
+    url: 'https://www.intel.com/content/www/us/en/docs/oneapi/optimization-guide-gpu/2025-2/intel-xe-gpu-architecture.html',
+  },
+  arclaunch: {
+    name: 'Intel · Arc B-series launch announcement',
+    url: 'https://www.intel.com/content/www/us/en/newsroom/news/intel-launches-arc-b-series-graphics-cards.html',
+  },
+  arcteardown: {
+    name: 'Overclocking.com (independent review) · Arc B580 Limited Edition teardown',
+    url: 'https://en.overclocking.com/review-intel-arc-b580-limited-edition/2/',
+  },
+  arcphotos: {
+    name: "Tom's Hardware (independent report) · Arc B580 teardown photographs",
+    url: 'https://www.tomshardware.com/pc-components/gpus/intels-new-arc-gpu-gets-naked-in-unsanctioned-peep-show-b580-has-nvidia-founders-edition-inspired-cooler-bgm-g21-die-surrounded-by-20-gbps-gddr6-memory',
+  },
+  arcreview: {
+    name: 'KitGuru (independent review) · Arc B580 Limited Edition cooler and board',
+    url: 'https://www.kitguru.net/components/graphic-cards/dominic-moass/intel-arc-b580-limited-edition-review/all/1/',
   },
 } as const;
 

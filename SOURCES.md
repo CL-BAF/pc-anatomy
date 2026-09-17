@@ -1,17 +1,21 @@
 # Technical provenance
 
-Reviewed 2026-09-15. PC Anatomy is independent of the manufacturers cited here. All geometry is original.
+Reviewed 2026-09-17. PC Anatomy is independent of the manufacturers cited here. All geometry is original.
 
 ## Current component reference audit
 
-All 183 component entries now have references in their detail panels. The complete
+All 310 component entries now have references in their detail panels. The complete
 [component-to-document index](docs/component-references.md) records those mappings.
 The registry in `lib/sources.ts` is authoritative for current app links; older notes
 below preserve the research history.
 
 - CPU and GPU internals use NVIDIA's RTX Blackwell white paper, AMD's Zen 5
-  microarchitecture guide, and Intel's Core Ultra 200S architecture/interface
-  datasheet, alongside SKU specifications.
+  microarchitecture guide, AMD's RDNA 4 Hot Chips 2025 presentation, Intel's
+  Core Ultra 200S architecture/interface datasheet, and Intel's Xe2 launch
+  briefing and oneAPI Xe architecture guide, alongside SKU specifications.
+- The RX 9070 XT and Arc B580 card exteriors follow the Sapphire NITRO+ and the
+  Intel Limited Edition. Where their makers publish no construction detail,
+  independent teardown reviews are cited and named as such.
 - Motherboard layout, slots, headers, audio and network connectivity use the ASUS
   X670E manual. Micron and Kingston document DDR5 module architecture.
 - Samsung's 870 EVO and 990 PRO datasheets document the SATA and M.2 drive families.
@@ -43,6 +47,105 @@ also opens from the motherboard. Its nominal 22 × 80 mm module has a mounting
 notch, an M-key contact gap, a controller, DRAM and two NAND packages. BGA joints
 are beneath the chips. Package count, contact count and routing are illustrative.
 The model is an educational assembly, not a reproduction of the Samsung 990 PRO PCB.
+
+## Additional graphics cards · September 17, 2026
+
+The GPU menu now holds three complete cards, each in its own dropdown and each
+taken apart to the same depth: card, processor, and three logical scales below
+it. The RTX 5090 is still the only card installed in the tower; the RX 9070 XT
+and Arc B580 are opened from the GPU menu and are marked as alternatives, the
+same way the Intel processor and the liquid cooler are.
+
+### AMD Radeon RX 9070 XT (Sapphire NITRO+)
+
+- [AMD Hot Chips 2025: RDNA 4 Radeon 9000 series](https://hc2025.hotchips.org/assets/program/conference/day1/8_amd_pomianowski_final.pdf)
+  is the primary architecture source. It documents a monolithic TSMC 4 nm die
+  of 356.5 mm², four shader engines, eight workgroup processors per engine, two
+  compute units per WGP, and per shader engine a rasterizer, primitive unit,
+  render backends (RB+) and render assist (RA) blocks. It gives the 8 MB L2
+  cache, 64 MB third-generation Infinity Cache, four 4 × 16-bit memory
+  controllers (256-bit), the command processor with packet accelerators, dual
+  media engines, the Radiance Display Engine, the MP0 security and power
+  microcontroller and the central compression engines. Its compute engine slide
+  lists the scalar unit, two 32-wide ALUs (FMA and FMA/INT), the 8-wide TLU, the
+  matrix accelerator, 192 KB vector GPR, 8 KB scalar GPR, 16 KB scalar cache,
+  128 KB shared memory, 32 KB ray accelerator L0 cache, 32 KB shader instruction
+  cache, scheduler units and texture load/store units. Its ray tracing slide
+  gives 8 ray/box and 2 ray/triangle units and 8-wide BVH traversal.
+- [AMD Radeon RX 9070 XT specifications](https://www.amd.com/en/products/graphics/desktops/radeon/9000-series/amd-radeon-rx-9070xt.html):
+  64 compute units, 4,096 stream processors, 64 ray accelerators, 128 AI
+  accelerators, 128 ROPs, 16 GB GDDR6 at 20 Gbps over 256 bits (640 GB/s), 64 MB
+  Infinity Cache, 304 W TBP, 53.9 billion transistors, PCIe 5.0 ×16,
+  DisplayPort 2.1a and HDMI 2.1b.
+- [AMD RDNA 4 quick reference guide](https://www.amd.com/content/dam/amd/en/documents/partner-hub/radeon/amd-rdna-4-quick-reference-guide.pdf)
+  cross-checks the generation of the ray and AI accelerators and the display
+  interface standards.
+- [Sapphire NITRO+ RX 9070 XT product page](https://www.sapphiretech.com/en/consumer/nitro-radeon-rx-9070-xt-16g-gddr6)
+  identifies the exterior reference. AMD sold no card of its own for this GPU.
+- [KitGuru's NITRO+ review](https://www.kitguru.net/components/graphic-cards/dominic-moass/sapphire-rx-9070-xt-nitro-review/all/1/)
+  is an **independent teardown**, cited only for construction Sapphire does not
+  publish: 330.8 × 128.5 × 65.68 mm, three 100 mm fans, six heat pipes onto a
+  shared GPU and memory baseplate with secondary VRM plates, a steel support
+  frame, a backplate held by six magnets, the 12V-2x6 socket and ARGB header on
+  the rear of the PCB, two HDMI and two DisplayPort outputs, sixteen phases
+  (10 GPU, 3 SoC, 2 memory, 1 VDDCI) run by two MPS MP2868A controllers with MPS
+  MP87993 power stages, and no dual-BIOS switch.
+- [MPS Intelli-Phase power stages](https://www.monolithicpower.com/en/products/power-management/multi-phase-controllers-intelli-phase/processor-core-power-intelli-phase-monolithic-drmos.html)
+  and [MPS multiphase controllers](https://www.monolithicpower.com/en/products/power-management/multi-phase-controllers-intelli-phase/processor-core-power-controllers.html)
+  explain those part families. Neither page lists the exact part numbers.
+- [Samsung GDDR6](https://semiconductor.samsung.com/dram/gddr/gddr6/) explains
+  the memory family. No memory vendor is claimed for the NITRO+.
+
+**Limits.** AMD shows the compute engine as one diagram. Which of its blocks
+belong to the workgroup processor (shared memory, schedulers) and which to each
+compute unit is an interpretation of that diagram and is labelled as one in
+every affected entry. Block sizes and positions are illustrative, and the
+Navi 48 die scale is not a floorplan. AMD's Hot Chips slide and AMD's product
+page disagree on the transistor count; the app quotes the product page's
+53.9 billion. Board layout, pipe routing, fin count and passive population are
+original approximations, not the Sapphire PCB.
+
+### Intel Arc B580 (Limited Edition)
+
+- [Intel Arc B580 specifications](https://www.intel.com/content/www/us/en/products/sku/241598/intel-arc-b580-graphics/specifications.html):
+  Xe2 microarchitecture on TSMC N5, 20 Xe-cores, 5 render slices, 20 ray
+  tracing units, 160 XMX engines, 160 Xe vector engines, 2,670 MHz graphics
+  clock, 233 peak TOPS, 190 W TBP, 12 GB GDDR6 at 19 Gbps over 192 bits
+  (456 GB/s), PCIe 4.0 ×8, four displays over HDMI 2.1 and DisplayPort 2.1
+  (UHBR 13.5 and UHBR 10), H.264, HEVC and AV1 encode and decode, 272 × 115 mm,
+  two slots, 779 g, one 8-pin connector.
+- [Intel Arc B580 and B570 launch briefing](https://download.intel.com/newsroom/2024/client-computing/Intel-Arc-B580-B570-Media-Deck.pdf)
+  documents the Xe2 blocks: eight 512-bit vector engines and eight 2048-bit XMX
+  engines per Xe-core, native SIMD16 ALUs, 256 KB shared L1/SLM with 64-bit
+  atomic operations, three-way co-issue, extended math and FP64, ray tracing
+  units with 18 box and 2 triangle intersections, 3 traversal pipelines and a
+  16 KB BVH cache, and for the whole GPU 20 texture samplers, 10 pixel backends,
+  an 18 MB L2 cache and two multi-format transcoders.
+- [Intel oneAPI GPU optimization guide: Xe GPU architecture](https://www.intel.com/content/www/us/en/docs/oneapi/optimization-guide-gpu/2025-2/intel-xe-gpu-architecture.html)
+  gives the Xe2-HPG row for the B580: 20 Xe-cores, 8 vector engines per core,
+  8 hardware threads per vector engine, 512-bit registers, 256 KB L1 and 128 KB
+  SLM per Xe-core, native double precision and sub-group sizes of 16 and 32. It
+  also documents the earlier Xe-HPG slice and Xe-core organisation.
+- [Intel Arc B-series launch announcement](https://www.intel.com/content/www/us/en/newsroom/news/intel-launches-arc-b-series-graphics-cards.html)
+  cross-checks the XMX engines, twin media transcoders and codec support.
+- [Overclocking.com's B580 Limited Edition teardown](https://en.overclocking.com/review-intel-arc-b580-limited-edition/2/)
+  and [KitGuru's review](https://www.kitguru.net/components/graphic-cards/dominic-moass/intel-arc-b580-limited-edition-review/all/1/)
+  are **independent reviews**, cited for construction: two 85 mm fans with
+  eleven ring-linked blades, four heat pipes into two fin stacks, a backplate
+  cut-out for flow-through, an eight-layer PCB much shorter than the cooler with
+  six GPU and two memory phases, a copper cold plate, six GDDR6 packages and a
+  white LED logo as the only lighting.
+- [Tom's Hardware teardown photographs](https://www.tomshardware.com/pc-components/gpus/intels-new-arc-gpu-gets-naked-in-unsanctioned-peep-show-b580-has-nvidia-founders-edition-inspired-cooler-bgm-g21-die-surrounded-by-20-gbps-gddr6-memory),
+  an **independent report**, show the copper cold plate, the six GDDR6 packages
+  around the centred BMG-G21, a board about half the length of the cooler and
+  the backplate opening.
+
+**Limits.** Intel publishes texture samplers and pixel backends as totals for
+the GPU; the render slice scale divides them evenly across five slices and says
+so. Intel does not publish the memory controller count, so the GDDR6 interface
+is one block. No die area or transistor count is quoted, because neither
+appears in the cited Intel documents. As with the other cards, board layout,
+pipe routing and passive population are original approximations.
 
 ## Architecture and specifications
 

@@ -2247,6 +2247,47 @@ a {
   box-shadow: 0 0 7px #79bfcc99;
 }
 
+/* Nested card dropdowns inside a subsystem menu: the GPU menu holds three
+   whole cards, each with its own chain of scales. */
+.branch-submenus {
+  gap: 2px;
+}
+.branch-scales .submenu-head {
+  width: 100%;
+  color: #b3b8be;
+}
+.branch-scales .submenu-head > div {
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.branch-scales .submenu-head > svg {
+  margin-left: auto;
+  flex: none;
+  color: #7c8188;
+  transition: transform 0.16s;
+}
+.submenu.open .submenu-head > svg {
+  transform: rotate(180deg);
+}
+.branch-scales .submenu-head > i {
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  background: #5a5e65;
+}
+.submenu.here .submenu-head > i {
+  background: var(--accent);
+  box-shadow: 0 0 7px #79bfcc99;
+}
+.submenu-scales {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin: 1px 0 4px 11px;
+  padding-left: 11px;
+  border-left: 1px solid #3a3e44;
+}
+
 /* ---------------------------------------------------------------------------
    Touch
    A finger is about 9 mm across and has no hover state to aim with. Everything
