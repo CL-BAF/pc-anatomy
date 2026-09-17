@@ -1,289 +1,43 @@
 'use client';
 import { useCallback, useEffect, useState } from 'react';
-import {
-  Cpu,
-  Search,
-  RotateCcw,
-  Layers3,
-  ArrowUpRight,
-  Maximize,
-  Info,
-  ChevronRight,
-  ArrowLeft,
-  X,
-  Focus,
-  Eye,
-  EyeOff,
-  Box,
-  Microscope,
-  ChevronDown,
-  Play,
-  Pause,
-  PcCase,
-  CircuitBoard,
-  Zap,
-  Fan,
-  HardDrive,
-  Droplets,
-  Code2,
-  Minimize,
-} from 'lucide-react';
-import { Slider } from '@/components/ui/slider';
-import { Switch } from '@/components/ui/switch';
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
-import {
-  Sheet,
-  SheetContent,
-  SheetTitle,
-  SheetDescription,
-} from '@/components/ui/sheet';
-import {
-  Command,
-  CommandInput,
-  CommandList,
-  CommandItem,
-  CommandEmpty,
-  CommandGroup,
-} from '@/components/ui/command';
-
-import {
-  byId,
-  manifest,
-  categories,
-  colors,
-  levelPath,
-  openLevel,
-  searchConcepts,
-  sources,
-  type Category,
-} from '@/lib/manifest';
-import {
-  initialState,
-  selectSearch,
-  type ExplorerState,
-  type Selection,
-} from '@/lib/explorer-state';
-import {
-  branches,
-  isPhysical,
-  levels,
-  rootLevel,
-  submenuRoot,
-  type LevelId,
-} from '@/lib/levels';
-
-/** One icon per scale, so the branch you are on is recognisable at a glance. */
-const levelIcon: Record<LevelId, typeof Box> = {
-  pc: PcCase,
-  motherboard: CircuitBoard,
-  ryzen: Cpu,
-  ryzenio: CircuitBoard,
-  corei9: Cpu,
-  coreio: CircuitBoard,
-  psu: Zap,
-  fan: Fan,
-  cooler: Fan,
-  liquid: Droplets,
-  ssd: HardDrive,
-  nvme: CircuitBoard,
-  card: Box,
-  die: Cpu,
-  gpc: Layers3,
-  tpc: Layers3,
-  sm: Microscope,
-  rx9070: Box,
-  navi48: Cpu,
-  rxse: Layers3,
-  rxwgp: Layers3,
-  rxcu: Microscope,
-  arcb580: Box,
-  bmg: Cpu,
-  xeslice: Layers3,
-  xecore: Layers3,
-  xve: Microscope,
-};
-
-function menuRoot(level: LevelId) {
-  return (
-    branches().find((branch) => branch.levels.includes(level))?.root ?? null
-  );
-}
-
-/** Graphics cards whose chip diagrams open directly, without a dive. */
-const gpuRoots = new Set<LevelId>(['card', 'rx9070', 'arcb580']);
+import { EyeOff } from 'lucide-react';
+import { levelPath } from '@/lib/levels';
+import { useExplorer } from './use-explorer';
 import Viewer from './viewer';
 import PerformanceTip from './performance-tip';
-
-/** The project's source, linked from the header byline and the About panel. */
-const REPOSITORY = 'https://github.com/Yoosseph/gpu_anatomy';
+import Topbar from './topbar';
+import ScaleNav from './scale-nav';
+import SystemsList from './systems-list';
+import StageHeading from './stage-heading';
+import StageTools from './stage-tools';
+import Disassembly from './disassembly';
+import SearchDialog from './search-dialog';
+import DetailPanel from './detail-panel';
+import AboutDialog from './about-dialog';
 
 export default function Home() {
-  const [playing, setPlaying] = useState(false);
-  const [state, setState] = useState<ExplorerState>(initialState),
-    [search, setSearch] = useState(false),
+  const explorer = useExplorer();
+  const { state, selected, logical, layers, selectConcept, choose, navigate } =
+    explorer;
+  const [search, setSearch] = useState(false),
     [query, setQuery] = useState(''),
     [about, setAbout] = useState(false),
-    [layers, setLayers] = useState(false),
-    [expanded, setExpanded] = useState<Category | null>(null),
-    [hiddenMenuOpen, setHiddenMenuOpen] = useState(false),
-    [fullscreen, setFullscreen] = useState(false),
-    [fullscreenError, setFullscreenError] = useState(''),
     // `null` until the viewer has reported for the first time. Zero means the
     // viewer is running and nothing is switched on, which is a different thing
     // to say to the reader, and saying the wrong one was what put "No
     // structures visible" on screen for the whole of a cold load.
     [count, setCount] = useState<number | null>(null);
-  // While a dive is in flight the selection exists only to aim the camera at
-  // the part being opened. Showing its panel would flash the outer component's
-  // description, and its "Take apart" button, for a few hundred milliseconds
-  // before the deeper scale replaces it. The panel appears on arrival instead.
-  const selected =
-    state.selection && !state.diveInto ? byId[state.selection.concept] : null;
-  const level = levels[state.level],
-    logical = !isPhysical(state.level),
-    path = levelPath(state.level),
-    menus = branches(),
-    phases = level.phases,
-    explodePercent = Math.round(state.explode);
-  const hiddenComponents = state.hidden.flatMap((id) =>
-    byId[id] ? [byId[id]] : [],
-  );
-  // The subsystem whose menu is open. Follows wherever you are unless you
-  // deliberately open another one.
-  const [openMenu, setOpenMenu] = useState<LevelId | null>(null);
-  const shownMenu = openMenu ?? menuRoot(state.level);
-  // The card dropdown open inside the GPU menu. `null` follows wherever you
-  // are; `'none'` means you deliberately folded it away.
-  const [openSubmenu, setOpenSubmenu] = useState<LevelId | 'none' | null>(
-    null,
-  );
-  const shownSubmenu =
-    openSubmenu === 'none' ? null : (openSubmenu ?? submenuRoot(state.level));
-  const navigate = useCallback(
-    (level: LevelId, selection: Selection | null = null) => {
-      setPlaying(false);
-      setHiddenMenuOpen(false);
-      setOpenMenu(menuRoot(level));
-      setOpenSubmenu(null);
-      setState((s) => ({
-        ...s,
-        level,
-        diveInto: null,
-        explode: 0,
-        selection,
-        isolated: false,
-        focusRevision: 0,
-        cameraRevision: s.cameraRevision + 1,
-        visible: [...categories],
-        hidden: [],
-        view: 'perspective',
-      }));
-      setLayers(false);
+
+  /** Jump to a component, closing the palette if that is where it came from. */
+  const selectResult = useCallback(
+    (id: string) => {
+      selectConcept(id);
+      setSearch(false);
+      setQuery('');
     },
-    [],
-  );
-  const reset = useCallback(() => {
-    setPlaying(false);
-    setHiddenMenuOpen(false);
-    setOpenMenu(null);
-    setOpenSubmenu(null);
-    setState((s) => ({
-      ...initialState,
-      cameraRevision: s.cameraRevision + 1,
-    }));
-    setLayers(false);
-  }, []);
-  // Physical disassembly is one continuous move owned by the scene: the stage clears
-  // around the part you clicked while the camera closes in on it, and when the
-  // scene reports the stage is clear we swap in the deeper scale, which then
-  // grows back out of the same spot. Nothing cuts to black, and no timer here
-  // can drift out of step with the animation. `diveInto` is the whole record of
-  // a dive in flight, so cancelling one is just clearing it.
-  const dive = useCallback(
-    (conceptId: string) => {
-      const target = openLevel(conceptId);
-      if (!target) return false;
-      // GPU diagrams open directly. The outgoing isolation animation selected
-      // every repeated block and tinted the old scale green before replacing it.
-      if (
-        levelPath(target).some((id) => gpuRoots.has(id)) &&
-        !isPhysical(target)
-      ) {
-        navigate(target, { concept: levels[target].concept });
-        return true;
-      }
-      setPlaying(false);
-      setLayers(false);
-      setState((s) =>
-        s.diveInto
-          ? s
-          : {
-              ...s,
-              selection: { concept: conceptId },
-              isolated: false,
-              diveInto: conceptId,
-              diveRevision: s.diveRevision + 1,
-              focusRevision: s.focusRevision + 1,
-              cameraRevision: s.cameraRevision + 1,
-            },
-      );
-      return true;
-    },
-    [navigate],
+    [selectConcept],
   );
 
-  const arrive = useCallback(() => {
-    const arrivedLevel = state.diveInto ? openLevel(state.diveInto) : null;
-    if (!arrivedLevel) return;
-    setHiddenMenuOpen(false);
-    setOpenMenu(menuRoot(arrivedLevel));
-    setOpenSubmenu(null);
-    setState((s) => {
-      const target = s.diveInto ? openLevel(s.diveInto) : null;
-      if (!target || target !== arrivedLevel) return s;
-      return {
-        ...s,
-        level: target,
-        explode: 0,
-        visible: [...categories],
-        hidden: [],
-        isolated: false,
-        view: 'perspective',
-        diveInto: null,
-        focusRevision: 0,
-        cameraRevision: s.cameraRevision + 1,
-        // Arrive with the thing you opened already described.
-        selection: { concept: levels[target].concept },
-      };
-    });
-  }, [state.diveInto]);
-
-  const choose = useCallback(
-    (selection: Selection | null, intent: 'open' | 'inspect' = 'inspect') => {
-      if (selection && intent === 'open' && dive(selection.concept)) return;
-      setState((s) => ({
-        ...s,
-        selection,
-        isolated: false,
-        focusRevision: 0,
-      }));
-      setLayers(false);
-    },
-    [dive],
-  );
-  const selectResult = (id: string) => {
-    setOpenMenu(menuRoot(byId[id].level));
-    setOpenSubmenu(null);
-    setState((s) => selectSearch(s, id));
-    setSearch(false);
-    setQuery('');
-    setLayers(false);
-  };
   useEffect(() => {
     const key = (event: KeyboardEvent) => {
       // A key pressed while nothing is focused reports the document, not an
@@ -300,15 +54,7 @@ export default function Home() {
         event.preventDefault();
         setSearch(true);
       }
-      if (event.key === 'Escape') {
-        setState((s) => ({
-          ...s,
-          selection: null,
-          isolated: false,
-          focusRevision: 0,
-        }));
-        setLayers(false);
-      }
+      if (event.key === 'Escape') choose(null);
       if (event.key === 'Backspace') {
         const currentPath = levelPath(state.level);
         if (currentPath.length > 1) {
@@ -319,84 +65,8 @@ export default function Home() {
     };
     window.addEventListener('keydown', key);
     return () => window.removeEventListener('keydown', key);
-  }, [about, navigate, search, state.level]);
-  useEffect(() => {
-    const syncFullscreen = () => {
-      setFullscreen(Boolean(document.fullscreenElement));
-      if (document.fullscreenElement) setFullscreenError('');
-    };
-    document.addEventListener('fullscreenchange', syncFullscreen);
-    syncFullscreen();
-    return () =>
-      document.removeEventListener('fullscreenchange', syncFullscreen);
-  }, []);
-  // Runs the disassembly slowly enough to follow, and hands control straight
-  // back the moment the viewer touches the slider or changes scale.
-  useEffect(() => {
-    if (!playing) return;
-    let frame = 0,
-      last = performance.now();
-    const step = (now: number) => {
-      // Clamp the step so one stalled frame (a slow machine, a background
-      // tab, a heavy rebuild) cannot teleport the disassembly to the end.
-      // The run then takes a little longer on slow hardware but stays watchable.
-      const delta = Math.min(0.1, (now - last) / 1000);
-      last = now;
-      setState((s) => {
-        const next = Math.min(100, s.explode + delta * 11);
-        if (next >= 100) setPlaying(false);
-        return { ...s, explode: next, focusRevision: 0 };
-      });
-      frame = requestAnimationFrame(step);
-    };
-    frame = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(frame);
-  }, [playing]);
+  }, [about, choose, navigate, search, state.level]);
 
-  const setExplode = useCallback((value: number) => {
-    setPlaying(false);
-    setState((s) => ({ ...s, explode: value, focusRevision: 0 }));
-  }, []);
-
-  const toggle = (category: Category) =>
-    setState((s) => ({
-      ...s,
-      visible: s.visible.includes(category)
-        ? s.visible.filter((c) => c !== category)
-        : [...s.visible, category],
-      selection:
-        s.selection && byId[s.selection.concept].category === category
-          ? null
-          : s.selection,
-      isolated: false,
-      focusRevision: 0,
-    }));
-  const unhide = useCallback((id: string) => {
-    const category = byId[id]?.category;
-    setState((s) => ({
-      ...s,
-      visible:
-        category && !s.visible.includes(category)
-          ? [...s.visible, category]
-          : s.visible,
-      hidden: s.hidden.filter((hiddenId) => hiddenId !== id),
-      focusRevision: 0,
-    }));
-  }, []);
-  const toggleFullscreen = useCallback(async () => {
-    setFullscreenError('');
-    try {
-      if (document.fullscreenElement) await document.exitFullscreen();
-      else
-        await document.documentElement.requestFullscreen({
-          navigationUI: 'hide',
-        });
-    } catch {
-      setFullscreenError(
-        'Fullscreen is blocked by this browser. Press F11 instead.',
-      );
-    }
-  }, []);
   return (
     <main
       className={
@@ -405,59 +75,13 @@ export default function Home() {
         (logical ? ' logical' : '')
       }
     >
-      <header className="topbar">
-        <button className="brand" onClick={reset} aria-label="Reset PC Anatomy">
-          <span className="brand-icon">
-            <Cpu size={21} />
-          </span>
-          <span>PC Anatomy</span>
-        </button>
-        <a
-          className="byline"
-          href={REPOSITORY}
-          target="_blank"
-          rel="noreferrer"
-          title="PC Anatomy on GitHub"
-        >
-          <Code2 size={13} />
-          <span>
-            Created by <strong>Yoseph</strong>
-          </span>
-        </a>
-        <div className="header-actions">
-          <a
-            className="guide-link"
-            href="/guide/index.html"
-            title="Learn about PC components"
-          >
-            Guide
-          </a>
-          <button
-            className="mobile-layers"
-            onClick={() => setLayers(!layers)}
-            aria-label="Toggle systems"
-            aria-expanded={layers}
-          >
-            <Layers3 size={19} />
-          </button>
-          <button
-            className="search-button"
-            aria-label="Find a component"
-            onClick={() => setSearch(true)}
-          >
-            <Search size={16} />
-            <span>Search components</span>
-            <kbd>/</kbd>
-          </button>
-          <button
-            className="info-button"
-            aria-label="About and sources"
-            onClick={() => setAbout(true)}
-          >
-            <Info size={19} />
-          </button>
-        </div>
-      </header>
+      <Topbar
+        layers={layers}
+        onReset={explorer.reset}
+        onToggleLayers={() => explorer.setLayers(!layers)}
+        onSearch={() => setSearch(true)}
+        onAbout={() => setAbout(true)}
+      />
       <PerformanceTip ready={count !== null && count > 0} />
       {layers && (
         // Without this the drawer floats over a live 3-D view: a tap meant to
@@ -465,300 +89,44 @@ export default function Home() {
         <button
           className="drawer-scrim"
           aria-label="Close systems"
-          onClick={() => setLayers(false)}
+          onClick={() => explorer.setLayers(false)}
         />
       )}
       <aside
         className={'explorer' + (layers ? ' mobile-open' : '')}
         aria-label="System visibility"
       >
-        <div className="explore-section">
-          <div className="section-heading">
-            EXPLORE BY SCALE
-            <button
-              className="mobile-close"
-              aria-label="Close systems"
-              onClick={() => setLayers(false)}
-            >
-              <X size={17} />
-            </button>
-          </div>
-          <nav className="scale-navigation" aria-label="Exploration scale">
-            <button
-              className={state.level === rootLevel ? 'active' : ''}
-              aria-current={state.level === rootLevel ? 'true' : undefined}
-              onClick={() => {
-                setOpenMenu(null);
-                navigate(rootLevel);
-              }}
-            >
-              <span>01</span>
-              <PcCase size={18} />
-              <div>
-                {levels[rootLevel].name}
-                <small>{levels[rootLevel].summary}</small>
-              </div>
-              <ChevronRight size={15} />
-            </button>
-
-            {menus.map(({ root, label, levels: scales, submenus }, index) => {
-              const Icon = levelIcon[root];
-              const open = shownMenu === root;
-              const here = menuRoot(state.level) === root;
-              const scaleButton = (id: LevelId) => (
-                <button
-                  key={id}
-                  className={id === state.level ? 'active' : ''}
-                  aria-current={id === state.level ? 'true' : undefined}
-                  onClick={() => navigate(id)}
-                >
-                  <i />
-                  <div>
-                    {levels[id].name}
-                    <small>
-                      {levels[id].detailed
-                        ? levels[id].summary
-                        : levels[id].summary + ' · placeholder'}
-                    </small>
-                  </div>
-                </button>
-              );
-              return (
-                <div
-                  className={
-                    'branch' + (open ? ' open' : '') + (here ? ' here' : '')
-                  }
-                  key={root}
-                >
-                  <button
-                    className="branch-head"
-                    aria-expanded={open}
-                    onClick={() => setOpenMenu(open ? rootLevel : root)}
-                  >
-                    <span>{String(index + 2).padStart(2, '0')}</span>
-                    <Icon size={18} />
-                    <div>
-                      {label}
-                      <small>
-                        {submenus.length > 0
-                          ? `${submenus.length} cards · ${scales.length} scales`
-                          : `${scales.length} ${scales.length === 1 ? 'scale' : 'scales'} inside`}
-                      </small>
-                    </div>
-                    <ChevronDown size={15} />
-                  </button>
-                  {open && submenus.length === 0 && (
-                    <div className="branch-scales">
-                      {scales.map(scaleButton)}
-                    </div>
-                  )}
-                  {open && submenus.length > 0 && (
-                    <div className="branch-scales branch-submenus">
-                      {submenus.map((sub) => {
-                        const subOpen = shownSubmenu === sub.root;
-                        const subHere = submenuRoot(state.level) === sub.root;
-                        return (
-                          <div
-                            key={sub.root}
-                            className={
-                              'submenu' +
-                              (subOpen ? ' open' : '') +
-                              (subHere ? ' here' : '')
-                            }
-                          >
-                            <button
-                              className="submenu-head"
-                              aria-expanded={subOpen}
-                              onClick={() =>
-                                setOpenSubmenu(subOpen ? 'none' : sub.root)
-                              }
-                            >
-                              <i />
-                              <div>
-                                {sub.label}
-                                <small>
-                                  {sub.note ? sub.note + ' · ' : ''}
-                                  {sub.levels.length} scales
-                                </small>
-                              </div>
-                              <ChevronDown size={13} />
-                            </button>
-                            {subOpen && (
-                              <div className="submenu-scales">
-                                {sub.levels.map(scaleButton)}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </nav>
-        </div>
-        <div className="systems-section">
-          <div className="section-heading">
-            VISIBLE SYSTEMS{' '}
-            <button
-              onClick={() =>
-                setState((s) => ({
-                  ...s,
-                  visible:
-                    s.visible.length === categories.length
-                      ? []
-                      : [...categories],
-                  hidden: [],
-                  selection: null,
-                  isolated: false,
-                  focusRevision: 0,
-                }))
-              }
-            >
-              {state.visible.length === categories.length
-                ? 'Hide all'
-                : 'Show all'}
-            </button>
-          </div>
-          <div className="layer-scroll">
-            {categories.map((category) => (
-              <div key={category}>
-                <div className="layer-row">
-                  <button
-                    className="category-visibility"
-                    aria-pressed={state.visible.includes(category)}
-                    aria-label={
-                      (state.visible.includes(category) ? 'Hide ' : 'Show ') +
-                      category
-                    }
-                    onClick={() => toggle(category)}
-                  >
-                    <i style={{ background: colors[category] }} />
-                    <span>{category}</span>
-                    <small>
-                      {state.visible.includes(category) ? 'On' : 'Off'}
-                    </small>
-                  </button>
-                  <button
-                    className="category-expand"
-                    onClick={() =>
-                      setExpanded(expanded === category ? null : category)
-                    }
-                    aria-expanded={expanded === category}
-                    aria-label={
-                      (expanded === category ? 'Hide ' : 'Show ') +
-                      category +
-                      ' components'
-                    }
-                  >
-                    <ChevronDown size={12} />
-                  </button>
-                </div>
-                {expanded === category && (
-                  <div className="sublayers">
-                    {manifest
-                      .filter((c) => c.category === category && c.id !== 'card')
-                      .map((c) => (
-                        <div key={c.id}>
-                          <button onClick={() => selectResult(c.id)}>
-                            {c.shortName}
-                          </button>
-                          <Switch
-                            size="sm"
-                            checked={
-                              state.visible.includes(category) &&
-                              !state.hidden.includes(c.id)
-                            }
-                            onCheckedChange={(checked) =>
-                              setState((s) => ({
-                                ...s,
-                                visible:
-                                  checked && !s.visible.includes(category)
-                                    ? [...s.visible, category]
-                                    : s.visible,
-                                hidden: checked
-                                  ? s.hidden.filter((x) => x !== c.id)
-                                  : [...s.hidden, c.id],
-                                selection: null,
-                                isolated: false,
-                                focusRevision: 0,
-                              }))
-                            }
-                            aria-label={
-                              (state.visible.includes(category) &&
-                              !state.hidden.includes(c.id)
-                                ? 'Hide '
-                                : 'Show ') + c.name
-                            }
-                          />
-                        </div>
-                      ))}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
+        <ScaleNav
+          level={state.level}
+          shownMenu={explorer.shownMenu}
+          shownSubmenu={explorer.shownSubmenu}
+          onOpenMenu={explorer.showMenu}
+          onOpenSubmenu={explorer.showSubmenu}
+          onNavigate={navigate}
+          onClose={() => explorer.setLayers(false)}
+        />
+        <SystemsList
+          visible={state.visible}
+          hidden={state.hidden}
+          onToggleCategory={explorer.toggleCategory}
+          onToggleAll={explorer.toggleAllCategories}
+          onSetConceptVisible={explorer.setConceptVisible}
+          onSelectConcept={selectResult}
+        />
       </aside>
-      <section className="stage-heading">
-        <div>
-          <h1>
-            {state.explode === 100
-              ? 'Component inventory'
-              : state.explode > 0
-                ? logical
-                  ? 'Resources, separated'
-                  : 'Coming apart'
-                : level.title}
-          </h1>
-          <div className="stage-meta">
-            <p className="eyebrow">{level.caption}</p>
-            <nav className="breadcrumbs" aria-label="Component hierarchy">
-              {path.length > 1 && (
-                <button
-                  aria-label="Back one level"
-                  onClick={() => navigate(path[path.length - 2])}
-                >
-                  <ArrowLeft size={14} />
-                </button>
-              )}
-              {path.map((id, i) => (
-                <span key={id}>
-                  {i > 0 && <ChevronRight size={12} />}
-                  <button
-                    aria-current={id === state.level ? 'page' : undefined}
-                    onClick={() => navigate(id)}
-                  >
-                    {levels[id].name}
-                  </button>
-                </span>
-              ))}
-              {selected && selected.shortName !== level.name && (
-                <span>
-                  <ChevronRight size={12} />
-                  <span className="crumb-selected">{selected.shortName}</span>
-                </span>
-              )}
-            </nav>
-          </div>
-        </div>
-        {count !== null && (
-          <output
-            className="stage-counter"
-            aria-live="polite"
-            aria-label={`${count} visible parts`}
-          >
-            <strong>{count}</strong>
-            <span>visible parts</span>
-          </output>
-        )}
-      </section>
+      <StageHeading
+        level={state.level}
+        explode={state.explode}
+        logical={logical}
+        selected={selected}
+        count={count}
+        onNavigate={navigate}
+      />
       <Viewer
         state={state}
         onSelect={choose}
         onCount={setCount}
-        onDived={arrive}
+        onDived={explorer.arrive}
       />
       {count === null && (
         <div className="empty-scene loading">
@@ -769,474 +137,49 @@ export default function Home() {
         <div className="empty-scene">
           <EyeOff size={27} />
           <h3>No structures visible</h3>
-          <button
-            onClick={() =>
-              setState((s) => ({
-                ...s,
-                visible: [...categories],
-                hidden: [],
-                isolated: false,
-              }))
-            }
-          >
-            Show all systems
-          </button>
+          <button onClick={explorer.showEverything}>Show all systems</button>
         </div>
       )}
-      <div className="stage-tools">
-        <div className="view-controls" aria-label="Camera controls">
-          {(['perspective', 'top', 'front', 'back'] as const).map((view, i) => (
-            <button
-              key={view}
-              title={view[0].toUpperCase() + view.slice(1) + ' view'}
-              aria-label={view[0].toUpperCase() + view.slice(1) + ' view'}
-              disabled={logical && state.explode > 85 && view !== 'top'}
-              aria-pressed={
-                logical && state.explode > 85
-                  ? view === 'top'
-                  : state.view === view
-              }
-              className={
-                (
-                  logical && state.explode > 85
-                    ? view === 'top'
-                    : state.view === view
-                )
-                  ? 'active'
-                  : ''
-              }
-              onClick={() =>
-                setState((s) => ({
-                  ...s,
-                  view,
-                  focusRevision: 0,
-                  cameraRevision: s.cameraRevision + 1,
-                }))
-              }
-            >
-              {['3D', 'TOP', 'FRONT', 'BACK'][i]}
-            </button>
-          ))}
-          <span />
-          <button
-            title={fullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
-            aria-label={fullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
-            aria-pressed={fullscreen}
-            className={fullscreen ? 'active' : ''}
-            onClick={() => void toggleFullscreen()}
-          >
-            {fullscreen ? <Minimize size={15} /> : <Maximize size={15} />}
-          </button>
-        </div>
-        {hiddenComponents.length > 0 && (
-          <div className="hidden-tracker">
-            <button
-              className="hidden-tracker-toggle"
-              aria-expanded={hiddenMenuOpen}
-              aria-controls="hidden-components-menu"
-              onClick={() => setHiddenMenuOpen((open) => !open)}
-            >
-              <EyeOff size={15} />
-              <span>
-                {hiddenComponents.length} hidden component
-                {hiddenComponents.length === 1 ? '' : 's'}
-              </span>
-              <ChevronDown size={14} />
-            </button>
-            {hiddenMenuOpen && (
-              <div
-                className="hidden-components-menu"
-                id="hidden-components-menu"
-              >
-                <div className="hidden-menu-heading">
-                  <strong>Hidden on this scale</strong>
-                  <button
-                    onClick={() =>
-                      setState((s) => ({ ...s, hidden: [], focusRevision: 0 }))
-                    }
-                  >
-                    Show all
-                  </button>
-                </div>
-                <ul>
-                  {hiddenComponents.map((component) => (
-                    <li key={component.id}>
-                      <i style={{ background: colors[component.category] }} />
-                      <span>{component.shortName}</span>
-                      <button
-                        aria-label={`Show ${component.name}`}
-                        onClick={() => unhide(component.id)}
-                      >
-                        <Eye size={14} />
-                        Show
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-        )}
-        {fullscreenError && (
-          <output className="fullscreen-error">{fullscreenError}</output>
-        )}
-      </div>
-      <section className="disassembly" aria-label="Explosion control">
-        <div className="disassembly-intro">
-          <button
-            className={
-              'play' +
-              (playing ? ' running' : '') +
-              (!playing && state.explode < 1 ? ' idle' : '')
-            }
-            onClick={() => {
-              if (playing) {
-                setPlaying(false);
-                return;
-              }
-              // Someone who has asked for less motion gets the end state, not a
-              // nine-second animation they did not want.
-              if (
-                window.matchMedia('(prefers-reduced-motion: reduce)').matches
-              ) {
-                setState((s) => ({ ...s, explode: 100, focusRevision: 0 }));
-                return;
-              }
-              setState((s) => ({
-                ...s,
-                explode: s.explode >= 99 ? 0 : s.explode,
-                focusRevision: 0,
-              }));
-              setPlaying(true);
-            }}
-            aria-label={
-              playing
-                ? 'Pause automatic disassembly'
-                : 'Take it apart automatically'
-            }
-          >
-            {playing ? <Pause size={23} /> : <Play size={23} />}
-            <span>{playing ? 'Pause' : 'Auto'}</span>
-          </button>
-          <div className="disassembly-label">
-            <div>
-              <strong>{logical ? 'Expand' : 'Disassemble'}</strong>
-              <span>DRAG OR PLAY</span>
-            </div>
-          </div>
-        </div>
-        <div className="timeline">
-          <div className="phase-labels">
-            {phases.map(([name, value]) => (
-              <button
-                key={name}
-                className={
-                  Math.abs(state.explode - Number(value)) < 13 ? 'active' : ''
-                }
-                onClick={() => setExplode(Number(value))}
-              >
-                {name}
-              </button>
-            ))}
-          </div>
-          <Slider
-            value={[state.explode]}
-            onValueChange={(value) =>
-              setExplode(Array.isArray(value) ? value[0] : value)
-            }
-            aria-label="Disassemble the specimen"
-            aria-valuetext={`${explodePercent} percent`}
-          />
-          <div className="ruler" aria-hidden="true">
-            {Array.from({ length: 41 }, (_, i) => (
-              <i key={i} />
-            ))}
-          </div>
-        </div>
-        <div className="disassembly-readout">
-          <output>{explodePercent}%</output>
-          <button
-            className="reset"
-            aria-label="Reset camera and assembly"
-            onClick={reset}
-          >
-            <RotateCcw size={18} />
-            <span>Reset</span>
-          </button>
-        </div>
-      </section>
-      <Dialog open={search} onOpenChange={setSearch} modal>
-        <DialogContent className="search-dialog">
-          <DialogTitle>Find a component</DialogTitle>
-          <DialogDescription>
-            Jump to any hardware or architecture resource.
-          </DialogDescription>
-          <Command shouldFilter={false}>
-            <CommandInput
-              value={query}
-              onValueChange={setQuery}
-              placeholder="Try Tensor, GDDR7, L2 or SM…"
-            />
-            <CommandList>
-              <CommandEmpty>
-                No matching components. Try “memory” or “CUDA”.
-              </CommandEmpty>
-              <CommandGroup
-                heading={query ? 'Matching structures' : 'Explore the specimen'}
-              >
-                {(query
-                  ? searchConcepts(query)
-                  : [
-                      'package',
-                      'gddr7',
-                      'gpc',
-                      'sm',
-                      'tensor',
-                      'rt',
-                      'l2',
-                      'vrm',
-                    ].map((id) => byId[id])
-                ).map((c) => (
-                  <CommandItem
-                    key={c.id}
-                    value={c.id}
-                    onSelect={() => selectResult(c.id)}
-                  >
-                    <i style={{ background: colors[c.category] }} />
-                    <div>
-                      {c.name}
-                      <small>
-                        <span>{levels[c.level].name}</span>
-                        {c.category} ·{' '}
-                        {c.representationType === 'logical'
-                          ? 'Logical architecture'
-                          : 'Physical hardware'}
-                      </small>
-                    </div>
-                    <ArrowUpRight size={15} />
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            </CommandList>
-          </Command>
-          <div className="search-hint">
-            ↑ ↓ to browse <span>Enter to inspect</span>
-          </div>
-        </DialogContent>
-      </Dialog>
-      <Sheet
-        open={!!selected}
-        modal={false}
-        onOpenChange={(open, details) => {
-          if (!open && details.reason !== 'outside-press') choose(null);
-        }}
-      >
-        <SheetContent
-          className="detail-panel"
-          side="right"
-          showCloseButton={false}
-          initialFocus={false}
-        >
-          {selected && (
-            <>
-              <div className="detail-top">
-                <span style={{ color: colors[selected.category] }}>
-                  {selected.category} /{' '}
-                  {selected.representationType === 'logical'
-                    ? 'ARCHITECTURE'
-                    : 'HARDWARE'}
-                </span>
-                <button
-                  aria-label="Close component details"
-                  onClick={() => choose(null)}
-                >
-                  <X size={17} />
-                </button>
-              </div>
-              <SheetTitle>{selected.name}</SheetTitle>
-              <div className="instance-label">
-                {state.selection?.instance !== undefined
-                  ? 'INSTANCE ' +
-                    String(state.selection.instance + 1).padStart(2, '0')
-                  : 'COMPONENT GROUP'}
-              </div>
-              <SheetDescription>{selected.description}</SheetDescription>
-              <div className="purpose">
-                <h3>What it does</h3>
-                <p>{selected.purpose}</p>
-              </div>
-              <div className="quantity">{selected.quantity}</div>
-              <dl>
-                {Object.entries(selected.specifications).map(([k, v]) => (
-                  <div key={k}>
-                    <dt>{k}</dt>
-                    <dd>{v}</dd>
-                  </div>
-                ))}
-              </dl>
-              {selected.parent && (
-                <div className="parent-link">
-                  Part of{' '}
-                  <button onClick={() => selectResult(selected.parent!)}>
-                    {byId[selected.parent].shortName}
-                    <ChevronRight size={12} />
-                  </button>
-                </div>
-              )}
-              {openLevel(selected.id) &&
-                openLevel(selected.id) !== state.level && (
-                  <button
-                    className="open-component"
-                    onClick={() => dive(selected.id)}
-                  >
-                    Take apart {levels[openLevel(selected.id)!].name}
-                    <ChevronRight size={17} />
-                  </button>
-                )}
-              <div className="detail-actions">
-                <button
-                  onClick={() =>
-                    setState((s) => ({
-                      ...s,
-                      isolated: !s.isolated,
-                      focusRevision: s.focusRevision + 1,
-                      cameraRevision: s.cameraRevision + 1,
-                    }))
-                  }
-                >
-                  <Focus size={14} />
-                  {state.isolated ? 'Show context' : 'Isolate'}
-                </button>
-                <button
-                  onClick={() =>
-                    setState((s) => ({
-                      ...s,
-                      focusRevision: s.focusRevision + 1,
-                      cameraRevision: s.cameraRevision + 1,
-                    }))
-                  }
-                >
-                  <Maximize size={14} />
-                  Focus
-                </button>
-                <button
-                  onClick={() => {
-                    setHiddenMenuOpen(true);
-                    setState((s) => ({
-                      ...s,
-                      hidden: s.hidden.includes(selected.id)
-                        ? s.hidden
-                        : [...s.hidden, selected.id],
-                      selection: null,
-                      isolated: false,
-                      focusRevision: 0,
-                    }));
-                  }}
-                >
-                  <EyeOff size={14} />
-                  Hide
-                </button>
-              </div>
-              <p className="accuracy">{selected.physicalAccuracy}</p>
-              {selected.sources.length > 0 && (
-                <div className="source-links">
-                  <h3>References & architecture</h3>
-                  <p>
-                    Manufacturer documents and standards explain this component
-                    family. Illustrative geometry is not a product schematic.
-                  </p>
-                  {selected.sources.map((s) => (
-                    <a
-                      key={s}
-                      href={sources[s].url}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      {sources[s].name}
-                      <ArrowUpRight size={12} />
-                    </a>
-                  ))}
-                </div>
-              )}
-            </>
-          )}
-        </SheetContent>
-      </Sheet>
-      <Dialog open={about} onOpenChange={setAbout} modal>
-        <DialogContent className="about-dialog">
-          <DialogTitle>From the case down to a compute core.</DialogTitle>
-          <DialogDescription>
-            PC Anatomy is a free, interactive 3D computer hardware explorer.
-            Learn how a desktop PC works by inspecting and disassembling its
-            components.
-          </DialogDescription>
-          <p>
-            Start with an assembled ATX tower, take it apart, and keep going:
-            into the motherboard, into the graphics card, and down through the
-            GB202 processor to a single streaming multiprocessor. Every scale is
-            a branch you can descend or step back out of.
-          </p>
-          <h3>Two kinds of model.</h3>
-          <p>
-            <strong>Hardware</strong> is original, approximate mechanical
-            geometry. The ATX board outline, the expansion-slot pitch and the
-            rear I/O aperture follow the published form factor. The RTX 5090,
-            Ryzen 9 9950X and Core Ultra 9 285K are named subjects; everything
-            else is a representative example of its component family, not a bill
-            of materials for a particular build.
-          </p>
-          <p>
-            <strong>Silicon</strong> shows documented logical architecture.
-            Exact transistor-level placement is not publicly available. A full
-            GB202 has 192 SMs; the RTX 5090 enables 170. GPC interiors show a
-            representative full cluster, not an invented map of disabled units.
-          </p>
-          <h3>Research & credits</h3>
-          <a className="about-source" href="/guide/index.html#smoother-3d">
-            Browser hardware acceleration setup <ArrowUpRight size={15} />
-          </a>
-          <a className="about-source" href="/guide/index.html">
-            PC components: an illustrated beginner’s guide
-            <ArrowUpRight size={15} />
-          </a>
-          {Object.entries(sources)
-            .slice(0, 2)
-            .map(([id, s]) => (
-              <a
-                className="about-source"
-                key={id}
-                href={s.url}
-                target="_blank"
-                rel="noreferrer"
-              >
-                {s.name}
-                <ArrowUpRight size={15} />
-              </a>
-            ))}
-          <a
-            className="about-source"
-            href="https://github.com/ashemag/human-atlas"
-            target="_blank"
-            rel="noreferrer"
-          >
-            Interaction inspiration · Human Atlas
-            <ArrowUpRight size={15} />
-          </a>
-          <a
-            className="about-source"
-            href={REPOSITORY}
-            target="_blank"
-            rel="noreferrer"
-          >
-            PC Anatomy source code
-            <ArrowUpRight size={15} />
-          </a>
-          <p className="about-foot">
-            No affiliation with NVIDIA, AMD or Intel. No third-party model
-            assets. Research reviewed September 2026.
-          </p>
-        </DialogContent>
-      </Dialog>
+      <StageTools
+        view={state.view}
+        explode={state.explode}
+        logical={logical}
+        hidden={state.hidden}
+        hiddenMenuOpen={explorer.hiddenMenuOpen}
+        onToggleHiddenMenu={() => explorer.setHiddenMenuOpen((open) => !open)}
+        onSetView={explorer.setView}
+        onUnhide={explorer.unhide}
+        onClearHidden={explorer.clearHidden}
+      />
+      <Disassembly
+        level={state.level}
+        explode={state.explode}
+        logical={logical}
+        playing={explorer.playing}
+        onToggleAuto={explorer.toggleAuto}
+        onSetExplode={explorer.setExplode}
+        onReset={explorer.reset}
+      />
+      <SearchDialog
+        open={search}
+        onOpenChange={setSearch}
+        query={query}
+        onQueryChange={setQuery}
+        onSelect={selectResult}
+      />
+      <DetailPanel
+        selected={selected}
+        selection={state.selection}
+        level={state.level}
+        isolated={state.isolated}
+        onClose={() => choose(null)}
+        onSelectConcept={selectResult}
+        onDive={explorer.dive}
+        onIsolate={explorer.toggleIsolate}
+        onFocus={explorer.refocus}
+        onHide={explorer.hide}
+      />
+      <AboutDialog open={about} onOpenChange={setAbout} />
     </main>
   );
 }

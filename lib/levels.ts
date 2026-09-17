@@ -557,3 +557,12 @@ export function branches(): Branch[] {
     return { root: scales[0], label, levels: scales, submenus };
   });
 }
+
+/**
+ * The menu a scale is listed under, which is not always its own branch root:
+ * menus are grouped by label, so the case fan and the tower cooler share one
+ * Cooling heading, keyed by whichever of them comes first.
+ */
+export function menuRoot(id: LevelId): LevelId | null {
+  return branches().find((branch) => branch.levels.includes(id))?.root ?? null;
+}
