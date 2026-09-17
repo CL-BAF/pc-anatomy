@@ -417,7 +417,7 @@ export default function Home() {
           rel="noreferrer"
           title="PC Anatomy on GitHub"
         >
-          <Code2 size={19} />
+          <Code2 size={13} />
           <span>
             Created by <strong>Yoseph</strong>
           </span>
