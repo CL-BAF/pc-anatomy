@@ -56,16 +56,18 @@ import {
   manifest,
   categories,
   colors,
-  initialState,
   levelPath,
   openLevel,
-  selectSearch,
   searchConcepts,
   sources,
-  type ExplorerState,
-  type Selection,
   type Category,
 } from '@/lib/manifest';
+import {
+  initialState,
+  selectSearch,
+  type ExplorerState,
+  type Selection,
+} from '@/lib/explorer-state';
 import {
   branches,
   isPhysical,

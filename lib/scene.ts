@@ -3,12 +3,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { buildModel, refreshBatches, type Piece } from './models';
 import { resolvePickNear } from './picking.ts';
-import {
-  byId,
-  openLevel,
-  type ExplorerState,
-  type Selection,
-} from './manifest';
+import { byId, openLevel } from './manifest';
+import type { ExplorerState, Selection } from './explorer-state.ts';
 import { isPhysical, levels } from './levels.ts';
 import { inventoryLayout, smoothstep, spatialInventory } from './layout';
 /**

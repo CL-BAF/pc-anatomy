@@ -2,12 +2,8 @@ import { after, test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as T from 'three';
 import { buildModel, type Piece } from '../lib/models.ts';
-import {
-  byId,
-  selectSearch,
-  initialState,
-  searchConcepts,
-} from '../lib/manifest.ts';
+import { byId, searchConcepts } from '../lib/manifest.ts';
+import { initialState, selectSearch } from '../lib/explorer-state.ts';
 import { branches, levelPath, levels, type LevelId } from '../lib/levels.ts';
 import { MM } from '../lib/card-kit.ts';
 

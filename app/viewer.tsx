@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import type { ExplorerState, Selection } from '@/lib/manifest';
+import type { ExplorerState, Selection } from '@/lib/explorer-state';
 import type { createViewer } from '@/lib/scene';
 type Props = {
   state: ExplorerState;

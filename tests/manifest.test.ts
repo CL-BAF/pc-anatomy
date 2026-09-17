@@ -3,13 +3,12 @@ import assert from 'node:assert/strict';
 import {
   manifest,
   byId,
-  initialState,
-  selectSearch,
   searchConcepts,
   levelPath,
   colors,
   categories,
 } from '../lib/manifest.ts';
+import { initialState, selectSearch } from '../lib/explorer-state.ts';
 import {
   inventoryLayout,
   smoothstep,
