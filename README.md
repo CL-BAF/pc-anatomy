@@ -4,6 +4,8 @@ PC Anatomy is an open-source 3D explorer that takes a desktop computer apart fro
 
 ## [**Explore the live demo →**](https://pc-anatomy.com/)
 
+Ideas worth building are collected on the [**roadmap and Kanban board →**](https://github.com/users/Yoosseph/projects/1). If you would like to contribute but have nothing particular in mind, start there: the Backlog column holds the suggestions and feedback waiting to be picked up.
+
 Every polygon is generated in TypeScript with three.js. There are no imported models, image textures, or other runtime asset files. The roughly 300 selectable components each carry a name, a description, an explanation of their purpose, specifications, and citations instead of stopping at a label.
 
 ![An assembled ATX tower in PC Anatomy: a dual-glass aluminium case with the motherboard, graphics card, cooler and power supply visible through the window](docs/screenshots/pc-assembled.png)
@@ -145,7 +147,7 @@ Product and company names are used nominatively to identify the hardware being d
 
 ## Contributing
 
-Issues and focused pull requests are welcome. Keep written claims cited, preserve the distinction between physical models and logical diagrams, and run the full local checks before opening a change:
+Issues and focused pull requests are welcome, and the [roadmap and Kanban board](https://github.com/users/Yoosseph/projects/1) lists what is open. Keep written claims cited, preserve the distinction between physical models and logical diagrams, and run the full local checks before opening a change:
 
 ```bash
 npm run check
@@ -153,8 +155,9 @@ npm run lint
 npm test
 npm run build
 ```
-## ## AI disclaimer
 
-AI workflows were partly used as tools during the development of PC Anatomy, including for coding, iteration, debugging, and documentation. The project direction, design decisions, integration, testing, and final implementation remain maintainer-controlled.
+## AI disclaimer
+
+AI-assisted tools were used selectively during development for coding support, debugging, iteration, and documentation. The project’s architecture, technical direction, design, integration, and validation were developed and maintained by the project maintainer.
 
 PC Anatomy is available under the [MIT License](LICENSE).
