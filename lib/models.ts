@@ -1,4 +1,5 @@
 import { resourceTexture, siliconColor } from './silicon-texture.ts';
+import { buildAirflow } from './airflow.ts';
 import { buildHardware, type ModelTools } from './hardware.ts';
 import { buildGpuArchitecture } from './gpu-architecture.ts';
 import { buildRadeonCard } from './radeon-card.ts';
@@ -382,6 +383,16 @@ export function buildModel(level: LevelId): { root: T.Group; pieces: Piece[] } {
     plane.rotation.x = -Math.PI / 2;
     put(parent, plane, pos);
   }
+  /**
+   * Airflow for this scale. It hangs off the model root rather than off any
+   * one part, because the path it describes belongs to the whole build and
+   * not to the fan at one end of it.
+   */
+  const airflow: ModelTools['airflow'] = (streams) => {
+    const group = buildAirflow(streams);
+    root.add(group);
+    return group;
+  };
   const assembly: ModelTools['assembly'] = (level) => {
     const model = buildModel(level);
     // Freeze all instances at their assembled positions before handing the
@@ -403,7 +414,7 @@ export function buildModel(level: LevelId): { root: T.Group; pieces: Piece[] } {
     return model.root;
   };
   builders[level](
-    { add, instances, box, pcb, material, label, assembly },
+    { add, instances, box, pcb, material, label, assembly, airflow },
     root,
   );
   // Consolidate authored submeshes within each selectable assembly. Lead pins,

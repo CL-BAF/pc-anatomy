@@ -1,6 +1,7 @@
 import * as T from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { Piece } from './models.ts';
+import { cardAirflow, type FlowStream } from './airflow.ts';
 import type { Vec3 } from './layout.ts';
 import type { BoardVariant } from './pcb.ts';
 import { finishes } from './materials.ts';
@@ -10,6 +11,12 @@ import { buildCapacitor, buildChip, buildHeader, buildScrew } from './parts.ts';
 export type ModelTools = {
   /** Reuse a detailed scale as a single installed, selectable assembly. */
   assembly: (level: 'motherboard' | 'card') => T.Group;
+  /**
+   * Where this build moves air, drawn as chevrons marching along the path.
+   * Scenery rather than a part: never selected, never named, never pointed
+   * at, and gone as soon as the machine starts coming apart.
+   */
+  airflow: (streams: FlowStream[]) => T.Group;
   add: (
     concept: string,
     object: T.Object3D,
@@ -461,5 +468,26 @@ export function buildHardware(tools: ModelTools) {
   );
   instances('mlcc', ceramics, v(1.8, 0.8, 1), 0, '#8c8068').forEach((p) =>
     p.delta.set(-0.8, 0.45, p.base.z * 0.4),
+  );
+
+  // ── Airflow ─────────────────────────────────────────────────────────────
+  // A card is three fans pressing air down into fin banks. Where there is
+  // board underneath, that air has to turn and leave along the card's free
+  // long edge; past the end of the board there is nothing but fin, so it goes
+  // straight through and out of the other side. That is what a flow-through
+  // cooler is, and it is the one thing about a card's shape you cannot see by
+  // looking at it. Installed in the tower the whole picture turns over with
+  // the card, and the air rises out of it instead.
+  tools.airflow(
+    cardAirflow({
+      fans: CARD.fans.map((f) => f * L),
+      radius: CARD.fanRadius * L,
+      width: CARD.width * L,
+      fan: seat.fan,
+      finsTop: seat.fins,
+      finsBottom: m(4),
+      backplate: seat.backplate,
+      pcbEnd: (CARD.pcb.centerX + CARD.pcb.length / 2) * L,
+    }),
   );
 }

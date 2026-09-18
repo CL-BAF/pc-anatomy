@@ -2,6 +2,7 @@ import * as T from 'three';
 import type { ModelTools } from './hardware.ts';
 import type { Vec3 } from './layout.ts';
 import { cardKit, MM } from './card-kit.ts';
+import { cardAirflow } from './airflow.ts';
 import { buildPerforation } from './parts.ts';
 
 /**
@@ -541,5 +542,27 @@ export function buildRadeonCard(tools: ModelTools) {
     ],
     { x0: PCB.x0 + 8, x1: PCB.x1 - 4, z0: -PCB.halfZ + 3, z1: PCB.halfZ - 3 },
     64,
+  );
+
+  // ── Airflow ─────────────────────────────────────────────────────────────
+  // A card is three fans pressing air down into fin banks. Where there is
+  // board underneath, that air has to turn and leave along the card's free
+  // long edge; past the end of the board there is nothing but fin, so it goes
+  // straight through and out of the other side. That is what a flow-through
+  // cooler is, and it is the one thing about a card's shape you cannot see by
+  // looking at it. Installed in the tower the whole picture turns over with
+  // the card, and the air rises out of it instead.
+  tools.airflow(
+    cardAirflow({
+      fans: FAN.xs,
+      radius: FAN.r,
+      width: W,
+      fan: Y.fan,
+      finsTop: Y.finsTop,
+      finsBottom: Y.finsBottom,
+      backplate: Y.backplate,
+      pcbEnd: PCB.x1,
+      scale: MM,
+    }),
   );
 }

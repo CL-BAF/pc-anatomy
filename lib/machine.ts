@@ -12,6 +12,7 @@ import {
   glowMaterial,
 } from './parts.ts';
 import { buildChassis, plateWithHoles, type CaseShell } from './chassis.ts';
+import { cardStack } from './graphics-card.ts';
 import { finishes, type Finish } from './materials.ts';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 
@@ -83,7 +84,7 @@ export function buildMotherboardAssembly(tools: ModelTools) {
 }
 
 export function buildMachine(tools: ModelTools, root: T.Group) {
-  const { add, instances, box, material, label } = tools;
+  const { add, airflow, instances, box, material, label } = tools;
   const place = (group: T.Group, obj: T.Object3D, pos: Vec3) => {
     obj.position.set(...pos);
     group.add(obj);
@@ -635,6 +636,13 @@ export function buildMachine(tools: ModelTools, root: T.Group) {
   add('cpucooler', tower, [SOCK_X, SOCK_Y, SOCK_Z], [0, 2.4, 1.6]);
 
   // ── Case fans ───────────────────────────────────────────────────────────
+  //
+  // Three across the front and one at the back, on one line through the
+  // machine at z = 0. The airflow section at the end of this file draws the
+  // path they share, so their heights are named here rather than computed
+  // twice.
+  const INTAKE_Y = [0, 1, 2].map((i) => -3.0 + i * mm(125));
+  const EXHAUST: Vec3 = [REAR + 0.32, 4.0, 0.75];
   for (let i = 0; i < 3; i++) {
     // No cable tail on these three. `buildFan` sweeps it out past the frame
     // corner, which on a stacked wall of fans means through the front panel
@@ -650,7 +658,7 @@ export function buildMachine(tools: ModelTools, root: T.Group) {
     const spill = new T.PointLight(RGB[i], 12, 9, 2);
     spill.position.set(0, -0.5, 0); // just inside the case, past the frame
     fan.add(spill);
-    add('casefan', fan, [FRONT - 0.55, -3.0 + i * mm(125), 0], [3.4, 0, 0]);
+    add('casefan', fan, [FRONT - 0.55, INTAKE_Y[i], 0], [3.4, 0, 0]);
   }
   // Rear exhaust. It sits beside the I/O aperture in the depth of the rear
   // panel, above the graphics card, so the front intakes and tower cooler all
@@ -666,7 +674,7 @@ export function buildMachine(tools: ModelTools, root: T.Group) {
   exhaustSpill.position.set(0, -0.5, 0);
   exhaust.add(exhaustSpill);
   exhaust.rotation.z = Math.PI / 2;
-  add('casefan', exhaust, [REAR + 0.32, 4.0, 0.75], [-3.4, 0, 0]);
+  add('casefan', exhaust, EXHAUST, [-3.4, 0, 0]);
 
   // ── Graphics card, in the primary slot ──────────────────────────────────
   //
@@ -685,10 +693,91 @@ export function buildMachine(tools: ModelTools, root: T.Group) {
   // board inside the card lands on the connector, and the card's height then
   // reaches out from the tray toward the window.
   card.rotation.x = Math.PI;
+  const CARD_Y = SLOT1_Y - mm(2);
   add(
     'graphicscard',
     card,
-    [REAR + 0.16 + CARD_L / 2, SLOT1_Y - mm(2), BOARD_Z + mm(71)],
+    [REAR + 0.16 + CARD_L / 2, CARD_Y, BOARD_Z + mm(71)],
     [0, 0, 3.0],
   );
+
+  // ── Airflow ─────────────────────────────────────────────────────────────
+  //
+  // What all of those fans are actually for.
+  //
+  // One path runs the length of the machine, front to back, and everything
+  // else is arranged around it: the tower cooler stands in it on purpose, the
+  // graphics card hangs below it breathing across it, and the supply is shut
+  // out of it underneath the shroud, which is most of why the shroud exists.
+  //
+  // The paths are authored rather than read off each fan's transform, for the
+  // reason `airflow.ts` gives, but every point below is taken from a part
+  // placed above, so the air keeps meeting the hardware if the build moves.
+  // The card supplies its own streams: it is installed here as the complete
+  // card assembly, turned over, and its airflow turns over with it.
+  const COOLER_FAN: Vec3 = [
+    SOCK_X + STACK_D / 2 + mm(13),
+    SOCK_Y + STACK_Y,
+    SOCK_Z + STACK_Z,
+  ];
+  const CARD_INTAKE = CARD_Y - cardStack(CARD_L).fan;
+  const PSU_X = REAR + mm(100),
+    PSU_Y = FLOOR + mm(46);
+  airflow([
+    {
+      // Top intake, straight into the cooler, out through the fin stack and
+      // the rear exhaust. Every part of that is one run of air.
+      kind: 'through',
+      size: 0.6,
+      path: [
+        [FRONT + 0.7, INTAKE_Y[2], 0],
+        [FRONT - 1.2, INTAKE_Y[2], 0],
+        [COOLER_FAN[0] + 1.7, (INTAKE_Y[2] + COOLER_FAN[1]) / 2, COOLER_FAN[2]],
+        COOLER_FAN,
+        [SOCK_X, COOLER_FAN[1], COOLER_FAN[2]],
+        [SOCK_X - STACK_D, COOLER_FAN[1] - 0.2, COOLER_FAN[2] + 0.4],
+        EXHAUST,
+        [REAR - 1.1, EXHAUST[1], EXHAUST[2]],
+      ],
+    },
+    {
+      // Middle intake, over the card and out of the same exhaust.
+      kind: 'through',
+      size: 0.6,
+      path: [
+        [FRONT + 0.7, INTAKE_Y[1], 0],
+        [FRONT - 1.3, INTAKE_Y[1], 0.05],
+        [2.6, INTAKE_Y[1] + 0.55, -0.1],
+        [-0.4, 2.0, 0.15],
+        [-3.9, 3.05, 0.5],
+        EXHAUST,
+        [REAR - 1.1, EXHAUST[1] + 0.06, EXHAUST[2]],
+      ],
+    },
+    {
+      // Bottom intake, along the shroud and up into the card's fans. It stops
+      // there because the card takes over: this is the air it is breathing.
+      kind: 'intake',
+      size: 0.6,
+      path: [
+        [FRONT + 0.7, INTAKE_Y[0], 0],
+        [FRONT - 1.4, INTAKE_Y[0], -0.1],
+        [2.2, INTAKE_Y[0] + 0.2, -0.4],
+        [0.2, CARD_INTAKE - 0.55, -0.6],
+      ],
+    },
+    {
+      // The supply, breathing through the floor and out of the back on its
+      // own. Nothing it exhausts passes over anything else in the machine.
+      kind: 'through',
+      size: 0.5,
+      path: [
+        [PSU_X, FLOOR - 0.26, -0.4],
+        [PSU_X, PSU_Y - ph / 2 + mm(24), -0.4],
+        [PSU_X - 0.9, PSU_Y + mm(8), -0.5],
+        [PSU_X - pw / 2 - 0.4, PSU_Y + mm(4), -0.4 - mm(28)],
+        [REAR - 1.0, PSU_Y + mm(4), -0.4 - mm(28)],
+      ],
+    },
+  ]);
 }

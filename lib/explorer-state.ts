@@ -1,6 +1,7 @@
 import { byId, isLevelRoot } from './manifest.ts';
 import { categories, type Category } from './concept.ts';
 import { isPhysical, rootLevel, type LevelId } from './levels.ts';
+import type { AirflowMode } from './airflow.ts';
 
 /**
  * What the explorer is currently showing, and the moves that change it.
@@ -19,6 +20,15 @@ export type ExplorerState = {
   selection: Selection | null;
   isolated: boolean;
   view: 'perspective' | 'top' | 'front' | 'back';
+  /**
+   * Whether the airflow chevrons are drawn, or `auto` to let the scale decide.
+   *
+   * A preference rather than a property of the view: once set either way it
+   * survives navigating, diving and searching, because someone who has asked
+   * to see where the air goes has asked it of the machine and not of one
+   * scale of it. `airflowShown` resolves it against the current scale.
+   */
+  airflow: AirflowMode;
   cameraRevision: number;
   focusRevision: number;
   /** The component being opened, while the isolate-and-close-in ramp runs. */
@@ -35,6 +45,7 @@ export const initialState: ExplorerState = {
   selection: null,
   isolated: false,
   view: 'perspective',
+  airflow: 'auto',
   cameraRevision: 0,
   focusRevision: 0,
   diveInto: null,

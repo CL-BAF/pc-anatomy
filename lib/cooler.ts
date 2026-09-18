@@ -19,7 +19,7 @@ const FIN_W = mm(125);
 const FIN_D = mm(108);
 
 export function buildCooler(tools: ModelTools, _root: T.Group) {
-  const { add, box, material, label } = tools;
+  const { add, airflow, box, material, label } = tools;
   const place = (group: T.Group, obj: T.Object3D, pos: Vec3) => {
     obj.position.set(...pos);
     group.add(obj);
@@ -164,4 +164,25 @@ export function buildCooler(tools: ModelTools, _root: T.Group) {
   }
   label(mount, 'BACKPLATE · SPRING-LOADED', [0, -mm(26), mm(48)], mm(80), '#7d858a');
   add('coolermount', mount, [0, mm(6), 0], [0, -3.0, 0]);
+
+  // ── Airflow ─────────────────────────────────────────────────────────────
+  // The fan pushes air through the gaps between the fins, not over them, which
+  // is why the stack is a stack and not a block. It leaves warmer than it
+  // arrived, and in the machine it leaves straight into the rear exhaust.
+  // Closely spaced on purpose. Most of this path is between the fins, where
+  // the fins hide it, so a stream of three chevrons spends most of its cycle
+  // with every one of them inside the stack and nothing on screen.
+  airflow(
+    [-FIN_W * 0.29, 0, FIN_W * 0.29].map((x) => ({
+      kind: 'through' as const,
+      size: mm(17),
+      count: 8,
+      path: [
+        [x, mm(110), FIN_D / 2 + mm(52)],
+        [x, mm(110), FIN_D / 2 - mm(4)],
+        [x, mm(112), -FIN_D / 2 + mm(4)],
+        [x, mm(114), -FIN_D / 2 - mm(46)],
+      ],
+    })),
+  );
 }

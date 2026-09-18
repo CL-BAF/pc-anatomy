@@ -26,7 +26,7 @@ const TANK = mm(17);
 const COOLANT = '#3f7fa8';
 
 export function buildLiquid(tools: ModelTools, _root: T.Group) {
-  const { add, box, material, label } = tools;
+  const { add, airflow, box, material, label } = tools;
   const place = (group: T.Group, obj: T.Object3D, pos: Vec3) => {
     obj.position.set(...pos);
     group.add(obj);
@@ -244,4 +244,25 @@ export function buildLiquid(tools: ModelTools, _root: T.Group) {
   }
   label(fittings, 'ROTARY FITTINGS', [0, mm(64), mm(40)], mm(110), '#868f95');
   add('aiofittings', fittings, [0, 0, 0], [1.2, 0.9, 0], 0.12);
+
+  // ── Airflow ─────────────────────────────────────────────────────────────
+  // The end of the loop. Heat has crossed the lid, the coldplate, the coolant
+  // and the tubes to reach the core, and this is where it finally leaves: into
+  // air passing between the folded fins, three fans' worth of it.
+  airflow(
+    [0, 1, 2].map((i) => {
+      const x = (i - 1) * (RAD_W + mm(2));
+      return {
+        kind: 'through' as const,
+        size: mm(26),
+        count: 6,
+        path: [
+          [x, RAD_Y, RAD_T / 2 + mm(74)],
+          [x, RAD_Y, RAD_T / 2 + mm(4)],
+          [x, RAD_Y, -RAD_T / 2 - mm(4)],
+          [x, RAD_Y, -RAD_T / 2 - mm(58)],
+        ] as Vec3[],
+      };
+    }),
+  );
 }

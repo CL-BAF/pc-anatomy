@@ -19,7 +19,7 @@ const SIZE = mm(120);
 const DEPTH = mm(25);
 
 export function buildFanUnit(tools: ModelTools, _root: T.Group) {
-  const { add, box, material, label } = tools;
+  const { add, airflow, box, material, label } = tools;
   const place = (group: T.Group, obj: T.Object3D, pos: Vec3) => {
     obj.position.set(...pos);
     group.add(obj);
@@ -214,4 +214,22 @@ export function buildFanUnit(tools: ModelTools, _root: T.Group) {
     ]);
   label(lead, '4-PIN PWM', [SIZE * 0.66, mm(2), SIZE * 0.6], mm(30), '#8b939a');
   add('fanlead', lead, [0, -DEPTH * 0.3, 0], [1.6, -0.8, 1.2]);
+
+  // ── Airflow ─────────────────────────────────────────────────────────────
+  // The reason for every part above. In past the lit ring on the intake face,
+  // out past the motor struts on the other side: one fan's worth of air, which
+  // multiplied by four is the path through the whole machine.
+  airflow([
+    {
+      kind: 'intake',
+      size: SIZE * 0.13,
+      count: 7,
+      path: [
+        [0, SIZE * 0.66, 0],
+        [0, DEPTH * 0.5, 0],
+        [0, -DEPTH * 0.5, 0],
+        [0, -SIZE * 0.66, 0],
+      ],
+    },
+  ]);
 }

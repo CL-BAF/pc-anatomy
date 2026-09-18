@@ -39,7 +39,7 @@ const D = mm(140); // across the board
 const WALL = mm(1.2);
 
 export function buildPowerSupply(tools: ModelTools, _root: T.Group) {
-  const { add, instances, box, material, label } = tools;
+  const { add, airflow, instances, box, material, label } = tools;
   const place = (group: T.Group, obj: T.Object3D, pos: Vec3) => {
     obj.position.set(...pos);
     group.add(obj);
@@ -382,4 +382,25 @@ export function buildPowerSupply(tools: ModelTools, _root: T.Group) {
     smalls.push([x, boardY + mm(2), z]);
   }
   instances('psuboard', smalls, [mm(4), mm(2), mm(2.4)], 0, '#6f7a69');
+
+  // ── Airflow ─────────────────────────────────────────────────────────────
+  // A supply is a sealed box with one way in and one way out: up through the
+  // fan in the base, across the board past the parts that get hot, and out of
+  // the punched grille beside the mains inlet. Nothing else in the machine
+  // shares this air, which is what the shroud in the tower is arranging.
+  airflow([
+    {
+      kind: 'through',
+      size: mm(22),
+      count: 9,
+      path: [
+        [mm(6), -mm(52), 0],
+        [mm(6), mm(4), 0],
+        [mm(6), mm(46), mm(6)],
+        [-mm(30), mm(54), mm(16)],
+        [-W / 2 - mm(8), mm(52), mm(22)],
+        [-W / 2 - mm(56), mm(52), mm(22)],
+      ],
+    },
+  ]);
 }
