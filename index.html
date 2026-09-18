@@ -24,6 +24,28 @@
       content="Explore a desktop PC in interactive 3D. Take apart the case, motherboard, GPU, CPU, cooling and storage, and learn how computer hardware works."
     />
     <title>PC Anatomy</title>
+    <style>
+      /*
+        The block inside #root is for crawlers that do not run scripts and for
+        visitors without JavaScript. With JavaScript it is dead the moment
+        React mounts and clears #root — but the browser had already painted
+        it, so every load began with a flash of a page nobody was meant to
+        see. Hiding it costs those readers nothing: a crawler that does not
+        run scripts does not apply this stylesheet either, and one that does
+        run them gets the real application. The noscript rule below puts it
+        back for the only visitor who needs it.
+      */
+      #no-script-intro {
+        display: none;
+      }
+    </style>
+    <noscript>
+      <style>
+        #no-script-intro {
+          display: block;
+        }
+      </style>
+    </noscript>
     <link rel="canonical" href="https://pc-anatomy.com/" />
     <meta name="robots" content="index, follow, max-image-preview:large" />
     <meta property="og:type" content="website" />
@@ -106,6 +128,7 @@
   <body>
     <div id="root">
       <main
+        id="no-script-intro"
         style="
           max-width: 760px;
           margin: 12vh auto;
