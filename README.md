@@ -72,8 +72,8 @@ The rail on the left carries the scale tree and per-system visibility. The GPU m
 PC Anatomy requires Node.js 22.13 or newer.
 
 ```bash
-git clone https://github.com/Yoosseph/gpu_anatomy.git
-cd gpu_anatomy
+git clone https://github.com/Yoosseph/pc-anatomy.git
+cd pc-anatomy
 npm install
 npm run dev
 ```

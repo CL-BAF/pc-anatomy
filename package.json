@@ -7,9 +7,9 @@
   "author": "Yoseph",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Yoosseph/gpu_anatomy.git"
+    "url": "git+https://github.com/Yoosseph/pc-anatomy.git"
   },
-  "homepage": "https://github.com/Yoosseph/gpu_anatomy#readme",
+  "homepage": "https://github.com/Yoosseph/pc-anatomy#readme",
   "keywords": [
     "computer-hardware",
     "three.js",
