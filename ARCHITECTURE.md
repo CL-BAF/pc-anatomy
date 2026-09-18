@@ -155,6 +155,7 @@ subsystems stop touching.
 | `lib/graphics-card.ts`, `card-kit.ts`, `radeon-card.ts`, `arc-card.ts` | The three graphics cards. `card-kit.ts` holds the millimetre-scale parts all three share. |
 | `lib/gpu-architecture.ts`, `radeon-architecture.ts`, `arc-architecture.ts` | The chip block diagrams. |
 | `lib/diagram-kit.ts` | The shared visual language of those diagrams — `put`, `backdrop`, `block` — with a palette per chip. Navi 48 and BMG-G21 draw from it; the GB202 scales predate it and build their own scenery. |
+| `lib/airflow.ts` | Where the air goes: the chevron, the sampling and marching of a path, `cardAirflow` for the three cards, `airflowStrength`, the curve that takes it off screen as the machine opens, and `airflowShown`, which decides whether a scale draws it at all. |
 | `lib/parts.ts` | Shared realistic parts: fans, grilles, fin stacks, capacitors, chokes, slots, ports, screws, `glowMaterial`, `buildLightStrip`. |
 | `lib/materials.ts` | The ten surface finishes and `temperedGlass`. |
 | `lib/surfaces.ts`, `pcb.ts`, `silicon-texture.ts` | Generated material maps. No downloaded textures. |
@@ -168,7 +169,7 @@ subsystems stop touching.
 | `app/viewer.tsx` | The React ↔ three.js bridge: lazy scene load, hover label, error state. |
 | `app/links.ts` | Destinations used by more than one panel. |
 | `app/globals.css`, `app/workbench.css` | The visual direction, desktop through phone. |
-| `tests/*.test.ts` | 43 tests: catalogue integrity, layout, picking, geometry presence. |
+| `tests/*.test.ts` | 51 tests: catalogue integrity, layout, picking, geometry presence, airflow. |
 | `scripts/generate-icons.mjs` | Rasterises `public/favicon.svg` into PNG and ICO variants. Uses Playwright and Edge. |
 | `scripts/generate-reference-index.mjs` | Regenerates `docs/component-references.md` from the catalogue. Run it after changing citations. |
 
@@ -185,6 +186,7 @@ subsystems stop touching.
 | `material(color, metal?, rough?)` | The cached standard material. |
 | `label(parent, text, pos, width, color?)` | 3-D text, sized to a width rather than a font size. |
 | `assembly(level)` | Reuses a detailed scale as one installed, selectable assembly — how the motherboard and the card appear inside the tower. |
+| `airflow(streams)` | Chevrons marching along the paths this build moves air along. Scenery, not parts: see the convention below. |
 
 `delta` is the direction a piece travels as the machine comes apart. `reveal` is
 the disassembly fraction below which a piece is hidden, and it defaults to 0.
@@ -195,7 +197,7 @@ its visibility. The scene animates pieces; it never re-reads the catalogue.
 
 **`ExplorerState`** (`lib/explorer-state.ts`) is the whole of what the viewer is
 looking at: level, explode 0–100, visible categories, hidden ids, selection,
-isolated, camera view, and three revision counters. `cameraRevision` and
+isolated, camera view, the airflow mode, and three revision counters. `cameraRevision` and
 `focusRevision` exist so that asking for the same camera twice still moves it;
 `diveRevision` starts a dive. The scene watches the revisions, not the values.
 
@@ -221,6 +223,17 @@ fin stack once meant the assembled cooler rendered as a bare coldplate.
 everything `rx` and the Arc branch `arc` precisely because the original GPU
 catalogue claimed bare names like `fan` and `pcb`. A duplicate id fails the
 tests, but only after you have written the geometry.
+
+**Airflow is authored, not derived, and it is never a part.** A builder states
+the path its build actually moves air along and hands it to `tools.airflow`;
+nothing reads a fan's transform and blows air along its axis. It cannot:
+`buildFan` contradicts itself about which face is the intake — the lit ring and
+the finger guard are on +Y, documented as the intake face, while the builder's
+own header says it blows along +Y — and the callers are split on which of those
+they believed. Air that followed the geometry would leave the tower through the
+front panel. The chevrons carry `contextFrame`, refuse raycasts outright, and
+fade out over the first tenth of the disassembly, because a path through a
+machine is a claim about a machine that is closed.
 
 **Shine is contrast, not brightness.** High `envMapIntensity` and low roughness
 on metals, restrained key light. Raising overall exposure washes everything to
@@ -265,6 +278,17 @@ Three interaction decisions are settled, and re-opening them has been tried:
 - **Glass is see-through to the cursor.** `resolvePick` steps past transparent
   surfaces. Before it existed, the side panel answered for the whole machine and
   nothing inside the case could be hovered.
+- **Airflow is a preference, and its default belongs to the scale.**
+  `state.airflow` is `auto`, `on` or `off`, and `airflowShown` resolves it.
+  `auto` draws air wherever there are fans except on the assembled machine:
+  that is the scale a viewer arrives at, the case is closed, nothing has moved
+  yet, and four streams crossing an untouched tower is a lot to meet first.
+  It is also the one scale where a viewer might never think to look for the
+  control, which is why that control is a labelled switch beside the camera
+  row rather than a glyph inside it. Saying either way holds on every scale
+  until Reset, so returning to the tower having asked for air does not switch
+  it off again. The switch is absent where there are no fans, and airflow
+  follows the Cooling category — hide the fans and the arrows go with them.
 
 ## Adding a component
 
@@ -330,7 +354,7 @@ the model has. 212 concepts are physical, 98 are logical diagrams.
 
 ## Tests
 
-43 tests, all through Node's built-in runner.
+51 tests, all through Node's built-in runner.
 
 - `tests/manifest.test.ts` (15) — unique ids, reciprocal parents, no cycles,
   source resolution, SKU counts against full-chip capacity, search behaviour,
@@ -345,6 +369,14 @@ the model has. 212 concepts are physical, 98 are logical diagrams.
   counts multiplying out to published totals, diagram blocks not overlapping,
   each card's published construction and envelope, board passives not
   intersecting, and search reaching the new chips at their own scale.
+- `tests/airflow.test.ts` (8) — that the scales drawing airflow are exactly the
+  ones `airflowLevels` names (the stage tools offer the control from that
+  list), that the installed card brings its own streams into the tower, that
+  the chevrons are scenery no ray can reach, that the explorer opens on a quiet
+  machine while every other scale starts drawing, that the fade is monotonic
+  and over by a tenth, that the chevrons march and stop on command, that no
+  stream strays far from the hardware it describes, and that the tower's air
+  enters at the front and leaves at the back.
 
 The suite builds every scale, so a geometry regression usually surfaces as a
 failing assertion rather than a silent visual change.

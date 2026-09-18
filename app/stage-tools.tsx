@@ -1,38 +1,59 @@
 'use client';
 import { useCallback, useEffect, useState } from 'react';
-import { ChevronDown, Eye, EyeOff, Maximize, Minimize } from 'lucide-react';
+import {
+  ChevronDown,
+  Eye,
+  EyeOff,
+  Maximize,
+  Minimize,
+  Wind,
+} from 'lucide-react';
 import { byId, colors } from '@/lib/manifest';
+import { airflowShown, hasAirflow, type AirflowMode } from '@/lib/airflow';
 import type { ExplorerState } from '@/lib/explorer-state';
+import type { LevelId } from '@/lib/levels';
 
 const views = ['perspective', 'top', 'front', 'back'] as const;
 const viewLabels = ['3D', 'TOP', 'FRONT', 'BACK'];
 
 type Props = {
   view: ExplorerState['view'];
+  level: LevelId;
   explode: number;
   logical: boolean;
+  airflow: AirflowMode;
   hidden: string[];
   hiddenMenuOpen: boolean;
   onToggleHiddenMenu: () => void;
   onSetView: (view: ExplorerState['view']) => void;
+  onToggleAirflow: () => void;
   onUnhide: (id: string) => void;
   onClearHidden: () => void;
 };
 
 export default function StageTools({
   view,
+  level,
   explode,
   logical,
+  airflow,
   hidden,
   hiddenMenuOpen,
   onToggleHiddenMenu,
   onSetView,
+  onToggleAirflow,
   onUnhide,
   onClearHidden,
 }: Props) {
   const [fullscreen, setFullscreen] = useState(false);
   const [fullscreenError, setFullscreenError] = useState('');
   const hiddenComponents = hidden.flatMap((id) => (byId[id] ? [byId[id]] : []));
+  // Nothing at this scale moves air, so there is no control to offer.
+  const fans = hasAirflow(level);
+  const showingAirflow = airflowShown(airflow, level);
+  // The claim is about an assembled machine. Once it is open the arrows have
+  // already faded, so the control says so rather than appearing to do nothing.
+  const assembled = explode < 9;
   // Laid out flat, every camera but the top one looks at the parts edge-on.
   const flattened = logical && explode > 85;
 
@@ -93,6 +114,25 @@ export default function StageTools({
           {fullscreen ? <Minimize size={15} /> : <Maximize size={15} />}
         </button>
       </div>
+      {fans && (
+        <button
+          className={'airflow-toggle' + (showingAirflow ? ' active' : '')}
+          title={
+            showingAirflow
+              ? 'Hide the path the air takes'
+              : assembled
+                ? 'Show the path the air takes through the machine'
+                : 'Show airflow — it draws on the assembled machine'
+          }
+          aria-label={showingAirflow ? 'Hide airflow' : 'Show airflow'}
+          aria-pressed={showingAirflow}
+          onClick={onToggleAirflow}
+        >
+          <Wind size={15} />
+          <span>Airflow</span>
+          <small>{showingAirflow ? 'On' : 'Off'}</small>
+        </button>
+      )}
       {hiddenComponents.length > 0 && (
         <div className="hidden-tracker">
           <button

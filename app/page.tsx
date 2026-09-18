@@ -142,12 +142,15 @@ export default function Home() {
       )}
       <StageTools
         view={state.view}
+        level={state.level}
         explode={state.explode}
         logical={logical}
+        airflow={state.airflow}
         hidden={state.hidden}
         hiddenMenuOpen={explorer.hiddenMenuOpen}
         onToggleHiddenMenu={() => explorer.setHiddenMenuOpen((open) => !open)}
         onSetView={explorer.setView}
+        onToggleAirflow={explorer.toggleAirflow}
         onUnhide={explorer.unhide}
         onClearHidden={explorer.clearHidden}
       />

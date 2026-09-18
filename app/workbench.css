@@ -627,6 +627,45 @@ a {
   background: #414347;
   margin: 0 5px;
 }
+/*
+   The airflow switch.
+
+   It is the one control that starts off on the scale a viewer arrives at, so
+   it cannot be an unlabelled glyph in the camera row: it says what it is,
+   says whether it is on, and carries the cool blue of the intake chevrons so
+   that "Off" reads as an invitation rather than as something disabled.
+*/
+.airflow-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 12px;
+  min-height: 41px;
+  padding: 0 13px;
+  background: #17191b;
+  border: 1px solid #3f6c86;
+  border-radius: 5px;
+  color: #9fd4ef;
+  font-size: 12px;
+  box-shadow: 0 8px 24px #0004;
+}
+.airflow-toggle small {
+  font: 10px monospace;
+  letter-spacing: 0.5px;
+  color: #79838a;
+}
+.airflow-toggle:hover {
+  background: #1e2327;
+  border-color: #64a3c4;
+}
+.airflow-toggle.active {
+  background: #16303f;
+  border-color: #5e9ec0;
+  color: #cfe9f7;
+}
+.airflow-toggle.active small {
+  color: #8ccdff;
+}
 .hidden-tracker {
   position: relative;
   margin-left: auto;
@@ -1714,6 +1753,15 @@ a {
     padding: 0 9px;
     font-size: 10px;
   }
+  .airflow-toggle {
+    min-height: 38px;
+    margin-left: 8px;
+    padding: 0 9px;
+    font-size: 10px;
+  }
+  .airflow-toggle small {
+    display: none;
+  }
   .hidden-tracker-toggle > svg:last-child {
     display: none;
   }
@@ -1977,6 +2025,13 @@ a {
     margin-left: 8px;
   }
   .hidden-tracker-toggle span {
+    display: none;
+  }
+  .airflow-toggle {
+    margin-left: 8px;
+    padding: 0 8px;
+  }
+  .airflow-toggle small {
     display: none;
   }
   .hidden-components-menu {
@@ -2379,10 +2434,19 @@ a {
   color: #9ca5b2;
 }
 
+/*
+   Tucked under the parts counter, not above the timeline.
+
+   Down there it sat in the lower right of the stage, which is where the front
+   intakes are and so where the airflow arrows are: a tip about making the 3-D
+   smoother was covering the 3-D. Up here it clears the stage almost entirely
+   — the stage starts at 204px and the tip ends around 268px — and what little
+   it does overlap is the empty air above the case.
+*/
 .performance-tip {
   position: absolute;
   right: calc(24px + var(--safe-r));
-  bottom: calc(170px + var(--safe-b));
+  top: calc(158px + var(--safe-t));
   z-index: 24;
   display: flex;
   align-items: flex-start;
@@ -2440,6 +2504,16 @@ a {
     transform: translateY(0);
   }
 }
+/* Room above the stage is something only a roomy window has. Where the
+   heading and the breadcrumbs already fill that band, or there is no band to
+   speak of, the tip goes back to where it has always been: above the
+   timeline, clear of the controls. */
+@media (max-width: 900px), (max-height: 500px) {
+  .performance-tip {
+    top: auto;
+    bottom: calc(158px + var(--safe-b));
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   .performance-tip {
     animation: none;
@@ -2473,7 +2547,6 @@ a {
   }
   .performance-tip {
     right: 16px;
-    bottom: calc(158px + var(--safe-b));
   }
 }
 @media (pointer: coarse) and (orientation: landscape) and (max-height: 500px) {

@@ -1,6 +1,7 @@
 'use client';
 import { useCallback, useEffect, useState } from 'react';
 import { byId, categories, openLevel, type Category } from '@/lib/manifest';
+import { airflowShown } from '@/lib/airflow';
 import {
   initialState,
   selectSearch,
@@ -284,6 +285,20 @@ export function useExplorer() {
   const clearHidden = () =>
     setState((s) => ({ ...s, hidden: [], focusRevision: 0 }));
 
+  /**
+   * Show or hide where the air goes. Deliberately touches nothing else: no
+   * camera move, no change to the selection, so it can be switched on to
+   * answer one question and off again without losing your place.
+   *
+   * Resolved against the current scale first, so the first press always does
+   * what the control says it will, whichever way `auto` had fallen.
+   */
+  const toggleAirflow = () =>
+    setState((s) => ({
+      ...s,
+      airflow: airflowShown(s.airflow, s.level) ? 'off' : 'on',
+    }));
+
   const setView = (view: ExplorerState['view']) =>
     setState((s) => ({
       ...s,
@@ -346,6 +361,7 @@ export function useExplorer() {
     unhide,
     clearHidden,
     setView,
+    toggleAirflow,
     toggleIsolate,
     refocus,
     hide,

@@ -3,6 +3,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { buildModel, refreshBatches, type Piece } from './models';
 import { resolvePickNear } from './picking.ts';
+import { airflowShown, airflowStrength } from './airflow.ts';
 import { byId, openLevel } from './manifest';
 import type { ExplorerState, Selection } from './explorer-state.ts';
 import { isPhysical, levels } from './levels.ts';
@@ -261,7 +262,9 @@ export function createViewer(
     }
     for (const p of model.pieces) p.visible = shown(p);
     for (const child of model.root.children)
-      if (child.userData.contextFrame)
+      // Airflow is scenery too, but it fades on its own curve in `render`,
+      // which is finer grained than this and would fight with it.
+      if (child.userData.contextFrame && !child.userData.airflowTick)
         child.visible =
           visible.length > 0 && !state.isolated && state.explode < 20;
     callbacks.stats(visible.length);
@@ -400,9 +403,23 @@ export function createViewer(
   let lastTime = performance.now();
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
   let animated: T.Object3D[] = [];
+  /**
+   * The airflow groups' own tick functions. Gathered with the rotors because
+   * they are the same kind of thing: something the model knows how to animate
+   * that the scene only has to supply a clock to.
+   */
+  let flows: ((seconds: number, strength: number) => void)[] = [];
   const collectAnimations = () => {
     animated = [];
+    flows = [];
     model.root.traverse((object) => {
+      if (object.userData.airflowTick)
+        flows.push(
+          object.userData.airflowTick as (
+            seconds: number,
+            strength: number,
+          ) => void,
+        );
       if (object.userData.spinRate || object.userData.seekAmplitude) {
         object.userData.restRotationY ??= object.rotation.y;
         animated.push(object);
@@ -509,6 +526,20 @@ export function createViewer(
       // Operating parts keep the scene alive. requestAnimationFrame pauses in
       // background tabs, and reduced-motion users receive the static model.
       changed = true;
+    }
+    // Airflow describes a machine that is closed, so it goes as soon as this
+    // one starts to open, and it follows the fans: switch Cooling off and the
+    // arrows leave with the parts that were making them.
+    if (flows.length) {
+      const strength =
+        airflowShown(state.airflow, state.level) &&
+        !state.isolated &&
+        state.visible.includes('Cooling')
+          ? airflowStrength(amount)
+          : 0;
+      // Reduced motion gets the chevrons, standing still.
+      for (const tick of flows) tick(reducedMotion ? 0 : now / 1000, strength);
+      if (strength > 0.002 && !reducedMotion) changed = true;
     }
     selectedBox.visible = selected;
     hoverBox.visible = !!hovered && hovered.visible;
