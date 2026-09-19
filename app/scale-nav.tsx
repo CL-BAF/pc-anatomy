@@ -32,6 +32,7 @@ const levelIcon: Record<LevelId, typeof Box> = {
   corei9: Cpu,
   coreio: CircuitBoard,
   psu: Zap,
+  psubronze: Zap,
   fan: Fan,
   cooler: Fan,
   liquid: Droplets,
@@ -143,8 +144,10 @@ export default function ScaleNav({
                   {label}
                   <small>
                     {submenus.length > 0
-                      ? `${submenus.length} cards · ${scales.length} scales`
-                      : `${scales.length} ${scales.length === 1 ? 'scale' : 'scales'} inside`}
+                      ? `${submenus.length} ${label === 'GPU' ? 'cards' : 'models'} · ${scales.length} scales`
+                      : label === 'Power supply'
+                        ? `${scales.length} models`
+                        : `${scales.length} ${scales.length === 1 ? 'scale' : 'scales'} inside`}
                   </small>
                 </div>
                 <ChevronDown size={15} />
@@ -178,7 +181,8 @@ export default function ScaleNav({
                             {sub.label}
                             <small>
                               {sub.note ? sub.note + ' · ' : ''}
-                              {sub.levels.length} scales
+                              {sub.levels.length}{' '}
+                              {sub.levels.length === 1 ? 'scale' : 'scales'}
                             </small>
                           </div>
                           <ChevronDown size={13} />

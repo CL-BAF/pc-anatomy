@@ -88,6 +88,7 @@ export const airflowLevels: readonly LevelId[] = [
   'cooler',
   'liquid',
   'psu',
+  'psubronze',
   'card',
   'rx9070',
   'arcb580',

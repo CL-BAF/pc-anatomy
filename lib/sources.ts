@@ -57,6 +57,22 @@ export const sources = {
     name: 'Intel · ATX multi-rail power supply design guide',
     url: 'https://www.intel.com/content/www/us/en/content-details/336521/atx-version-3-multi-rail-desktop-platform-power-supply-design-guide.html',
   },
+  tuf850g: {
+    name: 'ASUS · TUF Gaming 850W Gold specifications and construction',
+    url: 'https://www.asus.com/motherboards-components/power-supply-units/tuf-gaming/tuf-gaming-850g/techspec/',
+  },
+  tuf850fan: {
+    name: 'ASUS · TUF Gaming 850W Gold fan and construction',
+    url: 'https://www.asus.com/motherboards-components/power-supply-units/tuf-gaming/tuf-gaming-850g/',
+  },
+  tuf750b: {
+    name: 'ASUS · TUF Gaming 750W Bronze specifications and construction',
+    url: 'https://www.asus.com/uk/motherboards-components/power-supply-units/tuf-gaming/tuf-gaming-750b/techspec/',
+  },
+  tuf750fan: {
+    name: 'ASUS · TUF Gaming 750W Bronze fan and construction',
+    url: 'https://www.asus.com/us/motherboards-components/power-supply-units/tuf-gaming/tuf-gaming-750b/',
+  },
   ddr5: {
     name: 'Micron · DDR5 client module architecture white paper',
     url: 'https://www.micron.com/content/dam/micron/global/public/products/white-paper/ddr5-key-module-features-wp-client.pdf',

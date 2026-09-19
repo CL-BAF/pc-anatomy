@@ -1,10 +1,10 @@
 # Technical provenance
 
-Reviewed 2026-09-17. PC Anatomy is independent of the manufacturers cited here. All geometry is original.
+Reviewed 2026-09-19. PC Anatomy is independent of the manufacturers cited here. All geometry is original.
 
 ## Current component reference audit
 
-All 310 component entries now have references in their detail panels. The complete
+All 327 component entries now have references in their detail panels. The complete
 [component-to-document index](docs/component-references.md) records those mappings.
 The registry in `lib/sources.ts` is authoritative for current app links; older notes
 below preserve the research history.
@@ -25,6 +25,13 @@ below preserve the research history.
   TI's TIDA-010015 schematics explain PFC, LLC conversion and rectification. That
   reference design is a 24 V industrial supply, so it supports circuit principles,
   not the modeled ATX output voltages or a particular PC PSU's topology.
+- ASUS's [TUF Gaming 850W Gold specifications](https://www.asus.com/motherboards-components/power-supply-units/tuf-gaming/tuf-gaming-850g/techspec/)
+  and [TUF Gaming 750W Bronze specifications](https://www.asus.com/uk/motherboards-components/power-supply-units/tuf-gaming/tuf-gaming-750b/techspec/)
+  establish each 150 × 150 × 86 mm enclosure, 135 mm fan, output rating, efficiency
+  class and cable families. The Gold model has modular PSU-side sockets; the
+  Bronze model has permanently attached leads. The sheet-metal details, connector
+  cavities, cable routing and all internal components are original illustrative
+  geometry, not ASUS service documentation or a teardown reconstruction.
 - Noctua's fan and tower-cooler documents, ARCTIC's liquid-cooler construction, and
   Fractal Design's case manual support the mechanical component families. Their
   dimensions, counts and proprietary designs are not claimed for our generic models.

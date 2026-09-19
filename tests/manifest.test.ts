@@ -67,6 +67,23 @@ await test('M.2 is reachable from its motherboard and the Storage menu without d
   assert.equal(menus.length, levelIds.length - 1);
   assert.equal(selectSearch(initialState, 'nvmenand').level, 'nvme');
 });
+await test('power supply menu separates modular and fixed-cable models', () => {
+  const power = branches().find((b) => b.label === 'Power supply')!;
+  assert.deepEqual(power.levels, ['psu', 'psubronze']);
+  assert.equal(power.submenus.length, 0);
+  assert.match(levels.psu.name, /^Modular/);
+  assert.match(levels.psubronze.name, /^Non-modular/);
+  assert.equal(byId.psu.open, 'psu');
+  assert.equal(levels.psubronze.alternative, true);
+  assert.equal(byId.bronzepsucase.open, 'psubronze');
+  assert.ok(manifest.some((c) => c.id === 'psumodular' && c.level === 'psu'));
+  assert.ok(
+    manifest.some(
+      (c) => c.id === 'bronzepsuharness' && c.level === 'psubronze',
+    ),
+  );
+  assert.ok(!manifest.some((c) => c.id === 'bronzepsumodular'));
+});
 await test('shipping SKU counts are distinct from full-chip capacity', () => {
   assert.equal(byId.die.specifications.SMs, '170');
   assert.equal(byId.die.specifications.TPCs, '85');

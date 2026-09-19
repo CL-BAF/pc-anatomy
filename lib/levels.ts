@@ -15,6 +15,7 @@ export type LevelId =
   | 'corei9'
   | 'coreio'
   | 'psu'
+  | 'psubronze'
   | 'fan'
   | 'cooler'
   | 'liquid'
@@ -183,13 +184,28 @@ export const levels: Record<LevelId, LevelDef> = {
   psu: {
     id: 'psu',
     parent: 'pc',
-    name: 'Power supply',
-    title: 'Inside the power supply.',
-    caption: 'ATX SWITCHING SUPPLY',
-    summary: 'Mains in, twelve volts out',
+    name: 'Modular · TUF Gaming 850W Gold',
+    title: 'Inside a modular power supply.',
+    caption: 'ASUS TUF GAMING 850W GOLD',
+    summary: 'ASUS · 850 W · 80 PLUS Gold',
     kind: 'physical',
     branchLabel: 'Power supply',
     concept: 'psu',
+    spread: 1.9,
+    phases: dissectionPhases,
+    detailed: true,
+  },
+  psubronze: {
+    id: 'psubronze',
+    parent: 'pc',
+    alternative: true,
+    name: 'Non-modular · TUF Gaming 750W Bronze',
+    title: 'Inside a fixed-cable power supply.',
+    caption: 'ASUS TUF GAMING 750W BRONZE',
+    summary: 'ASUS · 750 W · 80 PLUS Bronze',
+    kind: 'physical',
+    branchLabel: 'Power supply',
+    concept: 'bronzepsucase',
     spread: 1.9,
     phases: dissectionPhases,
     detailed: true,

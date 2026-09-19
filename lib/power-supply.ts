@@ -9,7 +9,6 @@ import {
   buildFinStack,
   buildHoneycomb,
   buildMainsInlet,
-  buildModularPanel,
   buildScrew,
 } from './parts.ts';
 
@@ -35,11 +34,239 @@ import {
 const mm = (v: number) => v / 12;
 
 const W = mm(150); // along the board, inlet to output
-const D = mm(140); // across the board
+const D = mm(150); // across the board; both TUF models are 150 × 150 × 86 mm
 const WALL = mm(1.2);
 
-export function buildPowerSupply(tools: ModelTools, _root: T.Group) {
-  const { add, airflow, instances, box, material, label } = tools;
+/** Printed metal side treatment, generated in the browser like the other maps. */
+function sideBadge(variant: 'modular' | 'fixed', side: number) {
+  const canvas = document.createElement('canvas');
+  // Draw above the displayed resolution: the side is usually seen obliquely,
+  // where a small canvas otherwise turns the lettering soft and jagged.
+  canvas.width = 2048;
+  canvas.height = 1024;
+  const ctx = canvas.getContext('2d')!;
+  ctx.scale(2, 2);
+  const accent = variant === 'modular' ? '#b8a477' : '#b68763';
+  ctx.fillStyle = '#171c20';
+  ctx.fillRect(0, 0, 1024, 512);
+  ctx.fillStyle = '#2b3338';
+  ctx.fillRect(0, 0, 1024, 12);
+  ctx.fillRect(0, 500, 1024, 12);
+  ctx.font = 'bold 62px sans-serif';
+  ctx.fillStyle = '#f5f5f0';
+  ctx.fillText('TUF GAMING', 91, 135);
+  ctx.font = 'bold 154px sans-serif';
+  ctx.fillText(variant === 'modular' ? '850W' : '750W', 85, 312);
+  ctx.fillStyle = accent;
+  ctx.font = 'bold 45px sans-serif';
+  ctx.fillText(
+    variant === 'modular' ? '80 PLUS GOLD' : '80 PLUS BRONZE',
+    93,
+    390,
+  );
+  ctx.fillStyle = '#ccd2d3';
+  ctx.font = 'bold 31px sans-serif';
+  ctx.fillText(
+    variant === 'modular' ? 'FULLY MODULAR' : 'FIXED CABLE',
+    93,
+    448,
+  );
+  ctx.fillStyle = '#30383d';
+  for (let i = 0; i < 5; i++) {
+    ctx.beginPath();
+    ctx.moveTo(730 + i * 42, 35);
+    ctx.lineTo(1000, 305 - i * 31);
+    ctx.lineTo(1000, 321 - i * 31);
+    ctx.lineTo(714 + i * 42, 51);
+    ctx.fill();
+  }
+  const texture = new T.CanvasTexture(canvas);
+  texture.colorSpace = T.SRGBColorSpace;
+  texture.anisotropy = 16;
+  const badge = new T.Mesh(
+    new T.PlaneGeometry(mm(130), mm(65)),
+    new T.MeshStandardMaterial({
+      map: texture,
+      metalness: 0.36,
+      roughness: 0.7,
+    }),
+  );
+  if (side < 0) badge.rotation.y = Math.PI;
+  return badge;
+}
+
+function faceText(text: string, width: number, height = mm(5)) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 1024;
+  canvas.height = 128;
+  const ctx = canvas.getContext('2d')!;
+  ctx.scale(2, 2);
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#e6e9e7';
+  ctx.font = 'bold 44px sans-serif';
+  ctx.fillText(text, 256, 47, 500);
+  const texture = new T.CanvasTexture(canvas);
+  texture.colorSpace = T.SRGBColorSpace;
+  texture.anisotropy = 16;
+  return new T.Mesh(
+    new T.PlaneGeometry(width, height),
+    new T.MeshBasicMaterial({
+      map: texture,
+      transparent: true,
+      depthWrite: false,
+    }),
+  );
+}
+
+function modularSockets(
+  material: ModelTools['material'],
+  box: ModelTools['box'],
+) {
+  const group = new T.Group();
+  const put = (mesh: T.Object3D, x: number, y: number, z: number) => {
+    mesh.position.set(x, y, z);
+    group.add(mesh);
+  };
+  put(box([mm(124), mm(70), mm(3)], '#252b30', 0.8), 0, 0, 0);
+  put(box([mm(119), mm(1), mm(2)], '#545f66', 0.9), 0, mm(31), mm(2));
+  put(faceText('TUF GAMING  |  MODULAR OUTPUTS', mm(99)), 0, mm(26), mm(2.1));
+  const sockets: [number, number, number, number, string][] = [
+    [-43, 11, 25, 15, 'MB'],
+    [-12, 11, 20, 15, 'CPU'],
+    [16, 11, 20, 15, 'PCI-E'],
+    [43, 11, 20, 15, 'PCI-E'],
+    [-43, -17, 25, 14, '16-PIN'],
+    [-15, -17, 20, 14, 'SATA'],
+    [12, -17, 20, 14, 'SATA'],
+    [40, -17, 20, 14, 'PERIPH'],
+  ];
+  for (const [x, y, w, h, title] of sockets) {
+    put(
+      box([mm(w + 3), mm(h + 3), mm(2)], '#485158', 0.78),
+      mm(x),
+      mm(y),
+      mm(2),
+    );
+    put(box([mm(w), mm(h), mm(2.4)], '#090c0e', 0.18), mm(x), mm(y), mm(3));
+    const columns = title === 'MB' || title === '16-PIN' ? 8 : 4;
+    for (let row = 0; row < 2; row++)
+      for (let col = 0; col < columns; col++) {
+        const px = mm(x + ((col + 0.5) / columns - 0.5) * (w - 3));
+        const py = mm(y + (row ? -1 : 1) * h * 0.23);
+        put(box([mm(1.25), mm(1.8), mm(0.4)], '#65583e', 0.7), px, py, mm(4.3));
+      }
+    put(
+      faceText(title, mm(w + 3), mm(4.2)),
+      mm(x),
+      mm(y - h / 2 - 4.5),
+      mm(2.2),
+    );
+  }
+  // Machined panel fasteners visually separate the socket plate from the shell.
+  for (const x of [-56, 56])
+    for (const y of [-29, 29]) {
+      const screw = new T.Mesh(
+        new T.CylinderGeometry(mm(1.8), mm(1.8), mm(0.7), 12),
+        material('#a3a9aa', 0.9, 0.28),
+      );
+      screw.rotation.x = Math.PI / 2;
+      put(screw, mm(x), mm(y), mm(2.2));
+    }
+  return group;
+}
+
+function fixedHarness(
+  material: ModelTools['material'],
+  box: ModelTools['box'],
+) {
+  const group = new T.Group();
+  const put = (obj: T.Object3D, pos: Vec3) => {
+    obj.position.set(...pos);
+    group.add(obj);
+  };
+  put(box([mm(3), mm(70), mm(124)], '#22282c', 0.85), [0, 0, 0]);
+  put(box([mm(3), mm(42), mm(64)], '#3b4247', 0.55), [mm(2), 0, 0]);
+  put(box([mm(3), mm(35), mm(56)], '#0a0d0f', 0.12), [mm(4), 0, 0]);
+  const title = faceText('FIXED CABLE HARNESS', mm(78));
+  title.rotation.y = Math.PI / 2;
+  put(title, [mm(2.4), mm(26), 0]);
+  const runs: [number, number, number, string][] = [
+    [-15, 8, -16, 'MB 24'],
+    [-5, -7, -6, 'CPU 8'],
+    [6, 7, 8, 'PCI-E'],
+    [16, -8, 19, 'SATA'],
+  ];
+  for (const [z, y, endZ, name] of runs) {
+    const curve = new T.CatmullRomCurve3([
+      new T.Vector3(mm(5), mm(y * 0.45), mm(z * 0.6)),
+      new T.Vector3(mm(17), mm(y * 0.75), mm(z)),
+      new T.Vector3(mm(34), mm(y), mm(endZ)),
+      new T.Vector3(mm(48), mm(y), mm(endZ)),
+    ]);
+    group.add(
+      new T.Mesh(
+        new T.TubeGeometry(curve, 16, mm(3.2), 8, false),
+        material('#111518', 0.12, 0.72),
+      ),
+    );
+    // Fine raised lines suggest woven sleeving rather than smooth plastic.
+    for (let i = 2; i < 13; i += 2) {
+      const point = curve.getPoint(i / 16);
+      const rib = new T.Mesh(
+        new T.TorusGeometry(mm(3.25), mm(0.22), 5, 10),
+        material('#4b5459', 0.5, 0.6),
+      );
+      rib.rotation.y = Math.PI / 2;
+      rib.position.copy(point);
+      group.add(rib);
+    }
+    put(box([mm(10), mm(11), mm(16)], '#14191d', 0.22), [
+      mm(52),
+      mm(y),
+      mm(endZ),
+    ]);
+    put(box([mm(1), mm(7), mm(12)], '#555e62', 0.77), [
+      mm(57),
+      mm(y),
+      mm(endZ),
+    ]);
+    const tag = faceText(name, mm(20), mm(3));
+    tag.rotation.y = Math.PI / 2;
+    put(tag, [mm(58), mm(y + 9), mm(endZ)]);
+  }
+  return group;
+}
+
+export function buildPowerSupply(
+  tools: ModelTools,
+  _root: T.Group,
+  variant: 'modular' | 'fixed' = 'modular',
+) {
+  const {
+    add: baseAdd,
+    airflow,
+    instances: baseInstances,
+    box,
+    pcb,
+    material,
+    label,
+  } = tools;
+  const id = (name: string) =>
+    variant === 'modular'
+      ? name
+      : name === 'psumodular'
+        ? 'bronzepsuharness'
+        : `bronze${name}`;
+  const add: ModelTools['add'] = (name, object, pos, delta, reveal) =>
+    baseAdd(id(name), object, pos, delta, reveal);
+  const instances: ModelTools['instances'] = (
+    name,
+    positions,
+    size,
+    reveal,
+    color,
+    geometry,
+  ) => baseInstances(id(name), positions, size, reveal, color, geometry);
   const place = (group: T.Group, obj: T.Object3D, pos: Vec3) => {
     obj.position.set(...pos);
     group.add(obj);
@@ -49,17 +276,55 @@ export function buildPowerSupply(tools: ModelTools, _root: T.Group) {
 
   // ── Housing ─────────────────────────────────────────────────────────────
   const housing = new T.Group();
-  const steel = '#5d656b';
-  // Base tray plus the inverted-U top shell, the way these are actually made.
-  place(housing, box([W, WALL, D], '#4e565c', 0.8), [0, 0, 0]);
-  place(housing, box([W, mm(86), WALL], steel, 0.8), [0, mm(43), -D / 2]);
-  place(housing, box([W, mm(86), WALL], steel, 0.8), [0, mm(43), D / 2]);
-  place(housing, box([W, WALL, D], steel, 0.8), [0, mm(86), 0]);
-  // Both end plates are part of the removable shell. The external grille,
-  // inlet and modular socket panel sit just proud of these faces; previously
-  // the missing plates left a clear view straight through the assembled PSU.
-  place(housing, box([WALL, mm(86), D], '#424a50', 0.8), [-W / 2, mm(43), 0]);
-  place(housing, box([WALL, mm(86), D], '#424a50', 0.8), [W / 2, mm(43), 0]);
+  const steel = variant === 'modular' ? '#22282d' : '#242729';
+  // Folded powder-coated steel. Four lid strips leave a real 135 mm fan
+  // aperture, instead of the uninterrupted grey slab in the earlier model.
+  place(housing, box([W, WALL, D], '#171b1f', 0.88), [0, 0, 0]);
+  for (const z of [-1, 1]) {
+    place(housing, box([W, mm(86), WALL], steel, 0.88), [
+      0,
+      mm(43),
+      (z * D) / 2,
+    ]);
+    place(housing, box([W, mm(2.2), mm(5)], '#353c41', 0.9), [
+      0,
+      mm(83),
+      z * (D / 2 - mm(3)),
+    ]);
+    place(housing, sideBadge(variant, z), [0, mm(43), z * (D / 2 + mm(0.75))]);
+  }
+  for (const x of [-1, 1])
+    place(housing, box([mm(8), WALL, D], steel, 0.88), [
+      x * (W / 2 - mm(4)),
+      mm(86),
+      0,
+    ]);
+  for (const z of [-1, 1])
+    place(housing, box([W - mm(16), WALL, mm(8)], steel, 0.88), [
+      0,
+      mm(86),
+      z * (D / 2 - mm(4)),
+    ]);
+  place(housing, box([WALL, mm(86), D], '#1a1f23', 0.9), [-W / 2, mm(43), 0]);
+  place(housing, box([WALL, mm(86), D], '#1a1f23', 0.9), [W / 2, mm(43), 0]);
+  // An inset lip and dense wire guard make the fan visible from above.
+  const guard = buildHoneycomb(
+    material,
+    mm(129),
+    mm(129),
+    mm(0.8),
+    mm(4.2),
+    '#343a3f',
+  );
+  guard.rotation.x = -Math.PI / 2;
+  place(housing, guard, [0, mm(87), 0]);
+  for (const x of [-1, 1])
+    for (const z of [-1, 1])
+      place(housing, box([mm(12), mm(1), mm(12)], '#3b4248', 0.87), [
+        x * mm(67),
+        mm(86),
+        z * mm(67),
+      ]);
   for (const sx of [-1, 1])
     for (const sz of [-1, 1])
       place(housing, buildScrew(material, mm(3)), [
@@ -67,48 +332,42 @@ export function buildPowerSupply(tools: ModelTools, _root: T.Group) {
         mm(86) + WALL,
         (sz * (D - mm(16))) / 2,
       ]);
-  label(housing, 'ATX POWER SUPPLY', [0, mm(87), -mm(34)], mm(90), '#8d959b');
   add('psucase', housing, [0, 0, 0], [0, 4.6, 0]);
 
-  // Intake fan in the base, blowing up through the board.
+  // 135 mm Axial-tech fan behind the visible lid guard.
   const intake = buildFan(material, {
     size: mm(135),
     blades: 11,
     phase: 0.4,
-    frameColor: '#3a4046',
-    guard: true,
-    cable: true,
+    frameColor: '#111519',
+    bladeColor: '#272d32',
+    hubColor: '#14191d',
   });
-  add('psuintake', intake, [mm(6), mm(4), 0], [0, -2.4, 0]);
+  add('psuintake', intake, [0, mm(73), 0], [0, -2.4, 0]);
 
   // Rear grille, mains inlet and switch.
   const grille = buildHoneycomb(
     material,
-    mm(78),
-    mm(52),
+    mm(86),
+    mm(70),
     mm(1),
     mm(4.4),
-    '#454c52',
+    '#333a3f',
   );
   grille.rotation.y = Math.PI / 2;
   grille.rotation.z = Math.PI / 2;
-  add('psugrille', grille, [-W / 2 - mm(1), mm(52), mm(22)], [-3.4, 1.4, 0]);
+  add('psugrille', grille, [-W / 2 - mm(1), mm(44), mm(29)], [-3.4, 1.4, 0]);
 
   const inlet = new T.Group();
   const socket = buildMainsInlet(material, mm(26));
   socket.rotation.y = -Math.PI / 2;
   place(inlet, socket, [0, 0, 0]);
-  place(inlet, box([mm(4), mm(16), mm(22)], '#7a8288', 0.82), [0, mm(30), 0]);
-  label(inlet, 'AC IN', [0, -mm(22), 0], mm(30), '#8d959b');
-  add('psuinlet', inlet, [-W / 2 - mm(2), mm(30), -mm(34)], [-3.4, 0.6, -0.6]);
+  place(inlet, box([mm(4), mm(16), mm(22)], '#101416', 0.28), [0, mm(30), 0]);
+  add('psuinlet', inlet, [-W / 2 - mm(2), mm(29), -mm(42)], [-3.4, 0.6, -0.6]);
 
   // ── The board, and the isolation gap across it ─────────────────────────
   const board = new T.Group();
-  place(
-    board,
-    box([W - mm(10), mm(1.6), D - mm(10)], '#2c3a24', 0.05, 0.01),
-    [0, 0, 0],
-  );
+  place(board, pcb([W - mm(10), mm(1.6), D - mm(10)], 'psu'), [0, 0, 0]);
   // The routed slot that separates mains-voltage copper from the output side.
   place(board, box([mm(3), mm(2.2), D - mm(24)], '#12160f', 0.2), [
     mm(2),
@@ -319,7 +578,7 @@ export function buildPowerSupply(tools: ModelTools, _root: T.Group) {
   const dcdc = new T.Group();
   for (let i = 0; i < 2; i++) {
     const daughter = new T.Group();
-    place(daughter, box([mm(34), mm(1.4), mm(22)], '#2c3a24', 0.06), [0, 0, 0]);
+    place(daughter, pcb([mm(34), mm(1.4), mm(22)], 'psu'), [0, 0, 0]);
     for (let k = 0; k < 3; k++)
       place(daughter, buildChoke(material, mm(8), mm(6), '#2b3033'), [
         mm(-10 + k * 10),
@@ -367,10 +626,13 @@ export function buildPowerSupply(tools: ModelTools, _root: T.Group) {
   label(supervisor, 'SUPERVISOR', [mm(8), mm(4), -mm(9)], mm(40), '#9aa2a8');
   add('psusupervisor', supervisor, [mm(30), boardY, mm(34)], [0.8, 1.4, 1.0]);
 
-  // Output panel on the face that points into the machine.
-  const panel = buildModularPanel(material, mm(76), mm(50), mm(4));
-  panel.rotation.y = Math.PI / 2;
-  add('psumodular', panel, [W / 2 + mm(1), mm(44), 0], [3.6, 0.6, 0]);
+  // The cable face is the clearest functional difference between the models.
+  const cableFace =
+    variant === 'modular'
+      ? modularSockets(material, box)
+      : fixedHarness(material, box);
+  if (variant === 'modular') cableFace.rotation.y = Math.PI / 2;
+  add('psumodular', cableFace, [W / 2 + mm(1), mm(43), 0], [3.6, 0.6, 0]);
 
   // A scatter of small parts so the board is not bare between the stages.
   const smalls: Vec3[] = [];
@@ -384,22 +646,20 @@ export function buildPowerSupply(tools: ModelTools, _root: T.Group) {
   instances('psuboard', smalls, [mm(4), mm(2), mm(2.4)], 0, '#6f7a69');
 
   // ── Airflow ─────────────────────────────────────────────────────────────
-  // A supply is a sealed box with one way in and one way out: up through the
-  // fan in the base, across the board past the parts that get hot, and out of
-  // the punched grille beside the mains inlet. Nothing else in the machine
-  // shares this air, which is what the shroud in the tower is arranging.
+  // The top axial fan draws into the sealed enclosure; exhaust leaves through
+  // the rear honeycomb. Nothing else in the machine shares this air path.
   airflow([
     {
       kind: 'through',
       size: mm(22),
       count: 9,
       path: [
-        [mm(6), -mm(52), 0],
-        [mm(6), mm(4), 0],
-        [mm(6), mm(46), mm(6)],
-        [-mm(30), mm(54), mm(16)],
-        [-W / 2 - mm(8), mm(52), mm(22)],
-        [-W / 2 - mm(56), mm(52), mm(22)],
+        [0, mm(122), 0],
+        [0, mm(89), 0],
+        [0, mm(58), 0],
+        [-mm(30), mm(48), mm(14)],
+        [-W / 2 - mm(8), mm(44), mm(29)],
+        [-W / 2 - mm(38), mm(44), mm(29)],
       ],
     },
   ]);

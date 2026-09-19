@@ -12,7 +12,7 @@ sounds arbitrary, it is usually the scar of a bug.
 
 A static single-page app. Every polygon is generated in TypeScript at runtime
 with three.js — no imported meshes, no image textures, no runtime asset files of
-any kind. The 310 catalogue entries are written by hand in source, and each one
+any kind. The 327 catalogue entries are authored in source, and each one
 is joined to its geometry by a single string id.
 
 React 19, strict TypeScript, Vite 8, Tailwind 4, and three.js used directly:
@@ -62,7 +62,7 @@ Four layers, joined by the concept id.
 lib/levels.ts        the scale tree: what scales exist, what opens into what
       │
 lib/concepts/*.ts    the written catalogue, composed by lib/manifest.ts
-      │              310 entries, each with a globally unique id
+      │              327 entries, each with a globally unique id
       │
 lib/models.ts        one geometry builder per scale, handed `ModelTools`.
       │              Builders attach geometry to concept ids via add()
@@ -86,7 +86,7 @@ state.
 
 ## The scale tree
 
-27 scales, 310 concepts. `physical` scales are lit like hardware and keep real
+28 scales, 327 concepts. `physical` scales are lit like hardware and keep real
 size relationships in the inventory; `logical` scales are block diagrams and are
 lit flat.
 
@@ -99,6 +99,7 @@ lit flat.
 | `corei9` | `motherboard` | Motherboard | logical | 9 |
 | `coreio` | `corei9` | Motherboard | logical | 4 |
 | `psu` | `pc` | Power supply | physical | 17 |
+| `psubronze` | `pc` | Power supply | physical | 17 |
 | `fan` | `pc` | Cooling | physical | 8 |
 | `cooler` | `pc` | Cooling | physical | 8 |
 | `liquid` | `pc` | Cooling | physical | 9 |
@@ -122,12 +123,13 @@ lit flat.
 
 Menus are grouped by `branchLabel`, not by branch root, which is why the case
 fan, the tower cooler and the AIO share one Cooling heading instead of nesting.
-The GPU menu is the only one with sub-menus: each card declares `submenu`, and
-every scale beneath it is listed under that card.
+The GPU menu has sub-menus: each card declares `submenu`, and every scale beneath
+it is listed under that card. The Power supply menu lists its two models directly.
 
-Four scales are marked `alternative: true`: the second processor, the liquid
-cooler, and the two graphics cards the tower does not carry. Only one cooler
-bolts to one socket, only one processor sits in it, and one card is installed —
+Five scales are marked `alternative: true`: the second processor, the liquid
+cooler, the two graphics cards and the fixed-cable PSU the tower does not carry.
+Only one cooler bolts to one socket, only one processor sits in it, one card is
+installed and the tower carries one supply —
 so these are real scales with real content that simply have nothing to click on
 at the scale above. They are reached from their subsystem menu instead. The flag
 is what keeps the "every scale is reachable" test honest without forcing the
@@ -145,13 +147,13 @@ subsystems stop touching.
 | `lib/levels.ts` | The scale tree: parents, kind, phases, spread, menu grouping. Also `levelPath`, `branchRoot`, `submenuRoot`, `branches`, `menuRoot`. |
 | `lib/concept.ts` | The `Concept` shape, the eight categories and their colours, the three accuracy strings, and the `concept()` factory. |
 | `lib/concepts/*.ts` | The written catalogue, one file per subsystem. Ids are global. |
-| `lib/sources.ts` | Every citable reference, keyed by id. 52 of them. |
+| `lib/sources.ts` | Every citable reference, keyed by id. 56 of them. |
 | `lib/manifest.ts` | Composes the catalogue, wires parents to children, and answers questions about it: `byId`, `searchConcepts`, `openLevel`, `levelConcept`. Nothing about the current view. |
 | `lib/explorer-state.ts` | `ExplorerState` — what the viewer is looking at — plus `initialState` and `selectSearch`. |
 | `lib/models.ts` | The `builders` registry, the `Piece` type, the shared `material()` cache, and `buildModel(level)`. |
 | `lib/hardware.ts` | `ModelTools`, the interface every builder is handed, and the RTX 5090 card assembly. |
 | `lib/machine.ts` | The tower itself: ATX constants, chassis, cable routing, RGB palette. |
-| `lib/mainboard.ts`, `power-supply.ts`, `fan-unit.ts`, `cooler.ts`, `liquid.ts`, `ssd.ts`, `nvme.ts`, `processor.ts`, `io-die.ts` | One geometry builder per physical or logical scale. |
+| `lib/mainboard.ts`, `power-supply.ts`, `fan-unit.ts`, `cooler.ts`, `liquid.ts`, `ssd.ts`, `nvme.ts`, `processor.ts`, `io-die.ts` | Builders for physical or logical scales. `power-supply.ts` builds both TUF exteriors from one illustrative conversion chain. |
 | `lib/graphics-card.ts`, `card-kit.ts`, `radeon-card.ts`, `arc-card.ts` | The three graphics cards. `card-kit.ts` holds the millimetre-scale parts all three share. |
 | `lib/gpu-architecture.ts`, `radeon-architecture.ts`, `arc-architecture.ts` | The chip block diagrams. |
 | `lib/diagram-kit.ts` | The shared visual language of those diagrams — `put`, `backdrop`, `block` — with a palette per chip. Navi 48 and BMG-G21 draw from it; the GB202 scales predate it and build their own scenery. |
@@ -169,7 +171,7 @@ subsystems stop touching.
 | `app/viewer.tsx` | The React ↔ three.js bridge: lazy scene load, hover label, error state. |
 | `app/links.ts` | Destinations used by more than one panel. |
 | `app/globals.css`, `app/workbench.css` | The visual direction, desktop through phone. |
-| `tests/*.test.ts` | 51 tests: catalogue integrity, layout, picking, geometry presence, airflow. |
+| `tests/*.test.ts` | 52 tests: catalogue integrity, layout, picking, geometry presence, airflow. |
 | `scripts/generate-icons.mjs` | Rasterises `public/favicon.svg` into PNG and ICO variants. Uses Playwright and Edge. |
 | `scripts/generate-reference-index.mjs` | Regenerates `docs/component-references.md` from the catalogue. Run it after changing citations. |
 
@@ -333,7 +335,7 @@ timeline. Do not add a second hand-written route table.
 ## Sourcing rules
 
 Every technical claim points at an entry in `lib/sources.ts`. Standards bodies
-and vendor documentation first. All 310 concepts currently cite at least one
+and vendor documentation first. All 327 concepts currently cite at least one
 source, and `docs/component-references.md` is the generated index of which.
 
 `concept()` fills in a default when an entry names no sources — `specs` for a
@@ -350,11 +352,11 @@ cites the same source twice. It does not check that a citation is appropriate.
 Nothing here claims a specific product's bill of materials. Every physical
 concept carries a `physicalAccuracy` string saying so, and they are not
 decorative — read one before adding a component that implies more precision than
-the model has. 212 concepts are physical, 98 are logical diagrams.
+the model has. 229 concepts are physical, 98 are logical diagrams.
 
 ## Tests
 
-51 tests, all through Node's built-in runner.
+52 tests, all through Node's built-in runner.
 
 `.github/workflows/ci.yml` runs `npm ci`, type checking, linting, tests, and a
 production build on every push and pull request with Node.js 22.

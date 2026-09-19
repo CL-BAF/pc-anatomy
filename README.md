@@ -24,6 +24,8 @@ Desktop PC
 │   └── Core Ultra 9 285K
 │       └── Core Ultra I/O tile
 ├── Power supply
+│   ├── ASUS TUF Gaming 850W Gold · modular
+│   └── ASUS TUF Gaming 750W Bronze · non-modular
 ├── Cooling
 │   ├── Case fan
 │   ├── CPU cooler
@@ -59,7 +61,7 @@ Descending into a part rebuilds it at its own scale with its own timeline, so th
 
 ## The interface
 
-The rail on the left carries the scale tree and per-system visibility. The GPU menu holds three cards, the RTX 5090, Radeon RX 9070 XT and Arc B580, each with its own dropdown of scales. The bar along the bottom is the disassembly timeline, with the **Auto** key at its left-hand end, the named phases above the slider, and a reset on the right. Left-click an explorable component to open it; right-click to inspect it and use the detail, hide, isolate and focus controls. Hidden components remain available from the stage tracker until they are restored, the scale changes, or the explorer is reset. The **Airflow** switch beside the camera views draws the path the air takes, cool where it enters and warm where it leaves, and it fades as soon as the disassembly slider moves. It starts on wherever there are fans except on the complete machine, where the case is closed and the switch is there to turn it on. The corner expand control toggles browser fullscreen.
+The rail on the left carries the scale tree and per-system visibility. The GPU menu holds three cards, the RTX 5090, Radeon RX 9070 XT and Arc B580, each with its own dropdown of scales. The Power supply menu lists two TUF Gaming units directly: an 850W Gold with modular sockets and a 750W Bronze with fixed cables. The bar along the bottom is the disassembly timeline, with the **Auto** key at its left-hand end, the named phases above the slider, and a reset on the right. Left-click an explorable component to open it; right-click to inspect it and use the detail, hide, isolate and focus controls. Hidden components remain available from the stage tracker until they are restored, the scale changes, or the explorer is reset. The **Airflow** switch beside the camera views draws the path the air takes, cool where it enters and warm where it leaves, and it fades as soon as the disassembly slider moves. It starts on wherever there are fans except on the complete machine, where the case is closed and the switch is there to turn it on. The corner expand control toggles browser fullscreen.
 
 | Workbench                                                                                                              | On a phone                                                                                                                                               |
 | ---------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -105,11 +107,11 @@ Read it before the first edit. It is kept current with the code, and a change th
 
 ## Accuracy and sources
 
-The machine follows published ATX dimensions where those dimensions are standardized. Five products are named and modeled as specific subjects: the GeForce RTX 5090, AMD Radeon RX 9070 XT, Intel Arc B580, AMD Ryzen 9 9950X, and Intel Core Ultra 9 285K. The RTX 5090 is the card installed in the tower; the Radeon (after the Sapphire NITRO+) and the Arc (Intel Limited Edition) are complete alternative cards opened from the GPU menu. The rest is an illustrative desktop build that explains representative construction and relationships rather than reproducing a particular bill of materials.
+The machine follows published ATX dimensions where those dimensions are standardized. Seven products are named and modeled as specific subjects: the GeForce RTX 5090, AMD Radeon RX 9070 XT, Intel Arc B580, AMD Ryzen 9 9950X, Intel Core Ultra 9 285K, ASUS TUF Gaming 850W Gold and ASUS TUF Gaming 750W Bronze. The RTX 5090 is the card installed in the tower; the Radeon (after the Sapphire NITRO+) and the Arc (Intel Limited Edition) are complete alternative cards opened from the GPU menu. The modular PSU is the one installed in the tower; the fixed-cable model opens from the Power supply menu. The rest is an illustrative desktop build that explains representative construction and relationships rather than reproducing a particular bill of materials.
 
 Processor and GPU floorplans are explanatory diagrams of documented logical architecture. They are not semiconductor mask layouts and do not claim exact transistor-level placement. See [SOURCES.md](SOURCES.md) for standards, product documentation, architecture references, and the scope of each source.
 
-Product and company names are used nominatively to identify the hardware being described. PC Anatomy is not affiliated with or endorsed by NVIDIA, AMD, Intel, or any other named company.
+The PSU exteriors follow published dimensions and visible product features; their internal boards explain the conversion chain and are not service diagrams of ASUS circuitry. Product and company names are used nominatively to identify the hardware being described. PC Anatomy is not affiliated with or endorsed by NVIDIA, AMD, Intel, ASUS, or any other named company.
 
 ## Contributing
 

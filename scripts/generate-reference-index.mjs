@@ -15,7 +15,7 @@ fs.writeFileSync(
   [
     '# Component reference index',
     '',
-    'Reviewed 2026-09-17. Generated from the same catalogue used in the app.',
+    'Reviewed 2026-09-19. Generated from the same catalogue used in the app.',
     '',
     'Manufacturer documents support component roles, architecture or construction. They do not establish exact geometry or the parts fitted to a particular product. See [scope and limitations](../SOURCES.md#current-component-reference-audit).',
     '',

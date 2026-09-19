@@ -8,27 +8,35 @@ import { concept, standard, type Concept } from '../concept.ts';
  * rectify and smooth the low-voltage side. Every block below is one step of
  * that chain, and the layout follows it left to right.
  *
- * Component values, part counts and topology details are representative of the
- * category. No wattage, efficiency rating or vendor is claimed.
+ * Exterior dimensions, fan diameter, output rating and cable architecture follow
+ * ASUS product documentation. Internal placement and circuit populations remain
+ * illustrative; ASUS does not publish a service-level board layout.
  */
 export const psuConcepts: Concept[] = [
   concept({
     id: 'psucase',
-    name: 'Supply housing',
-    shortName: 'Housing',
+    name: 'TUF Gaming 850W Gold housing',
+    shortName: '850W housing',
     category: 'Chassis',
     parent: 'psu',
     level: 'psu',
     open: 'psu',
     description:
-      'The folded steel shell, with the intake on one face and the exhaust grille on the other.',
+      'The 150 × 150 × 86 mm folded steel shell of the ASUS TUF Gaming 850W Gold.',
     purpose:
       'Contains mains-voltage parts, earths them, and forces intake air along the whole board before it leaves.',
     quantity: '1 modeled enclosure',
-    specifications: { Format: 'ATX', Enclosure: 'Folded steel' },
+    specifications: {
+      Format: 'ATX',
+      Dimensions: '150 × 150 × 86 mm',
+      Output: '850 W',
+      Efficiency: '80 PLUS Gold',
+      Cabling: 'Fully modular',
+    },
     representationType: 'physical',
-    physicalAccuracy: standard,
-    sources: ['psu'],
+    physicalAccuracy:
+      'Published dimensions and external features of the ASUS TUF Gaming 850W Gold; internal geometry and component placement are illustrative.',
+    sources: ['tuf850g', 'psu'],
     searchTerms: ['psu', 'case', 'shell', 'housing', 'enclosure'],
   }),
   concept({
@@ -39,13 +47,17 @@ export const psuConcepts: Concept[] = [
     parent: 'psucase',
     level: 'psu',
     description:
-      'A large slow fan in the base, drawing air up through the board and out of the back.',
+      'A 135 mm axial fan behind the broad top grille, drawing air over the board and out the rear.',
     purpose:
       'Removes the heat the switching devices, transformer and rectifiers produce, at low noise.',
     quantity: '1 modeled fan',
-    specifications: { Intake: 'Underside', Control: 'Thermally regulated' },
+    specifications: {
+      Diameter: '135 mm',
+      Intake: 'Guarded top face',
+      Control: 'Thermally regulated',
+    },
     representationType: 'physical',
-    sources: ['fanconstruction', 'bldc'],
+    sources: ['tuf850fan', 'fanconstruction', 'bldc'],
     searchTerms: ['fan', 'intake', 'cooling', 'airflow'],
   }),
   concept({
@@ -77,7 +89,10 @@ export const psuConcepts: Concept[] = [
     purpose:
       'Brings alternating current in on a keyed, earthed connector that cannot be inserted the wrong way.',
     quantity: '1 modeled inlet',
-    specifications: { Type: 'C14 appliance inlet', Contacts: 'Live · neutral · earth' },
+    specifications: {
+      Type: 'C14 appliance inlet',
+      Contacts: 'Live · neutral · earth',
+    },
     representationType: 'physical',
     physicalAccuracy: standard,
     sources: ['psu'],
@@ -268,7 +283,13 @@ export const psuConcepts: Concept[] = [
     specifications: { Signals: 'Power-on · power-good' },
     representationType: 'physical',
     sources: ['psu', 'acdc'],
-    searchTerms: ['supervisor', 'controller', 'protection', 'power good', 'ocp'],
+    searchTerms: [
+      'supervisor',
+      'controller',
+      'protection',
+      'power good',
+      'ocp',
+    ],
   }),
   concept({
     id: 'psumodular',
@@ -281,11 +302,14 @@ export const psuConcepts: Concept[] = [
       'Keyed sockets on the face that points into the case, each labelled for what may plug into it.',
     purpose:
       'Lets only the cables a build actually needs be fitted, so the rest never enter the case.',
-    quantity: '7 modeled sockets',
-    specifications: { Outputs: '24-pin · EPS · PCIe · SATA' },
+    quantity: '8 modeled socket groups',
+    specifications: {
+      Outputs: '24-pin · EPS · PCIe 16-pin · PCIe 8-pin · SATA',
+    },
     representationType: 'physical',
-    physicalAccuracy: standard,
-    sources: ['psu'],
+    physicalAccuracy:
+      'Socket families follow ASUS documentation; individual socket shape and placement are illustrative.',
+    sources: ['tuf850g', 'psu'],
     searchTerms: ['modular', 'connector', 'socket', 'cable', 'output'],
   }),
   concept({
@@ -305,3 +329,88 @@ export const psuConcepts: Concept[] = [
     searchTerms: ['grille', 'vent', 'exhaust', 'honeycomb', 'mesh'],
   }),
 ];
+
+/** The fixed-cable unit shares an explanatory conversion chain, with its own identities. */
+export const bronzePsuConcepts: Concept[] = psuConcepts.map((original) => {
+  const id =
+    original.id === 'psumodular' ? 'bronzepsuharness' : `bronze${original.id}`;
+  const parent =
+    original.id === 'psucase'
+      ? 'pc'
+      : original.parent === 'psucase'
+        ? 'bronzepsucase'
+        : original.parent === 'psuboard'
+          ? 'bronzepsuboard'
+          : original.parent;
+  return concept({
+    ...original,
+    id,
+    parent,
+    children: [],
+    level: 'psubronze',
+    open: original.id === 'psucase' ? 'psubronze' : undefined,
+    name:
+      original.id === 'psucase'
+        ? 'TUF Gaming 750W Bronze housing'
+        : original.id === 'psumodular'
+          ? 'Fixed cable harness'
+          : original.name,
+    shortName:
+      original.id === 'psucase'
+        ? '750W housing'
+        : original.id === 'psumodular'
+          ? 'Fixed cables'
+          : original.shortName,
+    description:
+      original.id === 'psucase'
+        ? 'The 150 × 150 × 86 mm folded steel shell of the ASUS TUF Gaming 750W Bronze.'
+        : original.id === 'psumodular'
+          ? 'Permanent sleeved cable looms leave the supply through a protected opening, with no detachable PSU-side sockets.'
+          : original.description,
+    purpose:
+      original.id === 'psumodular'
+        ? 'Delivers power through permanently attached leads to the motherboard, CPU, graphics card and drives.'
+        : original.purpose,
+    quantity:
+      original.id === 'psumodular'
+        ? '4 modeled cable looms'
+        : original.quantity,
+    specifications:
+      original.id === 'psucase'
+        ? {
+            Format: 'ATX',
+            Dimensions: '150 × 150 × 86 mm',
+            Output: '750 W',
+            Efficiency: '80 PLUS Bronze',
+            Cabling: 'Non-modular',
+          }
+        : original.id === 'psumodular'
+          ? { Outputs: '24-pin · EPS · PCIe 6+2-pin · SATA' }
+          : original.specifications,
+    physicalAccuracy:
+      original.id === 'psucase'
+        ? 'Published dimensions and external features of the ASUS TUF Gaming 750W Bronze; internal geometry and component placement are illustrative.'
+        : original.id === 'psumodular'
+          ? 'Cable families follow ASUS documentation; bundle routing and connector geometry are illustrative.'
+          : original.physicalAccuracy,
+    sources:
+      original.id === 'psucase' || original.id === 'psumodular'
+        ? ['tuf750b', 'psu']
+        : original.id === 'psuintake'
+          ? ['tuf750fan', 'fanconstruction', 'bldc']
+          : original.sources,
+    searchTerms:
+      original.id === 'psucase'
+        ? [
+            ...original.searchTerms,
+            '750w',
+            'bronze',
+            'non-modular',
+            'asus',
+            'tuf',
+          ]
+        : original.id === 'psumodular'
+          ? ['fixed', 'non-modular', 'cable', 'harness', 'loom']
+          : original.searchTerms,
+  });
+});

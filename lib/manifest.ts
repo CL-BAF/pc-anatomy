@@ -9,7 +9,7 @@ import { radeonConcepts } from './concepts/radeon.ts';
 import { arcConcepts } from './concepts/arc.ts';
 import { motherboardConcepts } from './concepts/motherboard.ts';
 import { pcConcepts } from './concepts/pc.ts';
-import { psuConcepts } from './concepts/psu.ts';
+import { psuConcepts, bronzePsuConcepts } from './concepts/psu.ts';
 import { categories, colors, type Category, type Concept } from './concept.ts';
 import {
   isPhysical,
@@ -43,6 +43,7 @@ export const manifest: Concept[] = [
   ...pcConcepts,
   ...motherboardConcepts,
   ...psuConcepts,
+  ...bronzePsuConcepts,
   ...fanConcepts,
   ...coolerConcepts,
   ...liquidConcepts,

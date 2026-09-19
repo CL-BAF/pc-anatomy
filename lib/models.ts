@@ -100,6 +100,7 @@ const builders: Record<LevelId, (tools: ModelTools, root: T.Group) => void> = {
   corei9: buildCoreUltra,
   coreio: buildCoreIo,
   psu: buildPowerSupply,
+  psubronze: (tools, root) => buildPowerSupply(tools, root, 'fixed'),
   fan: buildFanUnit,
   cooler: buildCooler,
   liquid: buildLiquid,

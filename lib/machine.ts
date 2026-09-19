@@ -359,7 +359,7 @@ export function buildMachine(tools: ModelTools, root: T.Group) {
 
   // ── Power supply ────────────────────────────────────────────────────────
   const psu = new T.Group();
-  const pw = mm(160),
+  const pw = mm(150),
     ph = mm(86),
     pd = mm(150);
   place(psu, slab([pw, ph, pd], 'steel', '#1c2023', 0.012), [0, 0, 0]);
@@ -416,7 +416,13 @@ export function buildMachine(tools: ModelTools, root: T.Group) {
         sy * (ph / 2 - mm(9)),
         sz * (pd / 2 - mm(9)),
       ]);
-  label(psu, 'ATX POWER SUPPLY', [0, ph / 2 + 0.01, -mm(20)], 2.2, '#6d757a');
+  label(
+    psu,
+    'TUF GAMING 850W GOLD',
+    [0, ph / 2 + 0.01, -mm(20)],
+    2.2,
+    '#9d9b8e',
+  );
   add('psu', psu, [REAR + mm(100), FLOOR + mm(46), -0.4], [-1.2, -2.4, 0]);
 
   // Cable looms from the supply up to the board and the card.
