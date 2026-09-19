@@ -122,6 +122,8 @@ npm test
 npm run build
 ```
 
+GitHub Actions runs these checks on every push and pull request using Node.js 22.
+
 ## AI disclaimer
 
 AI-assisted tools were used selectively during development for coding support, debugging, iteration, and documentation. The project’s architecture, technical direction, design, integration, and validation were developed and maintained by the project maintainer.

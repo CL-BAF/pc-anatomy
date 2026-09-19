@@ -356,6 +356,9 @@ the model has. 212 concepts are physical, 98 are logical diagrams.
 
 51 tests, all through Node's built-in runner.
 
+`.github/workflows/ci.yml` runs `npm ci`, type checking, linting, tests, and a
+production build on every push and pull request with Node.js 22.
+
 - `tests/manifest.test.ts` (15) — unique ids, reciprocal parents, no cycles,
   source resolution, SKU counts against full-chip capacity, search behaviour,
   reachability of every scale, the three-stage dissection language, inventory
