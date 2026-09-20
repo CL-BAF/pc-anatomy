@@ -172,10 +172,7 @@ export function buildDimm(tools: ModelTools, _root: T.Group) {
     mm(-1.75),
     mm(2.5),
   ]);
-  const sticker = (
-    text: string,
-    z: number,
-  ) => {
+  const sticker = (text: string, z: number) => {
     const canvas = document.createElement('canvas');
     canvas.width = 512;
     canvas.height = 48;
