@@ -1,0 +1,204 @@
+import { after, test } from 'node:test';
+import assert from 'node:assert/strict';
+import * as T from 'three';
+import { buildModel, type Piece } from '../lib/models.ts';
+import { byId, searchConcepts } from '../lib/manifest.ts';
+import { initialState, selectSearch } from '../lib/explorer-state.ts';
+import { branches, levelPath, levels, type LevelId } from '../lib/levels.ts';
+
+// Same canvas stub as the model tests: geometry only, no WebGL.
+const previousDocument = globalThis.document;
+globalThis.document = {
+  createElement: () => ({
+    width: 0,
+    height: 0,
+    getContext: () =>
+      new Proxy(
+        {},
+        {
+          get: (_, key) =>
+            key === 'createImageData'
+              ? (w: number, h: number) => ({
+                  data: new Uint8ClampedArray(w * h * 4),
+                })
+              : () => {},
+        },
+      ),
+  }),
+} as unknown as Document;
+after(() => {
+  globalThis.document = previousDocument;
+});
+
+const ramLevels: LevelId[] = ['dimm', 'dram', 'banks', 'bank'];
+const models = new Map(ramLevels.map((l) => [l, buildModel(l)]));
+const family = (level: LevelId, id: string) =>
+  models.get(level)!.pieces.filter((p) => p.concept === id);
+
+await test('the Memory menu holds the module-to-cell dive in order', () => {
+  assert.deepEqual(
+    branches().find((b) => b.label === 'Memory')?.levels,
+    ramLevels,
+  );
+  assert.deepEqual(levelPath('dimm'), ['pc', 'motherboard', 'dimm']);
+  assert.deepEqual(levelPath('bank'), [
+    'pc',
+    'motherboard',
+    'dimm',
+    'dram',
+    'banks',
+    'bank',
+  ]);
+});
+
+await test('each dive step opens from a concept on its parent scale', () => {
+  assert.equal(byId.ram.open, 'dimm');
+  assert.equal(byId.ram.level, 'motherboard');
+  assert.equal(byId.dramchip.open, 'dram');
+  assert.equal(byId.dramchip.level, 'dimm');
+  assert.equal(byId.dramdie.open, 'banks');
+  assert.equal(byId.dramdie.level, 'dram');
+  assert.equal(byId.drambank.open, 'bank');
+  assert.equal(byId.drambank.level, 'banks');
+  assert.equal(levels.dimm.branchLabel, 'Memory');
+  assert.equal(levels.dimm.kind, 'physical');
+  assert.equal(levels.dram.kind, 'physical');
+  assert.equal(levels.banks.kind, 'logical');
+  assert.equal(levels.bank.kind, 'logical');
+});
+
+await test('bank counts multiply out to the 16 Gb x8 organisation', () => {
+  assert.equal(family('banks', 'drambank').length, 32);
+  assert.equal(family('banks', 'dramio').length, 1);
+  assert.equal(
+    byId.drambank.specifications.Banks,
+    '32 on 16 Gb or larger x8 die',
+  );
+  assert.equal(byId.drambank.specifications.Groups, '8 bank groups × 4 banks');
+  assert.equal(family('bank', 'dramcell').length, 128);
+  assert.equal(family('bank', 'dramrow').length, 16);
+  assert.equal(family('bank', 'dramcolumn').length, 8);
+  assert.equal(family('bank', 'dramrowdec').length, 1);
+  assert.equal(family('bank', 'dramsenseamp').length, 1);
+});
+
+await test('RAM diagram blocks do not overlap one another', () => {
+  for (const level of ramLevels.filter((l) => levels[l].kind === 'logical')) {
+    const pieces = models.get(level)!.pieces;
+    const footprint = (p: Piece) => ({
+      x0: p.base.x + p.center.x - p.extent.x / 2,
+      x1: p.base.x + p.center.x + p.extent.x / 2,
+      z0: p.base.z + p.center.z - p.extent.z / 2,
+      z1: p.base.z + p.center.z + p.extent.z / 2,
+    });
+    for (let i = 0; i < pieces.length; i++)
+      for (let j = i + 1; j < pieces.length; j++) {
+        const a = footprint(pieces[i]),
+          b = footprint(pieces[j]);
+        const overlap =
+          Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0) > 0.01 &&
+          Math.min(a.z1, b.z1) - Math.max(a.z0, b.z0) > 0.01;
+        assert.ok(
+          !overlap,
+          `${level}: ${pieces[i].key} overlaps ${pieces[j].key}`,
+        );
+      }
+  }
+});
+
+await test('the module keeps the DDR5 outline with a keyed contact edge', () => {
+  const f = (id: string) => family('dimm', id);
+  assert.equal(f('dimmboard').length, 1);
+  assert.equal(f('dramchip').length, 8);
+  assert.equal(f('dimmpmic').length, 1);
+  assert.equal(f('dimmspd').length, 1);
+  assert.equal(f('dimmcontacts').length, 1);
+  const board = f('dimmboard')[0];
+  assert.ok(
+    Math.abs(board.base.x + board.center.x) + board.extent.x / 2 <=
+      133.35 / 6 + 0.05,
+    'module exceeds the 133.35 mm DDR5 length',
+  );
+  for (const chip of f('dramchip')) {
+    const outerX = Math.abs(chip.base.x + chip.center.x) + chip.extent.x / 2;
+    assert.ok(outerX <= 133.35 / 6 / 2 + 0.05, chip.key + ' leaves the board');
+  }
+  // The key gap splits the contact field: fingers flank an empty middle.
+  // (Submeshes sharing a material are merged at build, so read the baked
+  // finger geometry rather than individual meshes.)
+  const contacts = f('dimmcontacts')[0];
+  const gold = new T.Color('#d5b96b').getHex();
+  const xs: number[] = [];
+  contacts.object.traverse((o) => {
+    if (!(o instanceof T.Mesh)) return;
+    const mats = Array.isArray(o.material) ? o.material : [o.material];
+    if (
+      !mats.some(
+        (m) => m instanceof T.MeshStandardMaterial && m.color.getHex() === gold,
+      )
+    )
+      return;
+    const pos = o.geometry.getAttribute('position');
+    for (let i = 0; i < pos.count; i++) xs.push(pos.getX(i));
+  });
+  assert.ok(xs.length > 0, 'no contact fingers drawn');
+  assert.ok(
+    xs.some((x) => x < -1) && xs.some((x) => x > 0),
+    'contacts must span the module edge',
+  );
+  assert.ok(
+    xs.every((x) => x <= -1 || x >= 0),
+    'fingers must leave a key gap in the middle',
+  );
+});
+
+await test('the package scale shows substrate, die and balls', () => {
+  const f = (id: string) => family('dram', id);
+  assert.equal(f('dramsubstrate').length, 1);
+  assert.equal(f('dramdie').length, 1);
+  assert.ok(f('dramball').length > 40, 'ball grid is too sparse');
+  const die = f('dramdie')[0];
+  const substrate = f('dramsubstrate')[0];
+  assert.ok(
+    die.base.y > substrate.base.y,
+    'the die must sit above the substrate',
+  );
+  for (const ball of f('dramball'))
+    assert.ok(
+      ball.base.y < substrate.base.y,
+      'balls must sit beneath the substrate',
+    );
+});
+
+await test('every new piece belongs to a named concept', () => {
+  for (const level of ramLevels) {
+    const { pieces, root } = models.get(level)!;
+    assert.ok(pieces.length > 0, level + ' renders nothing');
+    const owned = new Set<T.Object3D>();
+    for (const p of pieces) p.object.traverse((o) => owned.add(o));
+    for (const child of root.children) {
+      if (child.userData.contextFrame) continue;
+      assert.ok(
+        owned.has(child) || child instanceof T.InstancedMesh,
+        `${level}: an object is rendered but belongs to no named part`,
+      );
+    }
+    for (const p of pieces)
+      assert.ok(byId[p.concept]?.shortName, `${level}: ${p.concept} unnamed`);
+  }
+});
+
+await test('search reaches the module and the cell array at their own scales', () => {
+  assert.ok(searchConcepts('dram').some((c) => c.id === 'dramchip'));
+  assert.ok(searchConcepts('cell').some((c) => c.id === 'dramcell'));
+  assert.equal(selectSearch(initialState, 'dramchip').level, 'dimm');
+  assert.equal(selectSearch(initialState, 'dramcell').level, 'bank');
+  assert.equal(selectSearch(initialState, 'drambank').level, 'banks');
+  // The motherboard search for RAM still lands on the installed module.
+  const found = selectSearch(
+    { ...initialState, level: 'sm' as const, visible: [] },
+    'ram',
+  );
+  assert.equal(found.level, 'motherboard');
+  assert.equal(found.selection?.concept, 'ram');
+});

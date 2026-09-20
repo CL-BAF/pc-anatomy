@@ -55,6 +55,43 @@ notch, an M-key contact gap, a controller, DRAM and two NAND packages. BGA joint
 are beneath the chips. Package count, contact count and routing are illustrative.
 The model is an educational assembly, not a reproduction of the Samsung 990 PRO PCB.
 
+### Memory module dive
+
+The Memory menu dives from a DDR5 module to one DRAM package, to the 32 banks
+of a 16 Gb x8 die, to the rows, columns and cells of a single bank. The
+modelled module is one educational example — a single-sided, single-rank UDIMM
+with eight x8 packages — and the copy says so wherever package count, rank
+count or layout could be read as universal. Bank-block sizes, the cell grid
+(about 16 × 8 illustrative cells against tens of thousands of real rows) and
+package internals are illustrative; the package is sealed in reality and no die
+floorplan or transistor placement is claimed. The module keeps the 133.35 mm
+DDR5 length with a JEDEC height class (gaming spreaders are taller) and a keyed
+288-pin edge.
+
+- [JEDEC DDR5 SDRAM standard (JESD79-5D)](https://www.jedec.org/standards-documents/docs/jesd79-5d)
+  and the [JEDEC DDR5 launch release](https://www.jedec.org/news/pressreleases/jedec-publishes-new-ddr5-standard-advancing-next-generation-high-performance)
+  support the 288-pin module, the two independent 32-bit subchannels, the 32
+  banks in 8 bank groups, BL16 and on-DIMM power regulation.
+- [Micron's DDR5 new-features white paper](https://www.micron.com/content/dam/micron/global/public/products/white-paper/ddr5-new-features-white-paper.pdf)
+  supports the bank organisation, burst length and refresh behaviour; Micron's
+  client-module paper (already cited for the motherboard socket) supports the
+  PMIC and SPD hub roles.
+- [SK hynix on DDR5 banks, burst length and refresh](https://news.skhynix.com/en/why-ddr5-is-the-industrys-powerful-next-gen-memory)
+  cross-checks the 32-bank, 8-group organisation.
+- [SFU course notes on DRAM banks, rows and sense amplifiers](https://www.cs.sfu.ca/~ashriram/Courses/CS7ARCH/assets/lectures/11_Memory_Consistency_DRAM.pdf)
+  support the 1T1C cell, destructive read with writeback, row buffer and
+  sense-amp operation that no vendor white paper teaches cleanly.
+- [Kingston's DDR5 overview](https://www.kingston.com/en/blog/pc-performance/ddr5-overview)
+  (already cited) supports the module and subchannel architecture; TI BGA
+  packaging notes (already cited) support the substrate and ball-grid
+  construction language without claiming flip-chip or wire-bond detail.
+
+**Limits.** Early 8 Gb x4/x8 dies hold 16 banks (8 groups × 2) and x16 dies
+hold 16 banks (4 groups × 4) — the app qualifies its counts to 16 Gb or larger
+x8 dies. Row, column and page counts are qualified the same way (16 row bits ×
+10 column bits on 16 Gb x8). On-die ECC versus side-band DIMM ECC is left out
+of the copy except for the subchannel width note the standard requires.
+
 ## Additional graphics cards · September 17, 2026
 
 The GPU menu now holds three complete cards, each in its own dropdown and each

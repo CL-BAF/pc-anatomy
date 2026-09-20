@@ -137,6 +137,23 @@ export const sources = {
     name: 'Kingston · DDR5 module and subchannel architecture',
     url: 'https://www.kingston.com/en/blog/pc-performance/ddr5-overview',
   },
+  jedecddr5: {
+    name: 'JEDEC · DDR5 SDRAM standard (JESD79-5D)',
+    url: 'https://www.jedec.org/standards-documents/docs/jesd79-5d',
+  },
+  micronddr5: {
+    name: 'Micron · DDR5 SDRAM new features white paper',
+    url: 'https://www.micron.com/content/dam/micron/global/public/products/white-paper/ddr5-new-features-white-paper.pdf',
+  },
+  skhynixddr5: {
+    name: 'SK hynix · DDR5 banks, burst length and refresh',
+    url: 'https://news.skhynix.com/en/why-ddr5-is-the-industrys-powerful-next-gen-memory',
+  },
+  // University teaching reference: no vendor white paper explains the 1T1C cell and sense-amp operation cleanly.
+  dramfundamentals: {
+    name: 'Simon Fraser University · DRAM banks, rows and sense amplifiers (course notes)',
+    url: 'https://www.cs.sfu.ca/~ashriram/Courses/CS7ARCH/assets/lectures/11_Memory_Consistency_DRAM.pdf',
+  },
   fanconstruction: {
     name: 'Noctua · Fan frame, impeller and bearing construction',
     url: 'https://cdn.noctua.at/media/noctua_nf_a12x25_pwm_infosheet_en_web.pdf',
