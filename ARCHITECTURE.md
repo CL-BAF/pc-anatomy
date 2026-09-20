@@ -12,7 +12,7 @@ sounds arbitrary, it is usually the scar of a bug.
 
 A static single-page app. Every polygon is generated in TypeScript at runtime
 with three.js — no imported meshes, no image textures, no runtime asset files of
-any kind. The 342 catalogue entries are authored in source, and each one
+any kind. The 343 catalogue entries are authored in source, and each one
 is joined to its geometry by a single string id.
 
 React 19, strict TypeScript, Vite 8, Tailwind 4, and three.js used directly:
@@ -62,7 +62,7 @@ Four layers, joined by the concept id.
 lib/levels.ts        the scale tree: what scales exist, what opens into what
       │
 lib/concepts/*.ts    the written catalogue, composed by lib/manifest.ts
-      │              342 entries, each with a globally unique id
+      │              343 entries, each with a globally unique id
       │
 lib/models.ts        one geometry builder per scale, handed `ModelTools`.
       │              Builders attach geometry to concept ids via add()
@@ -86,7 +86,7 @@ state.
 
 ## The scale tree
 
-32 scales, 342 concepts. `physical` scales are lit like hardware and keep real
+32 scales, 343 concepts. `physical` scales are lit like hardware and keep real
 size relationships in the inventory; `logical` scales are block diagrams and are
 lit flat.
 
@@ -94,7 +94,7 @@ lit flat.
 | --- | --- | --- | --- | ---: |
 | `pc` | — | root | physical | 16 |
 | `motherboard` | `pc` | Motherboard | physical | 24 |
-| `dimm` | `motherboard` | Memory | physical | 5 |
+| `dimm`        | `motherboard` | Memory           | physical |        6 |
 | `dram` | `dimm` | Memory | physical | 3 |
 | `banks` | `dram` | Memory | logical | 2 |
 | `bank` | `banks` | Memory | logical | 5 |
@@ -340,7 +340,7 @@ timeline. Do not add a second hand-written route table.
 ## Sourcing rules
 
 Every technical claim points at an entry in `lib/sources.ts`. Standards bodies
-and vendor documentation first. All 342 concepts currently cite at least one
+and vendor documentation first. All 343 concepts currently cite at least one
 source, and `docs/component-references.md` is the generated index of which.
 
 `concept()` fills in a default when an entry names no sources — `specs` for a
@@ -357,7 +357,7 @@ cites the same source twice. It does not check that a citation is appropriate.
 Nothing here claims a specific product's bill of materials. Every physical
 concept carries a `physicalAccuracy` string saying so, and they are not
 decorative — read one before adding a component that implies more precision than
-the model has. 237 concepts are physical, 105 are logical diagrams.
+the model has. 238 concepts are physical, 105 are logical diagrams.
 
 ## Tests
 
