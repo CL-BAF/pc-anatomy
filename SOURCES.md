@@ -87,6 +87,28 @@ DDR5 length with a JEDEC height class (gaming spreaders are taller) and a keyed
   packaging notes (already cited) support the substrate and ball-grid
   construction language without claiming flip-chip or wire-bond detail.
 
+### Reference module: Kingston FURY Beast
+
+The modelled spreader follows the Kingston FURY Beast DDR5 line in style
+only: black low-profile plates over the packages, text-only branding, and an
+exposed contact edge. Outline (133.35 mm), height class, colour and the
+exposed edge are the published facts; spreader surface texture, exact badge
+geometry and placement, IC-side population and routing are illustrative of
+the 1Rx8 example, and no Kingston logo is reproduced.
+
+- [Kingston FURY Beast DDR5 product page](https://www.kingston.com/en/memory/gaming/kingston-fury-beast-ddr5-memory)
+  supports the line's dimensions, colours, capacities and rates.
+- [Tom's Hardware review of the FURY Beast DDR5](https://www.tomshardware.com/reviews/kingston-fury-beast-ddr5-5200-c40-review),
+  an independent review, supports the construction detail the maker does not
+  publish: black PCB with matching spreader, single-sided 1Rx8 layout and the
+  exposed edge seating the slot.
+
+Kingston assembles modules; it does not fabricate the DRAM dies, which it
+sources from manufacturers such as Micron, SK hynix and others with variance
+between kits. Kingston attribution in this project covers the module —
+spreader, dimensions and 1Rx8 organisation — and never the die, which stays
+vendor-neutral throughout.
+
 **Limits.** Early 8 Gb x4/x8 dies hold 16 banks (8 groups × 2), early 8 Gb
 x16 dies hold 8 (4 groups × 2), and 16–64 Gb x16 dies hold 16 (4 groups × 4)
 — the app qualifies its counts to 16 Gb or larger x8 dies. Row, column and

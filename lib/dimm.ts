@@ -8,7 +8,9 @@ import type { Vec3 } from './layout.ts';
  * Coordinates are millimetres in the module frame, 1 unit ≈ 6 mm: the 133.35
  * mm UDIMM comes out at about twenty-two units long. The board lies flat with
  * its 288-pin edge along -Z; the eight x8 packages sit single-sided on the top
- * face with power management and the SPD hub between them and the contacts.
+ * face with power management and the SPD hub between them and the contacts. A
+ * Beast-class low-profile spreader clamps both faces over the packages and
+ * lifts clear with the explode, leaving the gold fingers and the key exposed.
  * Package count, rank count and layout describe the modelled educational
  * example only: a single-sided, single-rank module with eight x8 packages.
  */
@@ -38,17 +40,13 @@ export function buildDimm(tools: ModelTools, _root: T.Group) {
   label(board, 'DDR5 UDIMM · 8 × X8', [0, mm(0.8), mm(10)], mm(40), '#82998b');
   add('dimmboard', board, [0, 0, 0], [0, -1.2, 0]);
 
-  // Eight x8 DRAM packages in one row: one rank spanning both subchannels,
-  // four packages per subchannel. BGA joints stay underneath each package.
-  const chipX = (i: number) => -57.75 + i * 16.5;
-  for (let i = 0; i < 8; i++) {
-    const chip = new T.Group();
-    chip.add(box([mm(11), mm(1.2), mm(10)], '#171b20', 0.1, 0.015));
-    const joints = new T.InstancedMesh(
-      new T.SphereGeometry(mm(0.18), 6, 4),
-      material('#9ca7b2', 0.8),
-      48,
-    );
+  // Eight x8 DRAM packages in one row: one rank with four packages on each
+  // of the two subchannels. BGA joints stay underneath each package, drawn
+  // from one shared joint template rather than rebuilt per chip.
+  const jointGeo = new T.SphereGeometry(mm(0.18), 6, 4);
+  const jointMat = material('#9ca7b2', 0.8);
+  const joints = () => {
+    const mesh = new T.InstancedMesh(jointGeo, jointMat, 48);
     const matrix = new T.Matrix4();
     for (let row = 0; row < 6; row++)
       for (let col = 0; col < 8; col++) {
@@ -57,10 +55,16 @@ export function buildDimm(tools: ModelTools, _root: T.Group) {
           -mm(0.7),
           mm(((row - 2.5) * 10) / 8),
         );
-        joints.setMatrixAt(row * 8 + col, matrix);
+        mesh.setMatrixAt(row * 8 + col, matrix);
       }
-    chip.add(joints);
-    label(chip, 'x8', [0, mm(0.9), 0], mm(8), '#c4cccf');
+    return mesh;
+  };
+  const chipX = (i: number) => -57.75 + i * 16.5;
+  for (let i = 0; i < 8; i++) {
+    const chip = new T.Group();
+    chip.add(box([mm(11), mm(1.2), mm(10)], '#171b20', 0.1, 0.015));
+    chip.add(joints());
+    label(chip, 'DDR5 X8', [0, mm(0.9), 0], mm(8), '#c4cccf');
     add(
       'dramchip',
       chip,
@@ -79,6 +83,39 @@ export function buildDimm(tools: ModelTools, _root: T.Group) {
   spd.add(box([mm(5), mm(1), mm(5)], '#1b1e21', 0.1, 0.01));
   label(spd, 'SPD', [0, mm(0.8), 0], mm(4.5), '#8c9499');
   add('dimmspd', spd, [mm(8), mm(1.2), mm(-4)], [0.5, 1.6, -0.4]);
+
+  // Low-profile heat spreader in the Beast class: a thermal pad over the
+  // packages, brushed dark plates clamping both faces, and rounded end caps.
+  // Text-only branding — no logo geometry. The plates stop clear of the
+  // contact field, so the gold fingers and the key stay exposed; the whole
+  // assembly lifts clear with the explode, packages visible beneath it.
+  const spreader = new T.Group();
+  const spreaderMat = '#1c1e20';
+  place(
+    spreader,
+    box([mm(124), mm(1.2), mm(12)], '#2a2d30', 0.1),
+    [mm(-3), mm(1.35), mm(6)],
+  );
+  for (const side of [-1, 1])
+    place(spreader, box([mm(130), mm(1), mm(25)], spreaderMat, 0.75), [
+      mm(-1),
+      mm(side < 0 ? -1.15 : 2.55),
+      mm(2.5),
+    ]);
+  for (const x of [-64.5, 62.5])
+    place(spreader, box([mm(3.5), mm(5.2), mm(25)], spreaderMat, 0.75), [
+      mm(x),
+      mm(0.75),
+      mm(2.5),
+    ]);
+  label(
+    spreader,
+    'KINGSTON FURY',
+    [mm(-2), mm(3.1), mm(2.5)],
+    mm(56),
+    '#c9ced1',
+  );
+  add('dimmspreader', spreader, [0, 0, 0], [0, 2.6, 0]);
 
   // 288-pin edge contacts: 144 fingers per face at 0.8 mm pitch, split into
   // two fields around the key cutout, each on its own backing strip. Nothing

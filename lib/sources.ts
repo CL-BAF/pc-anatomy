@@ -154,6 +154,15 @@ export const sources = {
     name: 'Simon Fraser University · DRAM banks, rows and sense amplifiers (course notes)',
     url: 'https://www.cs.sfu.ca/~ashriram/Courses/CS7ARCH/assets/lectures/11_Memory_Consistency_DRAM.pdf',
   },
+  kingstonfury: {
+    name: 'Kingston · FURY Beast DDR5 product page',
+    url: 'https://www.kingston.com/en/memory/gaming/kingston-fury-beast-ddr5-memory',
+  },
+  // Independent review, cited for construction detail the maker does not publish.
+  kingstonfuryreview: {
+    name: "Tom's Hardware (independent review) · Kingston FURY Beast DDR5 construction",
+    url: 'https://www.tomshardware.com/reviews/kingston-fury-beast-ddr5-5200-c40-review',
+  },
   fanconstruction: {
     name: 'Noctua · Fan frame, impeller and bearing construction',
     url: 'https://cdn.noctua.at/media/noctua_nf_a12x25_pwm_infosheet_en_web.pdf',

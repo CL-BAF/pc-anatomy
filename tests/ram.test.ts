@@ -119,6 +119,44 @@ await test('each bank group frame holds exactly four banks', () => {
   }
 });
 
+await test('the spreader clads the module but clears the contact field', () => {
+  const spreaders = family('dimm', 'dimmspreader');
+  assert.equal(spreaders.length, 1);
+  const spreader = spreaders[0];
+  // Brushed dark metal, not board green or bare plastic. (Same-finish
+  // submeshes merge at build, so count the finish, then the assembly extent.)
+  const dark = new T.Color('#1c1e20').getHex();
+  let clad = 0;
+  spreader.object.traverse((o) => {
+    if (!(o instanceof T.Mesh)) return;
+    const mats = Array.isArray(o.material) ? o.material : [o.material];
+    if (
+      mats.some(
+        (m) => m instanceof T.MeshStandardMaterial && m.color.getHex() === dark,
+      )
+    )
+      clad++;
+  });
+  assert.ok(clad >= 1, 'spreader must wear the dark finish');
+  assert.ok(
+    spreader.extent.x >= 128 / 6 && spreader.extent.y >= 4.6 / 6,
+    'spreader assembly must span plates and caps',
+  );
+  // Plates stop above the contact field: spreader z-min stays clear of the
+  // key band and the finger rows, while spanning the chip row in x.
+  const z0 = spreader.base.z + spreader.center.z - spreader.extent.z / 2;
+  assert.ok(z0 > -12 / 6, 'spreader must clear the contact field');
+  const x0 = spreader.base.x + spreader.center.x - spreader.extent.x / 2;
+  const x1 = spreader.base.x + spreader.center.x + spreader.extent.x / 2;
+  let chipX0 = Infinity,
+    chipX1 = -Infinity;
+  for (const chip of family('dimm', 'dramchip')) {
+    chipX0 = Math.min(chipX0, chip.base.x + chip.center.x - chip.extent.x / 2);
+    chipX1 = Math.max(chipX1, chip.base.x + chip.center.x + chip.extent.x / 2);
+  }
+  assert.ok(x0 <= chipX0 && x1 >= chipX1, 'spreader must span the chip row');
+});
+
 await test('the module keeps the DDR5 outline with a keyed contact edge', () => {
   const f = (id: string) => family('dimm', id);
   assert.equal(f('dimmboard').length, 1);

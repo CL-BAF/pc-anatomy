@@ -34,12 +34,17 @@ export function buildRamArchitecture(
   if (level === 'banks') {
     backdrop(root, [11.6, 7.6], 'DDR5 DIE · 16 GBIT X8');
 
+    // One group origin shared by the scenery frames and the bank instances.
+    const groupOrigin = (g: number): [number, number] => [
+      ((g % 4) - 1.5) * 2.7,
+      g < 4 ? -1.9 : 1.1,
+    ];
+
     // Eight bank-group frames as scenery: the selectable banks sit inside
     // them, so the grouping reads without adding anonymous pieces.
     const frames = new T.Group();
     for (let g = 0; g < 8; g++) {
-      const gx = ((g % 4) - 1.5) * 2.7;
-      const gz = g < 4 ? -1.9 : 1.1;
+      const [gx, gz] = groupOrigin(g);
       put(frames, box([2.55, 0.08, 2.9], '#1d333b', 0.5), [gx, 0.06, gz]);
       for (const side of [-1, 1])
         put(frames, box([2.55, 0.1, 0.06], '#4a6b76', 0.7), [
@@ -55,8 +60,7 @@ export function buildRamArchitecture(
     // Thirty-two banks, four per group, on a 16 Gb or larger x8 die.
     const positions: Vec3[] = [];
     for (let g = 0; g < 8; g++) {
-      const gx = ((g % 4) - 1.5) * 2.7;
-      const gz = g < 4 ? -1.9 : 1.1;
+      const [gx, gz] = groupOrigin(g);
       for (let j = 0; j < 4; j++)
         positions.push([
           gx + ((j % 2) - 0.5) * 1.15,

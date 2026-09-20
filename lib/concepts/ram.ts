@@ -116,6 +116,29 @@ export const ramConcepts: Concept[] = [
     sources: ['ddr5', 'ddr5architecture', 'jedecddr5'],
     searchTerms: ['contacts', 'edge', '288-pin', 'key', 'notch', 'fingers'],
   }),
+  concept({
+    id: 'dimmspreader',
+    name: 'Memory heat spreader',
+    shortName: 'Spreader',
+    category: 'Cooling',
+    parent: 'ram',
+    level: 'dimm',
+    description:
+      'A black low-profile spreader in the Kingston FURY Beast class clamping both faces of the example module over the packages, with text-only KINGSTON FURY marking and no logo geometry. The contact edge and key stay exposed.',
+    purpose:
+      'Spreads heat from the packages across a larger surface and stiffens the module. It lifts clear with the explode, packages visible beneath it.',
+    quantity: '1 modelled assembly: 2 plates, 2 end caps, 1 pad',
+    specifications: {
+      Style: 'Low-profile, Kingston FURY Beast class',
+      Finish: 'Black, illustrative texture',
+      Contacts: 'Exposed edge',
+    },
+    representationType: 'physical',
+    physicalAccuracy:
+      'Representative Beast-class spreader. Profile, surface texture and badge placement are illustrative of the line; branding is text-only with no logo reproduction.',
+    sources: ['kingstonfury', 'kingstonfuryreview'],
+    searchTerms: ['spreader', 'heatspreader', 'heatsink', 'fury', 'kingston'],
+  }),
 
   // ── DRAM package (physical) ───────────────────────────────────────────
   concept({
