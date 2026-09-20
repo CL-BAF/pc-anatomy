@@ -124,10 +124,10 @@ export const ramConcepts: Concept[] = [
     parent: 'ram',
     level: 'dimm',
     description:
-      'A black low-profile spreader in the Kingston FURY Beast class clamping both faces of the example module over the packages, with text-only KINGSTON FURY marking and no logo geometry. The contact edge and key stay exposed.',
+      'Two thin mirror plates in the Kingston FURY Beast class, one per face, interlocked along the top edge with two locking clips and angled asymmetric facets. Branding differs per face: lettering outside, a spec sticker inside. The contact edge and key stay exposed.',
     purpose:
       'Spreads heat from the packages across a larger surface and stiffens the module. It lifts clear with the explode, packages visible beneath it.',
-    quantity: '1 modelled assembly: 2 plates, 2 end caps, 1 pad',
+    quantity: '1 modelled assembly: 2 plates, interlock, 2 clips',
     specifications: {
       Style: 'Low-profile, Kingston FURY Beast class',
       Finish: 'Black, illustrative texture',
@@ -135,8 +135,8 @@ export const ramConcepts: Concept[] = [
     },
     representationType: 'physical',
     physicalAccuracy:
-      'Representative Beast-class spreader. Profile, surface texture and badge placement are illustrative of the line; branding is text-only with no logo reproduction.',
-    sources: ['kingstonfury', 'kingstonfuryreview'],
+      'Representative Beast-class spreader. Facet styling, interlock and clip detail follow published construction accounts and are illustrative, not a product reproduction; branding is text-only with no logo.',
+    sources: ['kingstonfury', 'kingstonfuryreview', 'aphnetworks'],
     searchTerms: ['spreader', 'heatspreader', 'heatsink', 'fury', 'kingston'],
   }),
 

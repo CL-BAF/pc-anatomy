@@ -163,6 +163,11 @@ export const sources = {
     name: "Tom's Hardware (independent review) · Kingston FURY Beast DDR5 construction",
     url: 'https://www.tomshardware.com/reviews/kingston-fury-beast-ddr5-5200-c40-review',
   },
+  // Independent review, cited for the plate/interlock/clip construction narrative.
+  aphnetworks: {
+    name: 'APH Networks (independent review) · Kingston FURY Beast DDR5 construction',
+    url: 'https://aphnetworks.com/reviews/kingston-fury-beast-ddr5-5200-2x16gb/2',
+  },
   fanconstruction: {
     name: 'Noctua · Fan frame, impeller and bearing construction',
     url: 'https://cdn.noctua.at/media/noctua_nf_a12x25_pwm_infosheet_en_web.pdf',

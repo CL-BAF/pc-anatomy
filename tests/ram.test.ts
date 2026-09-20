@@ -125,7 +125,7 @@ await test('the spreader clads the module but clears the contact field', () => {
   const spreader = spreaders[0];
   // Brushed dark metal, not board green or bare plastic. (Same-finish
   // submeshes merge at build, so count the finish, then the assembly extent.)
-  const dark = new T.Color('#1c1e20').getHex();
+  const dark = new T.Color('#202326').getHex();
   let clad = 0;
   spreader.object.traverse((o) => {
     if (!(o instanceof T.Mesh)) return;
@@ -142,10 +142,11 @@ await test('the spreader clads the module but clears the contact field', () => {
     spreader.extent.x >= 128 / 6 && spreader.extent.y >= 4.6 / 6,
     'spreader assembly must span plates and caps',
   );
-  // Plates stop above the contact field: spreader z-min stays clear of the
-  // key band and the finger rows, while spanning the chip row in x.
+  // Plates stop above the contact field: the extruded profile runs z -10 to
+  // 15 mm with a 0.6 mm bevel, so the real silhouette boundary is -10.6 mm —
+  // clear of the key band and the finger rows — while spanning the chip row.
   const z0 = spreader.base.z + spreader.center.z - spreader.extent.z / 2;
-  assert.ok(z0 > -12 / 6, 'spreader must clear the contact field');
+  assert.ok(z0 > -10.7 / 6, 'spreader must clear the contact field');
   const x0 = spreader.base.x + spreader.center.x - spreader.extent.x / 2;
   const x1 = spreader.base.x + spreader.center.x + spreader.extent.x / 2;
   let chipX0 = Infinity,

@@ -1,6 +1,7 @@
 import * as T from 'three';
 import type { ModelTools } from './hardware.ts';
 import type { Vec3 } from './layout.ts';
+import { surfaceTexture } from './surfaces.ts';
 
 /**
  * Inside a DDR5 memory module.
@@ -84,37 +85,122 @@ export function buildDimm(tools: ModelTools, _root: T.Group) {
   label(spd, 'SPD', [0, mm(0.8), 0], mm(4.5), '#8c9499');
   add('dimmspd', spd, [mm(8), mm(1.2), mm(-4)], [0.5, 1.6, -0.4]);
 
-  // Low-profile heat spreader in the Beast class: a thermal pad over the
-  // packages, brushed dark plates clamping both faces, and rounded end caps.
-  // Text-only branding — no logo geometry. The plates stop clear of the
-  // contact field, so the gold fingers and the key stay exposed; the whole
-  // assembly lifts clear with the explode, packages visible beneath it.
+  // Low-profile heat spreader in the Beast class: two thin mirror plates, one
+  // per face, interlocked along the top edge with two locking clips and
+  // angled asymmetric facets on the faces. The bottom edge runs straight and
+  // stops clear of the contact field, so the gold fingers and the key stay
+  // exposed. Branding is text-only with no logo geometry, and differs per
+  // face: lettering on the outer face, a spec sticker on the inner one. The
+  // whole assembly lifts clear with the explode, packages visible beneath it.
   const spreader = new T.Group();
-  const spreaderMat = '#1c1e20';
-  place(
-    spreader,
-    box([mm(124), mm(1.2), mm(12)], '#2a2d30', 0.1),
-    [mm(-3), mm(1.35), mm(6)],
-  );
+  const spreaderFinish = new T.MeshStandardMaterial({
+    color: '#202326',
+    metalness: 0.85,
+    roughness: 0.42,
+    bumpMap: surfaceTexture('brushed'),
+    bumpScale: 0.002,
+    roughnessMap: surfaceTexture('brushed'),
+  });
+  spreaderFinish.envMapIntensity = 0.85;
+  // Face outline with angled top corners, extruded thin and laid flat: one
+  // shared geometry serves both mirror plates.
+  const outline = new T.Shape();
+  outline.moveTo(-65, -12.5);
+  outline.lineTo(65, -12.5);
+  outline.lineTo(65, 8);
+  outline.lineTo(60, 12.5);
+  outline.lineTo(-58, 12.5);
+  outline.lineTo(-65, 5);
+  outline.closePath();
+  const plateGeo = new T.ExtrudeGeometry(outline, {
+    depth: 0.4,
+    bevelEnabled: true,
+    bevelThickness: 0.3,
+    bevelSize: 0.3,
+    bevelSegments: 1,
+  });
+  plateGeo.rotateX(Math.PI / 2);
+  plateGeo.translate(0, 0.2, 2.5);
+  for (const y of [2.55, -1.15]) {
+    const plate = new T.Mesh(plateGeo, spreaderFinish);
+    plate.scale.setScalar(mm(1));
+    plate.position.set(0, mm(y), 0);
+    spreader.add(plate);
+  }
+  // Angled facet strips flanking the branding on each face, half-embedded,
+  // with slight opposing tilts so the faces read faceted, not plain.
   for (const side of [-1, 1])
-    place(spreader, box([mm(130), mm(1), mm(25)], spreaderMat, 0.75), [
-      mm(-1),
-      mm(side < 0 ? -1.15 : 2.55),
-      mm(2.5),
-    ]);
-  for (const x of [-64.5, 62.5])
-    place(spreader, box([mm(3.5), mm(5.2), mm(25)], spreaderMat, 0.75), [
+    for (const [x, tilt] of [
+      [-38, 0.12],
+      [38, -0.12],
+    ]) {
+      const rib = box([mm(2.2), mm(0.3), mm(18)], '#202326', 0.85);
+      rib.rotation.y = tilt;
+      rib.position.set(mm(x), mm(side < 0 ? -1.7 : 3.1), mm(2.5));
+      spreader.add(rib);
+    }
+  // Top-edge interlock rib with two locking clips holding the halves.
+  place(spreader, box([mm(116), mm(0.35), mm(0.4)], '#0e1013', 0.6), [
+    mm(0),
+    mm(3.0),
+    mm(14.4),
+  ]);
+  for (const x of [-40, 40])
+    place(spreader, box([mm(5), mm(4.4), mm(3)], '#141619', 0.6), [
       mm(x),
-      mm(0.75),
-      mm(2.5),
+      mm(0.7),
+      mm(14),
     ]);
+  // Slim thermal pads bridging the board face to the outer plate over chips.
+  for (const x of [-31, 25])
+    place(spreader, box([mm(56), mm(1.3), mm(11)], '#2a2d30', 0.1), [
+      mm(x),
+      mm(1.35),
+      mm(6),
+    ]);
+  // Face A: lettering. Face B: spec sticker with three small text lines.
   label(
     spreader,
     'KINGSTON FURY',
-    [mm(-2), mm(3.1), mm(2.5)],
+    [mm(-1), mm(3.15), mm(5)],
     mm(56),
     '#c9ced1',
   );
+  label(spreader, 'DDR5', [mm(-1), mm(3.15), mm(-2)], mm(20), '#9aa1a6');
+  place(spreader, box([mm(40), mm(0.12), mm(13)], '#d7dade', 0.05), [
+    mm(-1),
+    mm(-1.75),
+    mm(2.5),
+  ]);
+  const sticker = (
+    text: string,
+    z: number,
+  ) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 48;
+    const ctx = canvas.getContext('2d')!;
+    ctx.fillStyle = '#3a3f44';
+    ctx.textAlign = 'center';
+    ctx.font = '500 30px monospace';
+    ctx.fillText(text, 256, 34, 480);
+    const texture = new T.CanvasTexture(canvas);
+    texture.colorSpace = T.SRGBColorSpace;
+    const plane = new T.Mesh(
+      new T.PlaneGeometry(mm(34), (mm(34) * 48) / 512),
+      new T.MeshBasicMaterial({
+        map: texture,
+        transparent: true,
+        depthWrite: false,
+      }),
+    );
+    plane.rotation.x = Math.PI / 2;
+    plane.position.set(mm(-1), mm(-1.83), mm(z));
+    spreader.add(plane);
+  };
+  sticker('KF560C36BBE2-16  DDR5 6000MT/s', 5.5);
+  sticker('1.35V  CL36  16GB 1Rx8', 2.5);
+  sticker('ASSEMBLED IN TAIWAN', -0.5);
   add('dimmspreader', spreader, [0, 0, 0], [0, 2.6, 0]);
 
   // 288-pin edge contacts: 144 fingers per face at 0.8 mm pitch, split into

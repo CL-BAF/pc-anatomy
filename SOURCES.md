@@ -90,9 +90,11 @@ DDR5 length with a JEDEC height class (gaming spreaders are taller) and a keyed
 ### Reference module: Kingston FURY Beast
 
 The modelled spreader follows the Kingston FURY Beast DDR5 line in style
-only: black low-profile plates over the packages, text-only branding, and an
-exposed contact edge. Outline (133.35 mm), height class, colour and the
-exposed edge are the published facts; spreader surface texture, exact badge
+only: two thin mirror plates over the packages with angled asymmetric
+faceting, interlocked along the top edge with locking clips, text-only
+branding that differs per face, and an exposed contact edge. Outline
+(133.35 mm), height class, colour and the exposed edge are the published
+facts; facet styling, interlock and clip detail, surface texture, exact badge
 geometry and placement, IC-side population and routing are illustrative of
 the 1Rx8 example, and no Kingston logo is reproduced.
 
@@ -102,6 +104,9 @@ the 1Rx8 example, and no Kingston logo is reproduced.
   an independent review, supports the construction detail the maker does not
   publish: black PCB with matching spreader, single-sided 1Rx8 layout and the
   exposed edge seating the slot.
+- [APH Networks review of the FURY Beast DDR5](https://aphnetworks.com/reviews/kingston-fury-beast-ddr5-5200-2x16gb/2),
+  an independent review, supports the plate construction narrative: thin
+  halves, top-edge interlock, locking clips and adhesive strips.
 
 Kingston assembles modules; it does not fabricate the DRAM dies, which it
 sources from manufacturers such as Micron, SK hynix and others with variance
