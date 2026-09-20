@@ -21,8 +21,20 @@ export function buildDimm(tools: ModelTools, _root: T.Group) {
   };
 
   // Module board: 133.35 mm long in a JEDEC height class, green memory mask.
+  // The DDR5 key is a real cutout through the bottom edge at x in [-7, 1] mm:
+  // the upper board stops 3.5 mm short and two lower flanks run up to the key,
+  // the way a slot key passes through the module edge rather than its copper.
   const board = new T.Group();
-  board.add(pcb([mm(133.35), mm(1.27), mm(31.25)], 'memory'));
+  board.add(pcb([mm(133.35), mm(1.27), mm(27.75)], 'memory'));
+  board.children[0].position.set(0, 0, mm(1.75));
+  for (const [center, width] of [
+    [-36.8375, 59.675],
+    [33.8375, 65.675],
+  ]) {
+    const flank = pcb([mm(width), mm(1.27), mm(3.5)], 'memory');
+    flank.position.set(mm(center), 0, mm(-13.875));
+    board.add(flank);
+  }
   label(board, 'DDR5 UDIMM · 8 × X8', [0, mm(0.8), mm(10)], mm(40), '#82998b');
   add('dimmboard', board, [0, 0, 0], [0, -1.2, 0]);
 
@@ -68,12 +80,13 @@ export function buildDimm(tools: ModelTools, _root: T.Group) {
   label(spd, 'SPD', [0, mm(0.8), 0], mm(4.5), '#8c9499');
   add('dimmspd', spd, [mm(8), mm(1.2), mm(-4)], [0.5, 1.6, -0.4]);
 
-  // 288-pin edge contacts with the DDR5 key gap: two fingers fields split
-  // around the key, the way the slot key never passes through the fingers.
+  // 288-pin edge contacts: 144 fingers per face at 0.8 mm pitch, split into
+  // two fields around the key cutout, each on its own backing strip. Nothing
+  // spans the key zone: no board, no strip, no finger.
   const contacts = new T.Group();
   for (const [center, width] of [
-    [-33.5, 60],
-    [26.5, 60],
+    [-35.9, 57.8],
+    [29.9, 57.8],
   ]) {
     place(contacts, box([mm(width), mm(0.8), mm(3)], '#284a3b', 0.25), [
       mm(center),
@@ -81,15 +94,17 @@ export function buildDimm(tools: ModelTools, _root: T.Group) {
       mm(-14.5),
     ]);
   }
-  for (let i = 0; i < 96; i++) {
-    const x = -63.5 + i * 1.34;
-    if (x > -6 && x < 0) continue;
-    for (const side of [-1, 1]) {
-      place(
-        contacts,
-        box([mm(0.7), mm(0.08), mm(2.2)], '#d5b96b', 0.9, 0.002),
-        [mm(x), side * mm(0.45), mm(-14.5)],
-      );
+  for (let field = 0; field < 2; field++) {
+    const start = field === 0 ? -64.55 : 1.75;
+    for (let i = 0; i < 72; i++) {
+      const x = start + i * 0.8;
+      for (const side of [-1, 1]) {
+        place(
+          contacts,
+          box([mm(0.5), mm(0.08), mm(2.2)], '#d5b96b', 0.9, 0.002),
+          [mm(x), side * mm(0.45), mm(-14.5)],
+        );
+      }
     }
   }
   add('dimmcontacts', contacts, [0, 0, 0], [0, -0.4, -1.8]);

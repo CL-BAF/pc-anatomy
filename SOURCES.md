@@ -4,7 +4,7 @@ Reviewed 2026-09-19. PC Anatomy is independent of the manufacturers cited here. 
 
 ## Current component reference audit
 
-All 327 component entries now have references in their detail panels. The complete
+All 342 component entries now have references in their detail panels. The complete
 [component-to-document index](docs/component-references.md) records those mappings.
 The registry in `lib/sources.ts` is authoritative for current app links; older notes
 below preserve the research history.
@@ -86,11 +86,13 @@ DDR5 length with a JEDEC height class (gaming spreaders are taller) and a keyed
   packaging notes (already cited) support the substrate and ball-grid
   construction language without claiming flip-chip or wire-bond detail.
 
-**Limits.** Early 8 Gb x4/x8 dies hold 16 banks (8 groups × 2) and x16 dies
-hold 16 banks (4 groups × 4) — the app qualifies its counts to 16 Gb or larger
-x8 dies. Row, column and page counts are qualified the same way (16 row bits ×
-10 column bits on 16 Gb x8). On-die ECC versus side-band DIMM ECC is left out
-of the copy except for the subchannel width note the standard requires.
+**Limits.** Early 8 Gb x4/x8 dies hold 16 banks (8 groups × 2), early 8 Gb
+x16 dies hold 8 (4 groups × 2), and 16–64 Gb x16 dies hold 16 (4 groups × 4)
+— the app qualifies its counts to 16 Gb or larger x8 dies. Row, column and
+page counts are qualified the same way (16 row bits × 10 column bits on
+16 Gb x8; a column address selects 8 bits on x8, so an open row is 1 KiB).
+On-die ECC versus side-band DIMM ECC is left out of the copy except for the
+subchannel width note the standard requires.
 
 ## Additional graphics cards · September 17, 2026
 

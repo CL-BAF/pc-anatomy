@@ -44,9 +44,9 @@ export const ramConcepts: Concept[] = [
     level: 'dimm',
     open: 'dram',
     description:
-      'Eight x8 DRAM packages on one side of the example module: one single rank spanning both 32-bit subchannels, four packages per subchannel. Each package die holds all of the banks; the rank operates in lockstep.',
+      'Eight x8 DRAM packages on one side of the example module: one rank under a single chip select, spanning two independently addressable 32-bit subchannels with four packages each. Every package die holds all of the banks, and the four packages on one subchannel operate together.',
     purpose:
-      'Stores the bits. Selecting the rank addresses one 64-bit-wide set across both subchannels at once.',
+      'Stores the bits. Commands arrive per subchannel — each has its own command and address bus — while one chip select groups all eight packages into the rank.',
     quantity: '8 illustrative packages, 1 rank',
     specifications: {
       Width: '8 × x8 packages, single rank',
@@ -190,7 +190,7 @@ export const ramConcepts: Concept[] = [
     level: 'banks',
     open: 'bank',
     description:
-      'One of 32 independent banks on a 16 Gb or larger x8 die, grouped four to a bank group across 8 groups. Every package die holds all 32 banks and the rank operates in lockstep; early 8 Gb x4/x8 and all x16 dies hold 16 instead.',
+      'One of 32 independent banks on a 16 Gb or larger x8 die, grouped four to a bank group across 8 groups. Every package die holds all 32 banks; dies of other densities differ — early 8 Gb x4/x8 dies hold 16 banks (8 groups × 2), x16 dies hold 16 (4 groups × 4) except early 8 Gb x16 with 8 (4 groups × 2).',
     purpose:
       'Each bank is an independent array with its own row decoder and sense-amp row buffer, holding one open row at a time so banks can overlap their work.',
     quantity: '32 modelled banks in 8 groups of 4',
@@ -233,7 +233,7 @@ export const ramConcepts: Concept[] = [
     parent: 'drambank',
     level: 'bank',
     description:
-      'An illustrative sample of the storage cells in one bank row: each cell is one transistor plus one capacitor (1T1C). A real 16 Gb x8 bank holds tens of thousands of rows of about a thousand columns each; this grid is magnified and not to scale.',
+      'An illustrative sample of the storage cells in one bank: each cell is one transistor plus one capacitor (1T1C). A real 16 Gb x8 bank holds 65,536 row addresses of 1,024 column addresses each — one address selects 8 bits on x8, a fully open row is 8,192 bits (1 KiB) — so this grid is magnified and not to scale.',
     purpose:
       'Each cell holds one bit as charge. Reading a row is destructive and its values are written back from the row buffer.',
     quantity: 'Illustrative sample grid, about 16 rows × 8 columns',
@@ -271,11 +271,11 @@ export const ramConcepts: Concept[] = [
     parent: 'drambank',
     level: 'bank',
     description:
-      'An illustrative sample of the bitline pairs running down one bank to the sense amplifiers. A real 16 Gb x8 bank selects among about a thousand columns per row; this sample shows a handful.',
+      'An illustrative sample of the bitline pairs running down one bank to the sense amplifiers. A real 16 Gb x8 bank selects among 1,024 column addresses per open row, each address reading 8 bits on x8; this sample shows a handful.',
     purpose:
       'Addressing columns picks values out of the open row for transfer without disturbing the rest of it.',
     quantity: 'Illustrative sample of columns',
-    specifications: { Real: 'About 1024 columns per row on 16 Gb x8' },
+    specifications: { Real: '1,024 column addresses per row on 16 Gb x8' },
     representationType: 'logical',
     physicalAccuracy:
       'Documented logical architecture. Block size and placement are illustrative; exact transistor-level placement is not publicly available.',

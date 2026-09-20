@@ -106,6 +106,19 @@ await test('RAM diagram blocks do not overlap one another', () => {
   }
 });
 
+await test('each bank group frame holds exactly four banks', () => {
+  const banks = family('banks', 'drambank');
+  assert.equal(banks.length, 32);
+  for (let g = 0; g < 8; g++) {
+    const gx = ((g % 4) - 1.5) * 2.7;
+    const gz = g < 4 ? -1.9 : 1.1;
+    const inside = banks.filter(
+      (p) => Math.abs(p.base.x - gx) <= 1.28 && Math.abs(p.base.z - gz) <= 1.46,
+    );
+    assert.equal(inside.length, 4, `bank group ${g} holds ${inside.length}`);
+  }
+});
+
 await test('the module keeps the DDR5 outline with a keyed contact edge', () => {
   const f = (id: string) => family('dimm', id);
   assert.equal(f('dimmboard').length, 1);
@@ -123,13 +136,39 @@ await test('the module keeps the DDR5 outline with a keyed contact edge', () => 
     const outerX = Math.abs(chip.base.x + chip.center.x) + chip.extent.x / 2;
     assert.ok(outerX <= 133.35 / 6 / 2 + 0.05, chip.key + ' leaves the board');
   }
-  // The key gap splits the contact field: fingers flank an empty middle.
-  // (Submeshes sharing a material are merged at build, so read the baked
-  // finger geometry rather than individual meshes.)
-  const contacts = f('dimmcontacts')[0];
+  // The key cutout is real geometry: across the full keyed edge band
+  // (x in [-7, 1] mm, z below -12 mm) there are no vertices at all — no
+  // board, no backing strip, no finger. (Submeshes sharing a material are
+  // merged at build, so read the baked geometry rather than individual
+  // meshes, skipping label planes.)
+  const keyPieces = [f('dimmboard')[0], f('dimmcontacts')[0]];
+  const inBand: number[] = [];
+  for (const piece of keyPieces)
+    piece.object.traverse((o) => {
+      if (!(o instanceof T.Mesh)) return;
+      if (o.material instanceof T.MeshBasicMaterial) return;
+      const pos = o.geometry.getAttribute('position');
+      for (let i = 0; i < pos.count; i++)
+        if (pos.getZ(i) < -12 / 6 - 0.05) inBand.push(pos.getX(i));
+    });
+  assert.ok(inBand.length > 0, 'no keyed-edge geometry drawn at all');
+  assert.ok(
+    inBand.every((x) => x <= -7 / 6 + 0.001 || x >= 1 / 6 - 0.001),
+    'geometry spans the key cutout',
+  );
+  assert.ok(
+    inBand.some((x) => x < -7 / 6) && inBand.some((x) => x >= 1 / 6),
+    'contacts must flank the key on both sides',
+  );
+  // 288 pins: 144 gold fingers per face at 0.8 mm pitch. Fingers are the
+  // only gold meshes, so snap every baked gold vertex to its finger column
+  // on the pitch grid: 72 per field, both faces sharing each column.
   const gold = new T.Color('#d5b96b').getHex();
-  const xs: number[] = [];
-  contacts.object.traverse((o) => {
+  const columns = new Set<string>();
+  let goldYMin = Infinity,
+    goldYMax = -Infinity,
+    goldCount = 0;
+  f('dimmcontacts')[0].object.traverse((o) => {
     if (!(o instanceof T.Mesh)) return;
     const mats = Array.isArray(o.material) ? o.material : [o.material];
     if (
@@ -139,17 +178,27 @@ await test('the module keeps the DDR5 outline with a keyed contact edge', () => 
     )
       return;
     const pos = o.geometry.getAttribute('position');
-    for (let i = 0; i < pos.count; i++) xs.push(pos.getX(i));
+    for (let i = 0; i < pos.count; i++) {
+      goldCount++;
+      const x = pos.getX(i);
+      goldYMin = Math.min(goldYMin, pos.getY(i));
+      goldYMax = Math.max(goldYMax, pos.getY(i));
+      // Finger centers sit exactly on the grid; edges deviate by under a
+      // third of a pitch step, so rounding lands every vertex correctly.
+      const idx =
+        x < -1
+          ? Math.round((x + 64.55 / 6) / (0.8 / 6))
+          : Math.round((x - 1.75 / 6) / (0.8 / 6));
+      columns.add((x < -1 ? 'L' : 'R') + idx);
+    }
   });
-  assert.ok(xs.length > 0, 'no contact fingers drawn');
-  assert.ok(
-    xs.some((x) => x < -1) && xs.some((x) => x > 0),
-    'contacts must span the module edge',
-  );
-  assert.ok(
-    xs.every((x) => x <= -1 || x >= 0),
-    'fingers must leave a key gap in the middle',
-  );
+  assert.ok(goldCount > 0, 'no contact fingers drawn');
+  assert.equal(columns.size, 144);
+  for (const key of columns) {
+    const n = Number(key.slice(1));
+    assert.ok(n >= 0 && n < 72, key + ' is off the finger grid');
+  }
+  assert.ok(goldYMin < 0 && goldYMax > 0, 'fingers must sit on both faces');
 });
 
 await test('the package scale shows substrate, die and balls', () => {
