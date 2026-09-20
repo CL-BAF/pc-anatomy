@@ -199,6 +199,25 @@ await test('the module keeps the DDR5 outline with a keyed contact edge', () => 
     assert.ok(n >= 0 && n < 72, key + ' is off the finger grid');
   }
   assert.ok(goldYMin < 0 && goldYMax > 0, 'fingers must sit on both faces');
+  // Surface clearance: the 1.27 mm board slab reaches |y| = 0.635 mm, so no
+  // gold vertex may lie inside it — fingers sit on the faces, not in the board.
+  const slab = 0.635 / 6 - 0.001;
+  f('dimmcontacts')[0].object.traverse((o) => {
+    if (!(o instanceof T.Mesh)) return;
+    const mats = Array.isArray(o.material) ? o.material : [o.material];
+    if (
+      !mats.some(
+        (m) => m instanceof T.MeshStandardMaterial && m.color.getHex() === gold,
+      )
+    )
+      return;
+    const pos = o.geometry.getAttribute('position');
+    for (let i = 0; i < pos.count; i++)
+      assert.ok(
+        Math.abs(pos.getY(i)) >= slab,
+        'a gold finger is embedded in the board',
+      );
+  });
 });
 
 await test('the package scale shows substrate, die and balls', () => {

@@ -44,10 +44,10 @@ export const ramConcepts: Concept[] = [
     level: 'dimm',
     open: 'dram',
     description:
-      'Eight x8 DRAM packages on one side of the example module: one rank under a single chip select, spanning two independently addressable 32-bit subchannels with four packages each. Every package die holds all of the banks, and the four packages on one subchannel operate together.',
+      'Eight x8 DRAM packages on one side of the example module: one rank, spanning two independently addressable 32-bit subchannels with four packages each. Each subchannel has its own chip select — CS0_A_n and CS0_B_n on a 1Rx8 UDIMM — so commands arrive on either subchannel independently, and the four packages on one subchannel operate together. Every package die holds all of the banks.',
     purpose:
-      'Stores the bits. Commands arrive per subchannel — each has its own command and address bus — while one chip select groups all eight packages into the rank.',
-    quantity: '8 illustrative packages, 1 rank',
+      'Stores the bits. Commands arrive per subchannel — each subchannel’s chip select runs its own command and address bus — while both subchannels together form the rank under the module’s rank addressing.',
+    quantity: '8 illustrative packages, 1 rank, 2 subchannel chip selects',
     specifications: {
       Width: '8 × x8 packages, single rank',
       Subchannels: '4 packages per subchannel',

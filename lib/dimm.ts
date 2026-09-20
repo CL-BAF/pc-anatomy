@@ -82,7 +82,9 @@ export function buildDimm(tools: ModelTools, _root: T.Group) {
 
   // 288-pin edge contacts: 144 fingers per face at 0.8 mm pitch, split into
   // two fields around the key cutout, each on its own backing strip. Nothing
-  // spans the key zone: no board, no strip, no finger.
+  // spans the key zone: no board, no strip, no finger. The fingers sit ON the
+  // board faces — inner face just outside the 1.27 mm slab — so the gold
+  // reads from above instead of hiding inside the board.
   const contacts = new T.Group();
   for (const [center, width] of [
     [-35.9, 57.8],
@@ -102,7 +104,7 @@ export function buildDimm(tools: ModelTools, _root: T.Group) {
         place(
           contacts,
           box([mm(0.5), mm(0.08), mm(2.2)], '#d5b96b', 0.9, 0.002),
-          [mm(x), side * mm(0.45), mm(-14.5)],
+          [mm(x), side * mm(0.68), mm(-14.5)],
         );
       }
     }

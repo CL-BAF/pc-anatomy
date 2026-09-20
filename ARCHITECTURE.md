@@ -176,7 +176,7 @@ subsystems stop touching.
 | `app/viewer.tsx` | The React ↔ three.js bridge: lazy scene load, hover label, error state. |
 | `app/links.ts` | Destinations used by more than one panel. |
 | `app/globals.css`, `app/workbench.css` | The visual direction, desktop through phone. |
-| `tests/*.test.ts` | 60 tests: catalogue integrity, layout, picking, geometry presence, airflow, the RAM dive. |
+| `tests/*.test.ts` | 61 tests: catalogue integrity, layout, picking, geometry presence, airflow, the RAM dive. |
 | `scripts/generate-icons.mjs` | Rasterises `public/favicon.svg` into PNG and ICO variants. Uses Playwright and Edge. |
 | `scripts/generate-reference-index.mjs` | Regenerates `docs/component-references.md` from the catalogue. Run it after changing citations. |
 
@@ -361,7 +361,7 @@ the model has. 237 concepts are physical, 105 are logical diagrams.
 
 ## Tests
 
-60 tests, all through Node's built-in runner.
+61 tests, all through Node's built-in runner.
 
 `.github/workflows/ci.yml` runs `npm ci`, type checking, linting, tests, and a
 production build on every push and pull request with Node.js 22.
@@ -387,11 +387,12 @@ production build on every push and pull request with Node.js 22.
   and over by a tenth, that the chevrons march and stop on command, that no
   stream strays far from the hardware it describes, and that the tower's air
   enters at the front and leaves at the back.
-- `tests/ram.test.ts` (8) — the Memory menu order and the open chain down to
+- `tests/ram.test.ts` (9) — the Memory menu order and the open chain down to
   the cell array, bank counts multiplying out to the 16 Gb x8 organisation,
   diagram blocks not overlapping, the module outline with its keyed contact
-  edge, the package stack order, named geometry on every new scale, and search
-  reaching the module and the cells at their own scales.
+  edge, the empty key cutout, the 288-pin finger count and face clearance,
+  bank-group membership, the package stack order, named geometry on every new
+  scale, and search reaching the module and the cells at their own scales.
 
 The suite builds every scale, so a geometry regression usually surfaces as a
 failing assertion rather than a silent visual change.

@@ -70,12 +70,13 @@ DDR5 length with a JEDEC height class (gaming spreaders are taller) and a keyed
 
 - [JEDEC DDR5 SDRAM standard (JESD79-5D)](https://www.jedec.org/standards-documents/docs/jesd79-5d)
   and the [JEDEC DDR5 launch release](https://www.jedec.org/news/pressreleases/jedec-publishes-new-ddr5-standard-advancing-next-generation-high-performance)
-  support the 288-pin module, the two independent 32-bit subchannels, the 32
-  banks in 8 bank groups, BL16 and on-DIMM power regulation.
+  support the two independent 32-bit subchannels, the 32 banks in
+  8 bank groups and BL16.
+- [Micron's DDR5 client-module paper](https://www.micron.com/content/dam/micron/global/public/products/white-paper/ddr5-key-module-features-wp-client.pdf)
+  supports the 288-pin module outline and pin count, the subchannel wiring
+  and the on-module power regulation and SPD hub roles.
 - [Micron's DDR5 new-features white paper](https://www.micron.com/content/dam/micron/global/public/products/white-paper/ddr5-new-features-white-paper.pdf)
-  supports the bank organisation, burst length and refresh behaviour; Micron's
-  client-module paper (already cited for the motherboard socket) supports the
-  PMIC and SPD hub roles.
+  supports the bank organisation, burst length and refresh behaviour.
 - [SK hynix on DDR5 banks, burst length and refresh](https://news.skhynix.com/en/why-ddr5-is-the-industrys-powerful-next-gen-memory)
   cross-checks the 32-bank, 8-group organisation.
 - [SFU course notes on DRAM banks, rows and sense amplifiers](https://www.cs.sfu.ca/~ashriram/Courses/CS7ARCH/assets/lectures/11_Memory_Consistency_DRAM.pdf)
