@@ -124,7 +124,7 @@ export const ramConcepts: Concept[] = [
     parent: 'ram',
     level: 'dimm',
     description:
-      'Two thin mirror plates in the Kingston FURY Beast class, one per face, interlocked along the top edge with two locking clips and angled asymmetric facets. Branding differs per face: lettering outside, a spec sticker inside. The contact edge and key stay exposed.',
+      'Two thin mirror plates in the Kingston FURY Beast class, one per face, interlocked along the top edge with two locking clips and angled asymmetric facets. Branding differs per face: lettering outside, a spec sticker inside. The contact edge and key stay exposed. Lifting the spreader reveals the packages; the detail panel take-apart action or the scale menu reaches the package scale.',
     purpose:
       'Spreads heat from the packages across a larger surface and stiffens the module. It lifts clear with the explode, packages visible beneath it.',
     quantity: '1 modelled assembly: 2 plates, interlock, 2 clips',

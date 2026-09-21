@@ -93,13 +93,14 @@ export function buildDimm(tools: ModelTools, _root: T.Group) {
   // face: lettering on the outer face, a spec sticker on the inner one. The
   // whole assembly lifts clear with the explode, packages visible beneath it.
   const spreader = new T.Group();
+  const brush = surfaceTexture('brushed');
   const spreaderFinish = new T.MeshStandardMaterial({
     color: '#202326',
     metalness: 0.85,
     roughness: 0.42,
-    bumpMap: surfaceTexture('brushed'),
+    bumpMap: brush,
     bumpScale: 0.002,
-    roughnessMap: surfaceTexture('brushed'),
+    roughnessMap: brush,
   });
   spreaderFinish.envMapIntensity = 0.85;
   // Face outline with angled top corners, extruded thin and laid flat: one
@@ -121,8 +122,19 @@ export function buildDimm(tools: ModelTools, _root: T.Group) {
   });
   plateGeo.rotateX(Math.PI / 2);
   plateGeo.translate(0, 0.2, 2.5);
-  for (const y of [2.55, -1.15]) {
-    const plate = new T.Mesh(plateGeo, spreaderFinish);
+  // A grain-varied twin finish for the inner plate, so the two faces do not
+  // read as one stamped sheet.
+  const brushInner = brush.clone();
+  brushInner.center.set(0.5, 0.5);
+  brushInner.rotation = Math.PI / 2;
+  const spreaderFinishInner = spreaderFinish.clone();
+  spreaderFinishInner.bumpMap = brushInner;
+  spreaderFinishInner.roughnessMap = brushInner;
+  for (const [y, finish] of [
+    [2.55, spreaderFinish],
+    [-1.15, spreaderFinishInner],
+  ] as const) {
+    const plate = new T.Mesh(plateGeo, finish);
     plate.scale.setScalar(mm(1));
     plate.position.set(0, mm(y), 0);
     spreader.add(plate);
@@ -146,16 +158,17 @@ export function buildDimm(tools: ModelTools, _root: T.Group) {
     mm(14.4),
   ]);
   for (const x of [-40, 40])
-    place(spreader, box([mm(5), mm(4.4), mm(3)], '#141619', 0.6), [
+    place(spreader, box([mm(5), mm(4.4), mm(3)], '#2e3338', 0.6), [
       mm(x),
       mm(0.7),
       mm(14),
     ]);
-  // Slim thermal pads bridging the board face to the outer plate over chips.
+  // Slim thermal pads seated between the chip tops (2.0 mm) and the plate
+  // underside: bottom faces touch the packages, tops meet the plate.
   for (const x of [-31, 25])
-    place(spreader, box([mm(56), mm(1.3), mm(11)], '#2a2d30', 0.1), [
+    place(spreader, box([mm(56), mm(0.25), mm(11)], '#2a2d30', 0.1), [
       mm(x),
-      mm(1.35),
+      mm(2.125),
       mm(6),
     ]);
   // Face A: lettering. Face B: spec sticker with three small text lines.
@@ -195,7 +208,7 @@ export function buildDimm(tools: ModelTools, _root: T.Group) {
     plane.position.set(mm(-1), mm(-1.83), mm(z));
     spreader.add(plane);
   };
-  sticker('KF560C36BBE2-16  DDR5 6000MT/s', 5.5);
+  sticker('DDR5 6000MT/s', 5.5);
   sticker('1.35V  CL36  16GB 1Rx8', 2.5);
   sticker('ASSEMBLED IN TAIWAN', -0.5);
   add('dimmspreader', spreader, [0, 0, 0], [0, 2.6, 0]);

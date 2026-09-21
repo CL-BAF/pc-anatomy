@@ -158,6 +158,39 @@ await test('the spreader clads the module but clears the contact field', () => {
   assert.ok(x0 <= chipX0 && x1 >= chipX1, 'spreader must span the chip row');
 });
 
+await test('the thermal pads seat between chip tops and plate', () => {
+  // Pads are the '#2a2d30' meshes inside the spreader group: bottom faces
+  // touch the 2.0 mm chip tops without entering the bodies, tops meet the
+  // 2.05 mm plate underside. Both bounds use >= with epsilon.
+  const pad = new T.Color('#2a2d30').getHex();
+  const eps = 0.001;
+  let found = 0;
+  family('dimm', 'dimmspreader')[0].object.traverse((o) => {
+    if (!(o instanceof T.Mesh)) return;
+    const mats = Array.isArray(o.material) ? o.material : [o.material];
+    if (
+      !mats.some(
+        (m) => m instanceof T.MeshStandardMaterial && m.color.getHex() === pad,
+      )
+    )
+      return;
+    found++;
+    o.updateWorldMatrix(true, false);
+    o.geometry.computeBoundingBox();
+    const bb = o.geometry.boundingBox!.clone().applyMatrix4(o.matrixWorld);
+    // Spreader group sits at the origin, so world units are group units.
+    assert.ok(
+      bb.min.y >= 2.0 / 6 - eps,
+      'pad enters the chip bodies below 2.0 mm',
+    );
+    assert.ok(
+      bb.max.y >= 2.05 / 6 - eps,
+      'pad stops short of the plate underside',
+    );
+  });
+  assert.ok(found > 0, 'no thermal pads drawn');
+});
+
 await test('the module keeps the DDR5 outline with a keyed contact edge', () => {
   const f = (id: string) => family('dimm', id);
   assert.equal(f('dimmboard').length, 1);
